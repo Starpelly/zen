@@ -19,6 +19,21 @@ class Scoper
 
 		m_globalScope = new Scope("Global Scope", null);
 		m_currentScope = m_globalScope;
+
+		addGlobalConstant("null", .Basic(BasicType.FromKind(.UntypedNull)), default);
+		addGlobalConstant("true", .Basic(BasicType.FromKind(.UntypedBool)), Variant.Create<bool>(true));
+		addGlobalConstant("false", .Basic(BasicType.FromKind(.UntypedBool)), Variant.Create<bool>(false));
+	}
+
+	private void addGlobalConstant(String name, ZenType type, Variant value)
+	{
+		let entity = new Entity.Constant();
+		entity.Decl = null;
+		entity.Token = .(.Identifier, name, 0, 0, .Empty);
+		entity.Type = type;
+		entity.Value = value;
+
+		m_globalScope.Entities.Add(name, entity);
 	}
 
 	public Result<Scope> Run()

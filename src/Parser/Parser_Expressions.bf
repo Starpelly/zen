@@ -231,10 +231,6 @@ extension Parser
 			return new Expression.Literal(/*new PrimitiveDataType(PrimitiveType.GetFromLiteralToken(prevToken), typeName, prevToken),*/ prevToken, value);
 		}
 
-		if (match(.False)) returnLiteral!(previous(), Variant.Create<bool>(false));
-		if (match(.True)) returnLiteral!(previous(), Variant.Create<bool>(true));
-		if (match(.Null)) returnLiteral!(previous(), null);
-
 		if (match(.Number_Int, .Number_Float, .String))
 		{
 			Variant value = ?;

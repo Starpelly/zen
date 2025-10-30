@@ -61,6 +61,10 @@ class Parser
 		{
 			return getForStmt();
 		}
+		if (match(.While))
+		{
+			return getWhileStmt();
+		}
 		if (match(.Let))
 		{
 			return getVariableStmt(previous(), .Immutable);

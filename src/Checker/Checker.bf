@@ -55,7 +55,7 @@ class Checker
 			// Generally this is not taking into account other scopes and ifs and stuff, so we definitely need to do that.
 			if ((fun.Body.List.IsEmpty || !fun.Body.List.Back is AstNode.Stmt.Return) && !entity.Type.IsTypeVoid())
 			{
-				reportError(fun.Body.Close, "Function must return value");
+				reportError(fun.Body.Close, scope $"Function of type '{entity.Type.GetName()}' must return value");
 			}
 
 			m_functionStack.PopBack();
@@ -77,7 +77,13 @@ class Checker
 
 		if (let _if = node as AstNode.Stmt.If)
 		{
-			checkExpr(_if.Condition, _scope);
+			let t = checkExpr(_if.Condition, _scope);
+			if (!t.IsTypeBoolean())
+			{
+				// @FIX
+				// Bad error message
+				reportError(_if.Condition, "Conditional expression isn't a boolean");
+			}
 			checkStatement(_if.ThenBranch, _scope);
 		}
 
@@ -122,11 +128,11 @@ class Checker
 			switch (basic_lit.Kind)
 			{
 			case .Number_Int:
-				kind = .Int; break;
+				kind = .UntypedInteger; break;
 			case .Number_Float:
-				kind = .Float32; break;
+				kind = .UntypedFloat; break;
 			case .String:
-				kind = .String; break;
+				kind = .UntypedString; break;
 			default:
 				Runtime.FatalError("Unknown literal!");
 			}
@@ -184,7 +190,7 @@ class Checker
 			let y = checkExpr(ass.Value, _scope);
 			if (!ZenType.AreTypesIdentical(x, y))
 			{
-				// @TODO
+				// @FIX
 				// Bad error message
 				reportError(ass.Op, scope $"Type mismatch in binary op");
 			}
@@ -196,7 +202,18 @@ class Checker
 
 	private void reportError(Token token, String message)
 	{
-		// Log error here.
 		m_errors.Add(new .(token, message));
+	}
+
+	private void reportError(AstNode.Expression expr, String message)
+	{
+		if (let lit = expr as AstNode.Expression.Variable)
+		{
+			m_errors.Add(new .(lit.Name, message));
+		}
+		else
+		{
+			Runtime.FatalError("Not implemented yet!! :*(");
+		}
 	}
 }

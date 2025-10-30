@@ -170,6 +170,12 @@ class Generator
 			emitNode(_for.Body, code);
 		}
 
+		if (let _while = node as AstNode.Stmt.While)
+		{
+			code.AppendLine(scope $"while ({emitExpr(_while.Condition, .. scope .())})");
+			emitNode(_while.Body, code);
+		}
+
 		if (let expr = node as AstNode.Stmt.ExpressionStmt)
 		{
 			code.AppendLine(emitExpr(expr.InnerExpr, .. scope .()));

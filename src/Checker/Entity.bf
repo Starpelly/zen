@@ -32,5 +32,6 @@ abstract class Entity
 	public class Constant : Entity
 	{
 		public AstNode.Stmt.ConstantDeclaration Decl;
+		public Variant Value ~ _.Dispose();
 	}
 }

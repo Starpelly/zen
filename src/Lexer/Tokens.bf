@@ -68,9 +68,6 @@ public enum TokenKind
 	[RegisterKeyword("for")]
 	case For;
 
-	[RegisterKeyword("null")]
-	case Null;
-
 	[RegisterKeyword("fun")]
 	case Function;
 
@@ -79,12 +76,6 @@ public enum TokenKind
 
 	[RegisterKeyword("return")]
 	case Return;
-
-	[RegisterKeyword("true")]
-	case True;
-
-	[RegisterKeyword("false")]
-	case False;
 
 	[RegisterKeyword("var")]
 	case Var;

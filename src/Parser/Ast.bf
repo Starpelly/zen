@@ -141,6 +141,21 @@ abstract class AstNode
 			}
 		}
 
+		public class While : Stmt, IScope
+		{
+			public readonly AstNode.Expression Condition ~ delete _;
+			public readonly AstNode.Stmt Body ~ delete _;
+
+			public Scope Scope { get => m_scope; set => m_scope = value; }
+			private Scope m_scope;
+
+			public this(AstNode.Expression condition, AstNode.Stmt body)
+			{
+				this.Condition = condition;
+				this.Body = body;
+			}
+		}
+
 		public class VariableDeclaration : Stmt
 		{
 			public readonly DeclarationKind Kind;

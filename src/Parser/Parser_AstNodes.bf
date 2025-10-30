@@ -138,6 +138,25 @@ extension Parser
 		return new .(initializer, condition, update, body);
 	}
 
+	private AstNode.Stmt.While getWhileStmt()
+	{
+		consume(.LeftParen, "Expected '('.");
+		AstNode.Expression condition = getExpression();
+
+		if (condition == null)
+		{
+			// @HACK
+			// getExpression() eats the right parenthesis token for some reason, so we need to retreat to prevent another bullshit error.
+			// I'm thinking this should be prevented somehow?
+			retreat();
+		}
+		consume(.RightParen, "Expected ')'.");
+
+		let body = node();
+
+		return new .(condition, body);
+	}
+
 	private AstNode.Stmt node()
 	{
 		if (check(.LeftBrace))

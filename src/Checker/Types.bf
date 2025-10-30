@@ -6,8 +6,10 @@ namespace Zen;
 enum BasicKind
 {
 	Invalid,
+
 	Void,
 	Bool,
+
 	Int8,
 	Int16,
 	Int32,
@@ -16,32 +18,54 @@ enum BasicKind
 	UInt16,
 	UInt32,
 	UInt64,
+
+	Float16,
 	Float32,
 	Float64,
+
 	Int,
 	UInt,
+	UIntPtr,
 	RawPtr,
+
 	String,
+	CString,
+
 	Char8,
 	Char16,
-	Char32
+	Char32,
+
+	TypeID,
+
+	// Untyped types
+	UntypedBool,
+	UntypedInteger,
+	UntypedFloat,
+	UntypedString,
+	UntypedNull
 }
 
-[AllowDuplicates]
-enum BasicFlag : uint32
+enum BasicFlag
 {
-	case Boolean = 0;
-	case Integer = 1;
+	case Boolean = 1;
+	case Integer = _*2;
 	case Unsigned = _*2;
 	case Float = _*2;
 	case Pointer = _*2;
 	case String = _*2;
 	case Char = _*2;
 	case Void = _*2;
+	case Untyped = _*2;
 
 	case Numeric 		= Integer | Float;
 	case Ordered 		= Void | Numeric | Char | String | Pointer;
 	case ConstantType 	= Void | Boolean | Numeric | Char | String | Pointer;
+
+	[Inline]
+	public bool HasFlagInclusive(Self flag)
+	{
+		return (this & flag) != 0;
+	}
 }
 
 struct BasicType
@@ -60,30 +84,36 @@ struct BasicType
 	public const BasicType[?] BasicTypes = .(
 		.(.Void, .Void, "void"),
 
-		.(.Int, .Integer, "int"),
-		.(.Int8, .Integer, "int8"),
-		.(.Int16, .Integer, "int16"),
-		.(.Int32, .Integer, "int32"),
-		.(.Int64, .Integer, "int64"),
+		.(.Int, 	.Integer, "int"),
+		.(.Int8, 	.Integer, "int8"),
+		.(.Int16, 	.Integer, "int16"),
+		.(.Int32, 	.Integer, "int32"),
+		.(.Int64, 	.Integer, "int64"),
 
-		.(.UInt, .Integer | .Unsigned, "uint"),
-		.(.UInt8, .Integer | .Unsigned, "uint8"),
-		.(.UInt16, .Integer | .Unsigned, "uint16"),
-		.(.UInt32, .Integer | .Unsigned, "uint32"),
-		.(.UInt64, .Integer | .Unsigned, "uint64"),
+		.(.UInt, 	.Integer | .Unsigned, "uint"),
+		.(.UInt8, 	.Integer | .Unsigned, "uint8"),
+		.(.UInt16, 	.Integer | .Unsigned, "uint16"),
+		.(.UInt32, 	.Integer | .Unsigned, "uint32"),
+		.(.UInt64, 	.Integer | .Unsigned, "uint64"),
 
 		.(.Float32, .Float, "float"),
 		.(.Float32, .Float, "float32"),
 		.(.Float64, .Float, "float64"),
 
-		.(.Bool, .Boolean, "bool"),
+		.(.Bool, 	.Boolean, "bool"),
 
-		.(.Char8, .Char, "char"),
-		.(.Char8, .Char, "char8"),
-		.(.Char16, .Char, "char16"),
-		.(.Char32, .Char, "char32"),
+		.(.Char8, 	.Char, "char"),
+		.(.Char8, 	.Char, "char8"),
+		.(.Char16, 	.Char, "char16"),
+		.(.Char32, 	.Char, "char32"),
 
-		.(.String, .String, "string")
+		.(.String, 	.String, "string"),
+
+		.(.UntypedBool, 	.Boolean | .Untyped, "untyped bool"),
+		.(.UntypedInteger, 	.Integer | .Untyped, "untyped int"),
+		.(.UntypedFloat, 	.Float   | .Untyped, "untyped float"),
+		.(.UntypedString, 	.String  | .Untyped, "untyped string"),
+		.(.UntypedNull, 	.Untyped, "untyped null"),
 	);
 
 	public static Result<BasicType> FromName(StringView name)
@@ -148,56 +178,56 @@ public enum ZenType
 	public bool IsTypeVoid()
 	{
 		if (this case .Basic(let basic))
-			return (basic.Flags & .Void) != 0;
+			return basic.Flags.HasFlagInclusive(.Void);
 		return false;
 	}
 
 	public bool IsTypeBoolean()
 	{
 		if (this case .Basic(let basic))
-			return (basic.Flags & .Boolean) != 0;
+			return basic.Flags.HasFlagInclusive(.Boolean);
 		return false;
 	}
 
 	public bool IsTypeInteger()
 	{
 		if (this case .Basic(let basic))
-			return (basic.Flags & .Integer) != 0;
+			return basic.Flags.HasFlagInclusive(.Integer);
 		return false;
 	}
 
 	public bool IsTypeUnsigned()
 	{
 		if (this case .Basic(let basic))
-			return (basic.Flags & .Unsigned) != 0;
+			return basic.Flags.HasFlagInclusive(.Unsigned);
 		return false;
 	}
 
 	public bool IsTypeNumeric()
 	{
 		if (this case .Basic(let basic))
-			return (basic.Flags & .Numeric) != 0;
+			return basic.Flags.HasFlagInclusive(.Numeric);
 		return false;
 	}
 
 	public bool IsTypeString()
 	{
 		if (this case .Basic(let basic))
-			return (basic.Flags & .String) != 0;
+			return basic.Flags.HasFlagInclusive(.String);
 		return false;
 	}
 
 	public bool IsTypeFloat()
 	{
 		if (this case .Basic(let basic))
-			return (basic.Flags & .Float) != 0;
+			return basic.Flags.HasFlagInclusive(.Float);
 		return false;
 	}
 
 	public bool IsTypePointer()
 	{
 		if (this case .Basic(let basic))
-			return (basic.Flags & .Pointer) != 0;
+			return basic.Flags.HasFlagInclusive(.Pointer);
 		return false;
 	}
 
