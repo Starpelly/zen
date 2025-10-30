@@ -22,7 +22,10 @@ typedef			 double		float64;
 // Forward Declarations
 // --------------------------------------------------------------
 static void main ();
-static void print_tests ();
+static int add (int x, int y);
+static void abc_test ();
+static void loop_test ();
+static void print_test ();
 static int fibonacci (int n);
 // --------------------------------------------------------------
 // Functions
@@ -30,7 +33,8 @@ static int fibonacci (int n);
 static void main ()
 {
 	int fib = fibonacci(10);
-	print_tests();
+	printf("%s\n", "Hello world!");
+	print_test();
 	while (true)
 	{
 	}
@@ -38,13 +42,31 @@ static void main ()
 	{
 	}
 }
-static void print_tests ()
+static int add (int x, int y)
+{
+	return x + y;
+}
+static void abc_test ()
+{
+	int a = add(1, 1);
+	int b = a + a;
+	int c = a + b;
+	printf("%i", c);
+}
+static void loop_test ()
+{
+	for (int i = 0; i < 10; i = i + 1)
+	{
+		printf("%s", "welcome to zen!");
+	}
+}
+static void print_test ()
 {
 	int val_int = 1;
 	float val_float = 1.0;
 	bool val_bool = false;
-	printf("%i", val_int );
-	printf("%f\n", val_float );
+	printf("%i\n", val_int);
+	printf("%f\n", val_float);
 	printf("%s\n", val_bool  ? "true" : "false");
 }
 static int fibonacci (int n)

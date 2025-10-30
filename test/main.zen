@@ -1,5 +1,4 @@
-// #load "std/math.zen";
-#load "std/print.zen";
+#load "test.zen";
 
 #load "fibonacci.zen";
 
@@ -7,7 +6,8 @@ fun void main()
 {
 	let int fib = fibonacci(10);
 
-	print_tests();
+	println("Hello world!");
+	print_test();
 
 	while (true)
 	{
@@ -25,15 +25,4 @@ fun void main()
 	{
 		
 	}
-}
-
-fun void print_tests()
-{
-	let int val_int = 1;
-	let float val_float = 1.0;
-	let bool val_bool = false;
-
-	println(val_int);
-	println(val_float);
-	println(val_bool);
 }

@@ -255,6 +255,11 @@ class Generator
 						format.Set("%s");
 						extra.Set(" ? \"true\" : \"false\"");
 					}
+					else if (argType.IsTypeString())
+					{
+						// No format
+						format.Set("%s");
+					}
 					else
 					{
 						Runtime.FatalError("Can't convert this type! :(");
@@ -263,7 +268,18 @@ class Generator
 					if (builtinName == "println")
 						format.Append("\\n");
 
-					outStr.Append(scope $"printf(\"{format}\", {arguments.Code} {extra})");
+					outStr.Append("printf");
+					outStr.Append("(");
+					if (!format.IsEmpty)
+					{
+						outStr.Append(scope $"\"{format}\", ");
+					}
+					outStr.Append(arguments.Code);
+					if (!extra.IsEmpty)
+					{
+						outStr.Append(scope $" {extra}");
+					}
+					outStr.Append(")");
 					break;
 				}
 			}

@@ -1,16 +1,32 @@
-fun int abc_test()
+fun int add(let int x, let int y)
+{
+	return x + y;
+}
+
+fun void abc_test()
 {
 	let int a = add(1, 1);	// 2
 	let int b = a + a;		// 4
 	let int c = a + b;		// 6
 
-	print c;
+	print(c);
 }
 
 fun void loop_test()
 {
 	for (let int i = 0; i < 10; i = i + 1)
 	{
-		printf("welcome to zen!");
+		print("welcome to zen!");
 	}
+}
+
+fun void print_test()
+{
+	let int val_int = 1;
+	let float val_float = 1.0;
+	let bool val_bool = false;
+
+	println(val_int);
+	println(val_float);
+	println(val_bool);
 }
