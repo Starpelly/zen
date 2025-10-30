@@ -66,7 +66,10 @@ class Parser
 		{
 			return getVariableStmt(previous(), .Mutable);
 		}
-
+		if (match(.Const))
+		{
+			return getConstStmt();
+		}
 		if (match(.Hash))
 		{
 			let token = peek(); advance();

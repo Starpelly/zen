@@ -14,6 +14,11 @@ typedef			 char		int8;
 typedef			 float		float32;
 typedef			 double		float64;
 
+static void main ()
+{
+	int fib = fibonacci(10);
+	printf("%d\n", fib);
+}
 static int fibonacci (int n)
 {
 	if (n <= 1)
@@ -29,29 +34,4 @@ static int fibonacci (int n)
 		result = sum;
 	}
 	return result;
-}
-static int add (int a, int b)
-{
-	int c = a + b;
-	return c;
-}
-static int sub (int a, int b)
-{
-	int c = a - b;
-	return c;
-}
-static int mul (int a, int b)
-{
-	int c = a * b;
-	return c;
-}
-static int div (int a, int b)
-{
-	int c = a / b;
-	return c;
-}
-static void main ()
-{
-	int fib = fibonacci(10);
-	printf("%d\n", fib);
 }

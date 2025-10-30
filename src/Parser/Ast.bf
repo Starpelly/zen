@@ -149,6 +149,20 @@ abstract class AstNode
 			}
 		}
 
+		public class ConstantDeclaration : Stmt
+		{
+			public readonly Token Name;
+			public readonly Token Type;
+			public readonly Expression Initializer ~ delete _;
+
+			public this(Token name, Token type, Expression init)
+			{
+				this.Name = name;
+				this.Type = type;
+				this.Initializer = init;
+			}
+		}
+
 		public class Print : Stmt
 		{
 			public readonly Expression Expr ~ if (_ != null) delete _;

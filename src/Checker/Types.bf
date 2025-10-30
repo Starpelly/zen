@@ -27,16 +27,17 @@ enum BasicKind
 	Char32
 }
 
+[AllowDuplicates]
 enum BasicFlag : uint32
 {
-	case Void = 1;
-	case Boolean = 2;
-	case Integer = _*2;
+	case Boolean = 0;
+	case Integer = 1;
 	case Unsigned = _*2;
 	case Float = _*2;
 	case Pointer = _*2;
 	case String = _*2;
 	case Char = _*2;
+	case Void = _*2;
 
 	case Numeric 		= Integer | Float;
 	case Ordered 		= Void | Numeric | Char | String | Pointer;

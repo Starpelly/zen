@@ -35,11 +35,14 @@ class Tokenizer
 	private int m_line = 0;
 	private int m_column = 0;
 
+	private readonly Guid m_file;
+
 	private readonly StringView m_source;
 
-	public this(StringView source)
+	public this(StringView source, Guid file)
 	{
-		m_source = source;
+		this.m_source = source;
+		this.m_file = file;
 	}
 
 	public List<Token> Run()
@@ -217,7 +220,7 @@ class Tokenizer
 			}
 		}
 
-		m_tokens.Add(.(type, substring(m_start, m_current), m_line, m_column - (m_current - m_start)));
+		m_tokens.Add(.(type, substring(m_start, m_current), m_line, m_column - (m_current - m_start), m_file));
 		// addToken(type/*, getValue()*/);
 	}
 
@@ -231,7 +234,7 @@ class Tokenizer
 
 	private void addToken(TokenKind type, StringView lexeme/*, Variant literal*/)
 	{
-		m_tokens.Add(.(type, lexeme, m_line, m_column - (m_current - m_start)));
+		m_tokens.Add(.(type, lexeme, m_line, m_column - (m_current - m_start), m_file));
 	}
 
 	private void increaseLine()

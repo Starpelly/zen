@@ -28,4 +28,9 @@ abstract class Entity
 	{
 		public AstNode.Stmt.VariableDeclaration Decl;
 	}
+
+	public class Constant : Entity
+	{
+		public AstNode.Stmt.ConstantDeclaration Decl;
+	}
 }

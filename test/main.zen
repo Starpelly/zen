@@ -1,7 +1,8 @@
-// #load "fibonacci.zen";
-// #load "math.zen";
+#load "fibonacci.zen";
 // #load "test.zen";
 // #load "std/math.zen";
+
+const int FIB_TEST = 10;
 
 fun void main()
 {

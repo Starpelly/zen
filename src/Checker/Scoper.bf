@@ -10,10 +10,12 @@ class Scoper
 	private readonly Scope m_globalScope ~ delete _;
 	private Scope m_currentScope;
 
+	private readonly List<CompilerError> m_errors;
+
 	public this(Ast ast, List<CompilerError> errs)
 	{
 		this.m_ast = ast;
-		// this.m_errors = errs;
+		this.m_errors = errs;
 
 		m_globalScope = new Scope("Global Scope", null);
 		m_currentScope = m_globalScope;
@@ -51,7 +53,7 @@ class Scoper
 			let entity = new Entity.Function();
 			entity.Token = fun.Name;
 			entity.Decl = fun;
-			// entity.Type = .Basic(ZenType.GetBasicType(fun.Type.Lexeme));
+			entity.Type = getTypeFromToken(fun.Type);
 			m_currentScope.TryDeclare(fun.Name.Lexeme, entity);
 		}
 
@@ -67,8 +69,17 @@ class Scoper
 			let entity = new Entity.Variable();
 			entity.Token = v.Name;
 			entity.Decl = v;
-			// entity.Type = .Basic(ZenType.GetBasicType(v.Type.Lexeme));
+			entity.Type = getTypeFromToken(v.Type);
 			m_currentScope.TryDeclare(v.Name.Lexeme, entity);
+		}
+
+		if (let c = node as AstNode.Stmt.ConstantDeclaration)
+		{
+			let entity = new Entity.Constant();
+			entity.Token = c.Name;
+			entity.Decl = c;
+			entity.Type = getTypeFromToken(c.Type);
+			m_currentScope.TryDeclare(c.Name.Lexeme, entity);
 		}
 
 		if (let _if = node as AstNode.Stmt.If)
@@ -115,5 +126,24 @@ class Scoper
 		{
 			PrintScopeTree(child, indent + 1);
 		}
+	}
+
+	// @NOTE
+	// I'm thinking this should be a separate pass, like "Typer" or something that types all the entities...
+	// Maybe this is fine and should change from "Scoper" to "Entity creator" or something? Hmmmm....
+	private ZenType getTypeFromToken(Token token)
+	{
+		let res = BasicType.FromName(token.Lexeme);
+		if (res case .Ok(let val))
+			return .Basic(val);
+
+		reportError(token, "Unknown data type.");
+		return .Invalid;
+	}
+
+	private void reportError(Token token, String message)
+	{
+		// Log error here.
+		m_errors.Add(new .(token, message));
 	}
 }

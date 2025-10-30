@@ -159,6 +159,31 @@ extension Parser
 		return new .(kind, name, type, initializer);
 	}
 
+	private AstNode.Stmt.ConstantDeclaration getConstStmt()
+	{
+		let type = consumeType();
+		let name = consume(.Identifier, "Expected constant name.");
+
+		AstNode.Expression initializer = null;
+
+		if (match(.Equal))
+		{
+			initializer = getExpression();
+		}
+		else if (check(.Semicolon))
+		{
+			reportError(name, "Constants require an initializer.");
+		}
+		else
+		{
+			reportError(peek(), "Unexpected token.");
+		}
+
+		consume(.Semicolon, "Semicolon expected.");
+
+		return new .(name, type, initializer);
+	}
+
 	private AstNode.Stmt.Print getPrintStmt()
 	{
 		AstNode.Expression expr = getExpression();

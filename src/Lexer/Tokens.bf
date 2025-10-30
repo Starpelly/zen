@@ -125,6 +125,9 @@ public enum TokenKind
 	[RegisterKeyword("this")]
 	case This;
 
+	[RegisterKeyword("const")]
+	case Const;
+
 	public Result<RegisterKeywordAttribute> GetKeyword()
 	{
 		var memInfo = typeof(Self).GetField(this.ToString(.. scope .())).Value;
@@ -142,12 +145,16 @@ struct Token
 	public readonly int Line;
 	public readonly int Column;
 
-	public this(TokenKind type, StringView lexeme, int line, int col)
+	public readonly Guid File;
+
+	public this(TokenKind type, StringView lexeme, int line, int col, Guid file)
 	{
 		this.Kind = type;
 		this.Lexeme = lexeme;
 
 		this.Line = line;
 		this.Column = col;
+
+		this.File = file;
 	}
 }

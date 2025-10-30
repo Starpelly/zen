@@ -40,7 +40,6 @@ class Checker
 		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
 		{
 			let entity = fun.Scope.Lookup(fun.Name.Lexeme).Value as Entity.Function;
-			entity.Type = getType(fun.Type);
 
 			m_functionStack.Add(entity);
 
@@ -88,7 +87,7 @@ class Checker
 		if (let v = entity as Entity.Variable)
 		{
 			if (v.Decl.Initializer != null)
-			checkExpr(v.Decl.Initializer, _scope);
+				checkExpr(v.Decl.Initializer, _scope);
 		}
 	}
 
@@ -133,6 +132,11 @@ class Checker
 				reportError(@var.Name, scope $"Undeclared identifier '{@var.Name.Lexeme}'");
 				return .Invalid;
 			}
+
+			if (let constant = entity.Value as Entity.Constant)
+			{
+			}
+
 			return entity.Value.Type;
 		}
 
@@ -144,6 +148,12 @@ class Checker
 				reportError(funCall.Callee.Name, scope $"Undeclared identifier '{funCall.Callee.Name.Lexeme}'");
 				return .Invalid;
 			}
+
+			for (let arg in funCall.Arguments)
+			{
+				checkExpr(arg, _scope);
+			}
+
 			return entity.Value.Type;
 		}
 
@@ -161,16 +171,6 @@ class Checker
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");
-	}
-
-	private ZenType getType(Token token)
-	{
-		let res = BasicType.FromName(token.Lexeme);
-		if (res case .Ok(let val))
-			return .Basic(val);
-
-		reportError(token, "Unknown data type.");
-		return .Invalid;
 	}
 
 	private void reportError(Token token, String message)
