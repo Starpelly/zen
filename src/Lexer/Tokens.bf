@@ -43,12 +43,13 @@ public enum TokenKind
 	case MinusEqual;		// -=
 	case StarEqual;			// *=
 	case ForwardSlashEqual;	// /=
-	case BangEqual;			// !=
 	case ModulusEqual;		// %=
-	case EqualEqual;		// ==
-	case GreaterEqual;		// >=
-	case LessEqual;			// <=
 	case DoubleColon;		// ::
+
+	case EqualEqual;		// ==
+	case BangEqual;			// !=
+	case LessEqual;			// <=
+	case GreaterEqual;		// >=
 
 	case Identifier;
 	case Comment;

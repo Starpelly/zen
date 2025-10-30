@@ -17,8 +17,8 @@ fun void main()
 	}
 		*/
 
-		if (null)
-		{
-
-		}
+	for (let int i = 0; i < 20; i = i + 1)
+	{
+		
+	}
 }

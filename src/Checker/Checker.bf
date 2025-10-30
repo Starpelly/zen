@@ -77,13 +77,7 @@ class Checker
 
 		if (let _if = node as AstNode.Stmt.If)
 		{
-			let t = checkExpr(_if.Condition, _scope);
-			if (!t.IsTypeBoolean())
-			{
-				// @FIX
-				// Bad error message
-				reportError(_if.Condition, "Conditional expression isn't a boolean");
-			}
+			checkExpressionIsTruthy(_if.Condition, _scope);
 			checkStatement(_if.ThenBranch, _scope);
 		}
 
@@ -95,7 +89,7 @@ class Checker
 				checkStatement(_for.Initialization, forScope);
 
 			if (_for.Condition != null)
-				checkExpr(_for.Condition, forScope);
+							checkExpressionIsTruthy(_for.Condition, forScope);
 
 			if (_for.Updation != null)
 				checkExpr(_for.Updation, forScope);
@@ -142,12 +136,24 @@ class Checker
 
 		if (let bin = expr as AstNode.Expression.Binary)
 		{
+			// Check if it's a conditional boolean value.
+			switch (bin.Op.Kind)
+			{
+			case .Less,			// <
+				 .LessEqual,	// <=
+				 .Greater,		// >
+				 .GreaterEqual,	// >=
+				 .EqualEqual,	// ==
+				 .BangEqual:	// !=
+				return .Basic(BasicType.FromKind(.UntypedBool));
+			default:
+			}
+
 			let x = checkExpr(bin.Left, _scope);
 			let y = checkExpr(bin.Right, _scope);
-			if (!ZenType.AreTypesIdentical(x, y))
-			{
-				reportError(bin.Op, scope $"Type mismatch in binary op '{bin.Op.Lexeme}' ({x.GetName()}) to ({y.GetName()})");
-			}
+			checkTypesComparable(bin.Op, x, y);
+
+			// If X and Y matches, we can just return X because they're the same type.
 			return x;
 		}
 
@@ -188,16 +194,34 @@ class Checker
 		{
 			let x = checkExpr(ass.Assignee, _scope);
 			let y = checkExpr(ass.Value, _scope);
-			if (!ZenType.AreTypesIdentical(x, y))
-			{
-				// @FIX
-				// Bad error message
-				reportError(ass.Op, scope $"Type mismatch in binary op");
-			}
+			checkTypesComparable(ass.Op, x, y);
+
 			return x;
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");
+	}
+
+	private void checkTypesComparable(Token token, ZenType x, ZenType y)
+	{
+		// @HACK
+		if (!ZenType.AreTypesIdenticalUntyped(x, y))
+		{
+			// @FIX
+			// Bad error message
+			reportError(token, scope $"Types mismatch ({x.GetName()}) to ({y.GetName()})");
+		}
+	}
+
+	private void checkExpressionIsTruthy(AstNode.Expression expr, Scope _scope)
+	{
+		let t = checkExpr(expr, _scope);
+		if (!t.IsTypeBoolean())
+		{
+			// @FIX
+			// Bad error message
+			reportError(expr, "Conditional expression isn't a boolean");
+		}
 	}
 
 	private void reportError(Token token, String message)
@@ -207,6 +231,8 @@ class Checker
 
 	private void reportError(AstNode.Expression expr, String message)
 	{
+		// @TODO
+		// What the fuck?
 		if (let lit = expr as AstNode.Expression.Variable)
 		{
 			m_errors.Add(new .(lit.Name, message));

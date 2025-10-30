@@ -268,11 +268,28 @@ public enum ZenType
 		if (x == y)
 			return true;
 
-		// if (let bx = x as Basic)
 		if (x case .Basic(let bx))
 		{
 			if (y case .Basic(let by))
 				return bx.Kind == by.Kind;
+		}
+
+		return false;
+	}
+
+	// @HACK
+	// I don't know how I feel about this...
+	public static bool AreTypesIdenticalUntyped(ZenType x, ZenType y)
+	{
+		if (x == y)
+			return true;
+
+		if (x case .Basic(let bx))
+		{
+			if (y case .Basic(let by))
+			{
+				return bx.Flags.HasFlagInclusive(by.Flags);
+			}
 		}
 
 		return false;
