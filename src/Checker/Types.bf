@@ -6,6 +6,7 @@ namespace Zen;
 enum BasicKind
 {
 	Invalid,
+	Void,
 	Bool,
 	Int8,
 	Int16,
@@ -26,11 +27,11 @@ enum BasicKind
 	Char32
 }
 
-[AllowDuplicates]
 enum BasicFlag : uint32
 {
-	case Boolean = 0;
-	case Integer = 1;
+	case Void = 1;
+	case Boolean = 2;
+	case Integer = _*2;
 	case Unsigned = _*2;
 	case Float = _*2;
 	case Pointer = _*2;
@@ -38,8 +39,8 @@ enum BasicFlag : uint32
 	case Char = _*2;
 
 	case Numeric 		= Integer | Float;
-	case Ordered 		= Numeric | Char | String | Pointer;
-	case ConstantType 	= Boolean | Numeric | Char | String | Pointer;
+	case Ordered 		= Void | Numeric | Char | String | Pointer;
+	case ConstantType 	= Void | Boolean | Numeric | Char | String | Pointer;
 }
 
 struct BasicType
@@ -54,29 +55,10 @@ struct BasicType
 		this.Flags = flags;
 		this.Name = name;
 	}
-}
-
-enum TypeKind
-{
-	Invalid,
-
-	Basic,
-	Array,
-	Struct,
-	Pointer,
-	Named,
-	Tuple,
-	Function,
-
-	Count
-}
-
-public enum ZenType
-{
-	case Invalid;
-	case Basic(BasicType basic);
 
 	public const BasicType[?] BasicTypes = .(
+		.(.Void, .Void, "void"),
+
 		.(.Int, .Integer, "int"),
 		.(.Int8, .Integer, "int8"),
 		.(.Int16, .Integer, "int16"),
@@ -103,7 +85,7 @@ public enum ZenType
 		.(.String, .String, "string")
 	);
 
-	public static Result<BasicType> GetBasicType(StringView name)
+	public static Result<BasicType> FromName(StringView name)
 	{
 		for (let type in BasicTypes)
 		{
@@ -116,7 +98,7 @@ public enum ZenType
 		return .Err;
 	}
 
-	public static Result<BasicType> GetBasicType(BasicKind kind)
+	public static Result<BasicType> FromKind(BasicKind kind)
 	{
 		for (let type in BasicTypes)
 		{
@@ -128,6 +110,27 @@ public enum ZenType
 
 		return .Err;
 	}
+}
+
+enum TypeKind
+{
+	Invalid,
+
+	Basic,
+	Array,
+	Struct,
+	Pointer,
+	Named,
+	Tuple,
+	Function,
+
+	Count
+}
+
+public enum ZenType
+{
+	case Invalid;
+	case Basic(BasicType basic);
 
 	/*
 	public class Basic : ZenType
@@ -140,6 +143,13 @@ public enum ZenType
 		}
 	}
 	*/
+
+	public bool IsTypeVoid()
+	{
+		if (this case .Basic(let basic))
+			return (basic.Flags & .Void) != 0;
+		return false;
+	}
 
 	public bool IsTypeBoolean()
 	{

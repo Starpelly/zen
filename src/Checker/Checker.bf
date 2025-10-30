@@ -40,10 +40,19 @@ class Checker
 		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
 		{
 			let entity = fun.Scope.Lookup(fun.Name.Lexeme).Value as Entity.Function;
+			entity.Type = getType(fun.Type);
 
 			m_functionStack.Add(entity);
 
 			checkStatementList(fun.Body.List, fun.Scope);
+
+			// @HACK, @TODO
+			// Just to remember this should be an error, functions that don't have a "void" value should always return a value.
+			// Generally this is not taking into account other scopes and ifs and stuff, so we definitely need to do that.
+			if (!fun.Body.List.Back is AstNode.Stmt.Return && !entity.Type.IsTypeVoid())
+			{
+				reportError(fun.Body.Close, "Function must return value");
+			}
 
 			m_functionStack.PopBack();
 		}
@@ -102,7 +111,7 @@ class Checker
 				Runtime.FatalError("Unknown literal!");
 			}
 
-			return .Basic(ZenType.GetBasicType(kind).Value);
+			return .Basic(BasicType.FromKind(kind));
 		}
 
 		if (let bin = expr as AstNode.Expression.Binary)
@@ -152,6 +161,16 @@ class Checker
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");
+	}
+
+	private ZenType getType(Token token)
+	{
+		let res = BasicType.FromName(token.Lexeme);
+		if (res case .Ok(let val))
+			return .Basic(val);
+
+		reportError(token, "Unknown data type.");
+		return .Invalid;
 	}
 
 	private void reportError(Token token, String message)

@@ -51,7 +51,7 @@ class Scoper
 			let entity = new Entity.Function();
 			entity.Token = fun.Name;
 			entity.Decl = fun;
-			entity.Type = .Basic(ZenType.GetBasicType(fun.Type.Lexeme));
+			// entity.Type = .Basic(ZenType.GetBasicType(fun.Type.Lexeme));
 			m_currentScope.TryDeclare(fun.Name.Lexeme, entity);
 		}
 
@@ -67,7 +67,7 @@ class Scoper
 			let entity = new Entity.Variable();
 			entity.Token = v.Name;
 			entity.Decl = v;
-			entity.Type = .Basic(ZenType.GetBasicType(v.Type.Lexeme));
+			// entity.Type = .Basic(ZenType.GetBasicType(v.Type.Lexeme));
 			m_currentScope.TryDeclare(v.Name.Lexeme, entity);
 		}
 

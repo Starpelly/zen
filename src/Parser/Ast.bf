@@ -69,11 +69,11 @@ abstract class AstNode
 			public Scope Scope { get => m_scope; set => m_scope = value; }
 			private Scope m_scope;
 
-			public this(List<AstNode.Stmt> list/*, Token open, Token close*/)
+			public this(List<AstNode.Stmt> list, Token open, Token close)
 			{
 				this.List = list;
-				// this.Open = open;
-				// this.Close = close;
+				this.Open = open;
+				this.Close = close;
 			}
 		}
 

@@ -5,16 +5,16 @@ namespace Zen;
 
 extension Parser
 {
-	private List<AstNode.Stmt> scanBlock(List<AstNode.Stmt> list)
+	private List<AstNode.Stmt> scanBlock(List<AstNode.Stmt> list, out Token open, out Token close)
 	{
-		consume(.LeftBrace, "Expected '}'.");
+		open = consume(.LeftBrace, "Expected '{'.");
 
 		while (!check(.RightBrace) && !isAtEnd())
 		{
 			list.Add(scanNextStmt());
 		}
 
-		consume(.RightBrace, "Expected '}'.");
+		close = consume(.RightBrace, "Expected '}'.");
 
 		return list;
 	}
@@ -75,7 +75,8 @@ extension Parser
 		consume(.RightParen, "Expected ')'.");
 
 		// Body
-		AstNode.Stmt.Block body = new .(scanBlock(.. new .()));
+		let bodyList = scanBlock(.. new .(), var open, var close);
+		let body = new AstNode.Stmt.Block(bodyList, open, close);
 
 		return new .(name, type, body, parameters);
 	}
@@ -134,8 +135,8 @@ extension Parser
 		if (check(.LeftBrace))
 		{
 			let list = new List<AstNode.Stmt>();
-			let blockNodes = scanBlock(list);
-			return new AstNode.Stmt.Block(blockNodes);
+			let blockNodes = scanBlock(list, var open, var close);
+			return new AstNode.Stmt.Block(blockNodes, open, close);
 		}
 
 		return getExpressionStmt();

@@ -50,7 +50,7 @@ static int div (int a, int b)
 	int c = a / b;
 	return c;
 }
-static int main ()
+static void main ()
 {
 	int fib = fibonacci(10);
 	printf("%d\n", fib);
