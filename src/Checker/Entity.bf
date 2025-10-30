@@ -9,13 +9,13 @@ public enum EntityKind
 	Constant,
 	Variable,
 	TypeName,
-	Function
+	Function,
+	Builtin
 }
 
 /// An entity is a named "thing" in the language.
 abstract class Entity
 {
-	public Guid ID = .Create();
 	public Token Token;
 	public ZenType Type;
 
@@ -33,5 +33,10 @@ abstract class Entity
 	{
 		public AstNode.Stmt.ConstantDeclaration Decl;
 		public Variant Value ~ _.Dispose();
+	}
+
+	public class Builtin : Entity
+	{
+		public StringView Name;
 	}
 }

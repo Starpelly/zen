@@ -118,6 +118,12 @@ class Checker
 
 	private ZenType checkExpr(AstNode.Expression expr, Scope _scope)
 	{
+		mixin returnVal(ZenType type)
+		{
+			expr.Type = type;
+			return type;
+		}
+
 		if (let lit = expr as AstNode.Expression.Literal)
 		{
 			BasicKind kind = .Invalid;
@@ -135,7 +141,7 @@ class Checker
 				Runtime.FatalError("Unknown literal!");
 			}
 
-			return .Basic(BasicType.FromKind(kind));
+			returnVal!(ZenType.Basic(BasicType.FromKind(kind)));
 		}
 
 		if (let bin = expr as AstNode.Expression.Binary)
@@ -158,7 +164,7 @@ class Checker
 			checkTypesComparable(bin.Op, x, y);
 
 			// If X and Y matches, we can just return X because they're the same type.
-			return x;
+			returnVal!(x);
 		}
 
 		if (let @var = expr as AstNode.Expression.Variable)
@@ -174,7 +180,7 @@ class Checker
 			{
 			}
 
-			return entity.Value.Type;
+			returnVal!(entity.Value.Type);
 		}
 
 		if (let funCall = expr as AstNode.Expression.Call)
@@ -191,7 +197,7 @@ class Checker
 				checkExpr(arg, _scope);
 			}
 
-			return entity.Value.Type;
+			returnVal!(entity.Value.Type);
 		}
 
 		if (let ass = expr as AstNode.Expression.Assign)
@@ -200,7 +206,7 @@ class Checker
 			let y = checkExpr(ass.Value, _scope);
 			checkTypesComparable(ass.Op, x, y);
 
-			return x;
+			returnVal!(x);
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");

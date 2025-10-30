@@ -3,6 +3,28 @@ using System.Collections;
 
 namespace Zen;
 
+struct BuiltinFunction
+{
+	public readonly String Name;
+	public readonly uint ArgCount;
+	public readonly bool Variadic;
+
+	public this(String name, uint argCount, bool variadic)
+	{
+		this.Name = name;
+		this.ArgCount = argCount;
+		this.Variadic = variadic;
+	}
+}
+
+static
+{
+	public const BuiltinFunction[?] BuiltinFunctions = .(
+		.("print", 1, true),
+		.("println", 1, true)
+	);
+}
+
 class Scoper
 {
 	private readonly Ast m_ast;
@@ -23,6 +45,16 @@ class Scoper
 		addGlobalConstant("null", .Basic(BasicType.FromKind(.UntypedNull)), default);
 		addGlobalConstant("true", .Basic(BasicType.FromKind(.UntypedBool)), Variant.Create<bool>(true));
 		addGlobalConstant("false", .Basic(BasicType.FromKind(.UntypedBool)), Variant.Create<bool>(false));
+
+		// Built in functions
+		for (let fun in BuiltinFunctions)
+		{
+			let entity = new Entity.Builtin();
+			entity.Token = .(.Identifier, "", 0, 0, .Empty);
+			entity.Type = .Invalid;
+			entity.Name = fun.Name;
+			m_globalScope.Entities.Add(fun.Name, entity);
+		}
 	}
 
 	private void addGlobalConstant(String name, ZenType type, Variant value)

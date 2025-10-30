@@ -1,22 +1,39 @@
 // #load "std/math.zen";
 #load "std/print.zen";
 
-// #load "fibonacci.zen";
-// #load "test.zen";
+#load "fibonacci.zen";
 
 fun void main()
 {
-	// let int fib = fibonacci(10);
+	let int fib = fibonacci(10);
 
-	// test();
+	print_tests();
 
 	while (true)
 	{
-		printf("hello!");
+		
 	}
+
+	/*
+	while (true)
+	{
+		printstr("hello!");
+	}
+	*/
 
 	for (let int i = 0; i < 20; i = i + 1)
 	{
 		
 	}
+}
+
+fun void print_tests()
+{
+	let int val_int = 1;
+	let float val_float = 1.0;
+	let bool val_bool = false;
+
+	println(val_int);
+	println(val_float);
+	println(val_bool);
 }

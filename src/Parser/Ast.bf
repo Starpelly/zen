@@ -212,6 +212,8 @@ abstract class AstNode
 	/// Expression nodes.
 	public abstract class Expression : AstNode
 	{
+		public ZenType Type;
+
 		public class Binary : Expression
 		{
 			public readonly Expression Left ~ delete _;

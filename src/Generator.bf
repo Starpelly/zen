@@ -219,7 +219,58 @@ class Generator
 					arguments.Append(", ");
 			}
 
-			outStr.Append(scope $"{emitExpr(call.Callee, .. scope .())}({arguments.Code})");
+			// @TODO
+			// I don't like that this is here...
+			// But it might be okay... for now...
+			Result<BuiltinFunction> builtinFunc = .Err;
+			for (let builtin in BuiltinFunctions)
+			{
+				if (builtin.Name == call.Callee.Name.Lexeme)
+				{
+					builtinFunc = .Ok(builtin);
+				}
+			}
+
+			if (builtinFunc != .Err)
+			{
+				let builtinName = builtinFunc.Value.Name;
+				switch (builtinName)
+				{
+				case "print",
+					 "println":
+					String format = scope .();
+					String extra = scope .();
+
+					let argType = call.Arguments[0].Type;
+					if (argType.IsTypeInteger())
+					{
+						format.Set("%i");
+					}
+					else if (argType.IsTypeFloat())
+					{
+						format.Set("%f");
+					}
+					else if (argType.IsTypeBoolean())
+					{
+						format.Set("%s");
+						extra.Set(" ? \"true\" : \"false\"");
+					}
+					else
+					{
+						Runtime.FatalError("Can't convert this type! :(");
+					}
+
+					if (builtinName == "println")
+						format.Append("\\n");
+
+					outStr.Append(scope $"printf(\"{format}\", {arguments.Code} {extra})");
+					break;
+				}
+			}
+			else
+			{
+				outStr.Append(scope $"{emitExpr(call.Callee, .. scope .())}({arguments.Code})");
+			}
 		}
 
 		if (let ass = expr as AstNode.Expression.Assign)
