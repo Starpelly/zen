@@ -1,0 +1,8 @@
+fun int abc_test()
+{
+	let int a = add(1, 1);	// 2
+	let int b = a + a;		// 4
+	let int c = a + b;		// 6
+
+	print c;
+}

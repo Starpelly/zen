@@ -1,0 +1,11 @@
+#load "fibonacci.zen";
+// #load "math.zen";
+// #load "test.zen";
+#load "std/math.zen";
+
+fun int main()
+{
+	let int fib = fibonacci(10);
+
+	print fib;
+}

@@ -1,0 +1,32 @@
+fun int add(let int a, let int b)
+{
+	let int c = a + b;
+	return c;
+}
+
+fun int sub(let int a, let int b)
+{
+	let int c = a - b;
+	return c;
+}
+
+fun int mul(let int a, let int b)
+{
+	let int c = a * b;
+	return c;
+}
+
+fun int div(let int a, let int b)
+{
+	let int c = a / b;
+	return c;
+}
+
+/*
+fun int abs(let int val)
+{
+    if (val < 0)
+        return -val;
+    return val;
+}
+*/

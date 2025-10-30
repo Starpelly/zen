@@ -1,0 +1,6 @@
+FileVersion = 1
+
+[Project]
+Name = "zen"
+StartupObject = "Zen.Program"
+DefaultNamespace = "Zen"
