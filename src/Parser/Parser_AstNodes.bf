@@ -40,7 +40,7 @@ extension Parser
 		return new .(token, value);
 	}
 
-	private AstNode.Stmt.FunctionDeclaration getFunctionStmt()
+	private AstNode.Stmt.FunctionDeclaration getFunctionStmt(bool isExtern)
 	{
 		let type = consumeType();
 
@@ -74,11 +74,19 @@ extension Parser
 		}
 		consume(.RightParen, "Expected ')'.");
 
-		// Body
-		let bodyList = scanBlock(.. new .(), var open, var close);
-		let body = new AstNode.Stmt.Block(bodyList, open, close);
+		AstNode.Stmt.Block body = null;
+		if (!isExtern)
+		{
+			// Body
+			let bodyList = scanBlock(.. new .(), var open, var close);
+			body = new AstNode.Stmt.Block(bodyList, open, close);
+		}
+		else
+		{
+			consume(.Semicolon, "Semicolon expected.");
+		}
 
-		return new .(name, type, body, parameters);
+		return new .(isExtern ? .Extern : .Normal, name, type, body, parameters);
 	}
 
 	private AstNode.Stmt.If getIfStmt()

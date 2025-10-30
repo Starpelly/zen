@@ -19,6 +19,7 @@ class Generator
 		"""
 		#include <stdio.h>
 		#include <stdlib.h>
+		#include <stdbool.h>
 
 		typedef char* string;
 
@@ -55,6 +56,12 @@ class Generator
 		{
 			if (let fun = node as AstNode.Stmt.FunctionDeclaration)
 			{
+				if (fun.Kind == .Extern)
+				{
+					// I guess we'll trust that it exists?
+					continue;
+				}
+
 				let parameters = scope CodeBuilder();
 				for (let param in fun.Parameters)
 				{
@@ -72,7 +79,7 @@ class Generator
 
 		for (let node in m_ast)
 		{
-			emitNode(node, code);
+			emitNode(node, code, true);
 		}
 
 		/*
@@ -85,8 +92,16 @@ class Generator
 		str.Append(code.Code);
 	}
 
-	private void emitNode(AstNode node, CodeBuilder code)
+	private void emitNode(AstNode node, CodeBuilder code, bool semicolon = true)
 	{
+		mixin addSemicolon()
+		{
+			if (semicolon)
+			{
+				code.Append(";");
+			}
+		}
+
 		if (let b = node as AstNode.Stmt.Block)
 		{
 			code.AppendLine("{");
@@ -101,6 +116,11 @@ class Generator
 
 		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
 		{
+			if (fun.Kind == .Extern)
+			{
+				return;
+			}
+
 			let parameters = scope CodeBuilder();
 			for (let param in fun.Parameters)
 			{
@@ -115,7 +135,14 @@ class Generator
 
 		if (let n = node as AstNode.Stmt.VariableDeclaration)
 		{
-			code.AppendLine(scope $"{n.Type.Lexeme} {n.Name.Lexeme} = {emitExpr(n.Initializer, .. scope .())};");
+			code.AppendLine(scope $"{n.Type.Lexeme} {n.Name.Lexeme} = {emitExpr(n.Initializer, .. scope .())}");
+			addSemicolon!();
+		}
+
+		if (let r = node as AstNode.Stmt.Return)
+		{
+			code.AppendLine(scope $"return {emitExpr(r.Value, .. scope .())}");
+			addSemicolon!();
 		}
 
 		if (let _if = node as AstNode.Stmt.If)
@@ -124,24 +151,20 @@ class Generator
 			emitNode(_if.ThenBranch, code);
 		}
 
-		if (let r = node as AstNode.Stmt.Return)
-		{
-			code.AppendLine(scope $"return {emitExpr(r.Value, .. scope .())};");
-		}
-
 		if (let _for = node as AstNode.Stmt.For)
 		{
 			let body = scope CodeBuilder();
 			// Init
 			// body.Append(emitExpr(_for.Initialization, .. scope .()));
-			emitNode(_for.Initialization, body);
-			body.Append(" ");
+			emitNode(_for.Initialization, body, false);
+			body.Append(';');
 			// Condition
+			if (_for.Condition != null) body.Append(' ');
 			body.Append(emitExpr(_for.Condition, .. scope .()));
-			body.Append("; ");
+			body.Append(';');
 			// Update
+			if (_for.Updation != null) body.Append(' ');
 			body.Append(emitExpr(_for.Updation, .. scope .()));
-			// body.Append("; ");
 
 			code.AppendLine(scope $"for ({body.Code})");
 			emitNode(_for.Body, code);
@@ -150,7 +173,7 @@ class Generator
 		if (let expr = node as AstNode.Stmt.ExpressionStmt)
 		{
 			code.AppendLine(emitExpr(expr.InnerExpr, .. scope .()));
-			code.Append(";");
+			addSemicolon!();
 		}
 
 		/*

@@ -124,6 +124,9 @@ public enum TokenKind
 
 	[RegisterKeyword("const")]
 	case Const;
+	
+	[RegisterKeyword("extern")]
+	case Extern;
 
 	public Result<RegisterKeywordAttribute> GetKeyword()
 	{

@@ -79,6 +79,13 @@ abstract class AstNode
 
 		public class FunctionDeclaration : Stmt, IScope
 		{
+			public enum FunctionKind
+			{
+				Normal,
+				Extern
+			}
+
+			public readonly FunctionKind Kind;
 			public readonly Token Name;
 			public readonly Token Type;
 			public readonly Block Body ~ delete _;
@@ -87,8 +94,9 @@ abstract class AstNode
 			public Scope Scope { get => m_scope; set => m_scope = value; }
 			private Scope m_scope;
 
-			public this(Token name, Token type, Block body, List<AstNode.Stmt.VariableDeclaration> parameters)
+			public this(FunctionKind kind, Token name, Token type, Block body, List<AstNode.Stmt.VariableDeclaration> parameters)
 			{
+				this.Kind = kind;
 				this.Name = name;
 				this.Type = type;
 				this.Body = body;

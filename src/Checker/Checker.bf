@@ -41,6 +41,11 @@ class Checker
 		{
 			let entity = fun.Scope.Lookup(fun.Name.Lexeme).Value as Entity.Function;
 
+			if (fun.Kind == .Extern)
+			{
+				return;
+			}
+
 			m_functionStack.Add(entity);
 
 			checkStatementList(fun.Body.List, fun.Scope);
@@ -74,6 +79,22 @@ class Checker
 		{
 			checkExpr(_if.Condition, _scope);
 			checkStatement(_if.ThenBranch, _scope);
+		}
+
+		if (let _for = node as AstNode.Stmt.For)
+		{
+			let forScope = _for.Scope;
+
+			if (_for.Initialization != null)
+				checkStatement(_for.Initialization, forScope);
+
+			if (_for.Condition != null)
+				checkExpr(_for.Condition, forScope);
+
+			if (_for.Updation != null)
+				checkExpr(_for.Updation, forScope);
+
+			checkStatement(_for.Body, forScope);
 		}
 
 		if (let expr = node as AstNode.Stmt.ExpressionStmt)
@@ -119,7 +140,7 @@ class Checker
 			let y = checkExpr(bin.Right, _scope);
 			if (!ZenType.AreTypesIdentical(x, y))
 			{
-				reportError(bin.Op, scope $"Type mismatch in binary op '{bin.Op.Lexeme}'");
+				reportError(bin.Op, scope $"Type mismatch in binary op '{bin.Op.Lexeme}' ({x.GetName()}) to ({y.GetName()})");
 			}
 			return x;
 		}

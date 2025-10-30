@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef char* string;
 
@@ -17,27 +18,34 @@ typedef			 double		float64;
 // --------------------------------------------------------------
 // Constants
 // --------------------------------------------------------------
-#define FIB_TEST 10
+#define PI 3.141592653589793
+#define TWO_PI 6.283185307179587
+#define HALF_PI 1.570796326794897
+#define EPSILON 0.00001
 // --------------------------------------------------------------
 // Forward Declarations
 // --------------------------------------------------------------
 static void main ();
 static void test ();
-static void print (string text);
 static int fibonacci (int n);
 // --------------------------------------------------------------
 // Functions
 // --------------------------------------------------------------
 static void main ()
 {
-	int fib = fibonacci(FIB_TEST);
+	int fib = fibonacci(10);
+	test();
+	for (;;)
+	{
+	}
 }
 static void test ()
 {
-	print("hello!");
-}
-static void print (string text)
-{
+	for (int i = 0; i < 10; i = i + 1)
+	{
+		printf("hello!");
+		printf("welcome to zen!");
+	}
 }
 static int fibonacci (int n)
 {

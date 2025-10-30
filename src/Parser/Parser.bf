@@ -38,9 +38,16 @@ class Parser
 
 	private AstNode.Stmt scanNextStmt()
 	{
+		if (match(.Extern))
+		{
+			if (match(.Function))
+				return getFunctionStmt(true);
+			else
+				reportError(previous(), "Only functions can be declared as 'extern'");
+		}
 		if (match(.Function))
 		{
-			return getFunctionStmt();
+			return getFunctionStmt(false);
 		}
 		if (match(.Return))
 		{

@@ -35,17 +35,38 @@ class Scoper
 		}
 	}
 
-	private void addStatement(AstNode.Stmt node)
+	private void addStatement(AstNode.Stmt node, bool createScope = true)
 	{
+		Scope openNewScope(String name, AstNode.Stmt.IScope statement)
+		{
+			if (!createScope)
+				return m_currentScope;
+
+			let newScope = new Scope(name, m_currentScope);
+			statement.Scope = newScope;
+			m_currentScope = newScope;
+			return newScope;
+		}
+
+		Scope closeScope()
+		{
+			if (!createScope)
+				return m_currentScope;
+
+			m_currentScope = m_currentScope.Parent.Value;
+			return m_currentScope;
+		}
+
 		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
 		{
-			openScope(scope $"Function ({fun.Name.Lexeme})", fun);
+			openNewScope(scope $"Function ({fun.Name.Lexeme})", fun);
 
 			// Add parameters to scope
 			for (let param in fun.Parameters)
 			{
 				addStatement(param);
 			}
+			if (fun.Kind == .Normal)
 			addStatementList(fun.Body.List);
 
 			closeScope();
@@ -59,7 +80,7 @@ class Scoper
 
 		if (let b = node as AstNode.Stmt.Block)
 		{
-			openScope("Block", b);
+			openNewScope("Block", b);
 			addStatementList(b.List);
 			closeScope();
 		}
@@ -84,31 +105,18 @@ class Scoper
 
 		if (let _if = node as AstNode.Stmt.If)
 		{
-			openScope("If", _if);
-			addStatement(_if.ThenBranch);
+			openNewScope("If", _if);
+			addStatement(_if.ThenBranch, false);
 			closeScope();
 		}
 
 		if (let _for = node as AstNode.Stmt.For)
 		{
-			openScope("For", _for);
-			addStatement(_for.Body);
+			openNewScope("For", _for);
+			addStatement(_for.Initialization);
+			addStatement(_for.Body, false);
 			closeScope();
 		}
-	}
-
-	private Scope openScope(String name, AstNode.Stmt.IScope statement)
-	{
-		let newScope = new Scope(name, m_currentScope);
-		statement.Scope = newScope;
-		m_currentScope = newScope;
-		return newScope;
-	}
-
-	private Scope closeScope()
-	{
-		m_currentScope = m_currentScope.Parent.Value;
-		return m_currentScope;
 	}
 
 	public static void PrintScopeTree(Scope _scope, int indent = 0)
