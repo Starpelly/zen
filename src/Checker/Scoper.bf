@@ -132,6 +132,13 @@ class Scoper
 			addStatement(_for.Body, false);
 			closeScope();
 		}
+
+		if (let _while = node as AstNode.Stmt.While)
+		{
+			openNewScope("While", _while);
+			addStatement(_while.Body, false);
+			closeScope();
+		}
 	}
 
 	public static void PrintScopeTree(Scope _scope, int indent = 0)

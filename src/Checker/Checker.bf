@@ -83,18 +83,22 @@ class Checker
 
 		if (let _for = node as AstNode.Stmt.For)
 		{
-			let forScope = _for.Scope;
-
 			if (_for.Initialization != null)
-				checkStatement(_for.Initialization, forScope);
+				checkStatement(_for.Initialization, _for.Scope);
 
 			if (_for.Condition != null)
-							checkExpressionIsTruthy(_for.Condition, forScope);
+				checkExpressionIsTruthy(_for.Condition, _for.Scope);
 
 			if (_for.Updation != null)
-				checkExpr(_for.Updation, forScope);
+				checkExpr(_for.Updation, _for.Scope);
 
-			checkStatement(_for.Body, forScope);
+			checkStatement(_for.Body, _for.Scope);
+		}
+
+		if (let _while = node as AstNode.Stmt.While)
+		{
+			checkExpressionIsTruthy(_while.Condition, _while.Scope);
+			checkStatement(_while.Body, _while.Scope);
 		}
 
 		if (let expr = node as AstNode.Stmt.ExpressionStmt)

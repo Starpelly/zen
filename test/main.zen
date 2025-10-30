@@ -1,5 +1,5 @@
 // #load "std/math.zen";
-// #load "std/print.zen";
+#load "std/print.zen";
 
 // #load "fibonacci.zen";
 // #load "test.zen";
@@ -10,12 +10,10 @@ fun void main()
 
 	// test();
 
-	/*
 	while (true)
 	{
 		printf("hello!");
 	}
-		*/
 
 	for (let int i = 0; i < 20; i = i + 1)
 	{

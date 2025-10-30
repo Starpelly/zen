@@ -27,6 +27,10 @@ static void main ();
 // --------------------------------------------------------------
 static void main ()
 {
+	while (true)
+	{
+		printf("hello!");
+	}
 	for (int i = 0; i < 20; i = i + 1)
 	{
 	}
