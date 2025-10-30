@@ -382,7 +382,7 @@ class Tokenizer
 			addToken(.Number_Int/*, Variant.Create<int>(literal)*/);
 			break;
 		case .Number_Float:
-			let literal = double.Parse(substring);
+			let literal = float.Parse(substring);
 			addToken(.Number_Float/*, Variant.Create<double>(literal)*/);
 			break;
 		default:

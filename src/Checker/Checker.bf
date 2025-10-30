@@ -48,7 +48,7 @@ class Checker
 			// @HACK, @TODO
 			// Just to remember this should be an error, functions that don't have a "void" value should always return a value.
 			// Generally this is not taking into account other scopes and ifs and stuff, so we definitely need to do that.
-			if (!fun.Body.List.Back is AstNode.Stmt.Return && !entity.Type.IsTypeVoid())
+			if ((fun.Body.List.IsEmpty || !fun.Body.List.Back is AstNode.Stmt.Return) && !entity.Type.IsTypeVoid())
 			{
 				reportError(fun.Body.Close, "Function must return value");
 			}

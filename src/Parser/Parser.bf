@@ -46,10 +46,6 @@ class Parser
 		{
 			return getReturnStmt();
 		}
-		if (match(.Print))
-		{
-			return getPrintStmt();
-		}
 		if (match(.If))
 		{
 			return getIfStmt();

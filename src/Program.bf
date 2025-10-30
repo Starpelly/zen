@@ -48,10 +48,6 @@ class Program
 
 	private static void printNode(AstNode node, String outBuffer)
 	{
-		if (let print = node as AstNode.Stmt.Print)
-		{
-			outBuffer.Append(scope $"{print.Expr}");
-		}
 		if (let v = node as AstNode.Stmt.VariableDeclaration)
 		{
 			outBuffer.Append(scope $"{v.Kind}, {v.Name.Lexeme}");

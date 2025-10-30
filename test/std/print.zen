@@ -1,0 +1,4 @@
+fun void print(let string text)
+{
+	// print "hello";
+}

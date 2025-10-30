@@ -183,13 +183,4 @@ extension Parser
 
 		return new .(name, type, initializer);
 	}
-
-	private AstNode.Stmt.Print getPrintStmt()
-	{
-		AstNode.Expression expr = getExpression();
-
-		consume(.Semicolon, "Semicolon expected.");
-
-		return new .(expr);
-	}
 }

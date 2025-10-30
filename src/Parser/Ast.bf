@@ -163,16 +163,6 @@ abstract class AstNode
 			}
 		}
 
-		public class Print : Stmt
-		{
-			public readonly Expression Expr ~ if (_ != null) delete _;
-
-			public this(Expression expr)
-			{
-				this.Expr = expr;
-			}
-		}
-
 		public class ExpressionStmt : Stmt
 		{
 			public readonly Expression InnerExpr ~ delete _;

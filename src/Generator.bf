@@ -41,6 +41,35 @@ class Generator
 		code.AppendLine("{");
 		code.IncreaseTab();
 */
+		code.AppendBanner("Constants");
+		for (let node in m_ast)
+		{
+			if (let c = node as AstNode.Stmt.ConstantDeclaration)
+			{
+				code.AppendLine(scope $"#define {c.Name.Lexeme} {emitExpr(c.Initializer, .. scope .())}");
+			}
+		}
+
+		code.AppendBanner("Forward Declarations");
+		for (let node in m_ast)
+		{
+			if (let fun = node as AstNode.Stmt.FunctionDeclaration)
+			{
+				let parameters = scope CodeBuilder();
+				for (let param in fun.Parameters)
+				{
+					parameters.Append(scope $"{param.Type.Lexeme} {param.Name.Lexeme}");
+					if (param != fun.Parameters.Back)
+						parameters.Append(", ");
+				}
+
+				code.AppendLine(scope $"static {fun.Type.Lexeme} {fun.Name.Lexeme} ({parameters.Code})");
+				code.Append(';');
+			}
+		}
+
+		code.AppendBanner("Functions");
+
 		for (let node in m_ast)
 		{
 			emitNode(node, code);
@@ -124,10 +153,12 @@ class Generator
 			code.Append(";");
 		}
 
+		/*
 		if (let n = node as AstNode.Stmt.Print)
 		{
 			code.AppendLine(scope $"printf(\"%d\\n\", {emitExpr(n.Expr, .. scope .())});");
 		}
+		*/
 	}
 
 	private void emitExpr(AstNode.Expression expr, String outStr)

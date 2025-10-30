@@ -14,10 +14,30 @@ typedef			 char		int8;
 typedef			 float		float32;
 typedef			 double		float64;
 
+// --------------------------------------------------------------
+// Constants
+// --------------------------------------------------------------
+#define FIB_TEST 10
+// --------------------------------------------------------------
+// Forward Declarations
+// --------------------------------------------------------------
+static void main ();
+static void test ();
+static void print (string text);
+static int fibonacci (int n);
+// --------------------------------------------------------------
+// Functions
+// --------------------------------------------------------------
 static void main ()
 {
-	int fib = fibonacci(10);
-	printf("%d\n", fib);
+	int fib = fibonacci(FIB_TEST);
+}
+static void test ()
+{
+	print("hello!");
+}
+static void print (string text)
+{
 }
 static int fibonacci (int n)
 {

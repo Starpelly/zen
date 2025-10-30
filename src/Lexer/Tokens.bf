@@ -113,9 +113,6 @@ public enum TokenKind
 	[RegisterKeyword("enum")]
 	case Enum;
 
-	[RegisterKeyword("print")]
-	case Print;
-
 	[RegisterKeyword("and")]
 	case And;
 
