@@ -77,7 +77,10 @@ class Checker
 			}
 
 			if (_var.Initializer != null)
-				checkExpr(_var.Initializer, _scope);
+			{
+				let initType = checkExpr(_var.Initializer, _scope);
+				checkTypesComparable(_var.Operator.Value, entity.Type, initType);
+			}
 		}
 
 		if (let ret = node as AstNode.Stmt.Return)

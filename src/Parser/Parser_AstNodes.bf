@@ -68,7 +68,7 @@ extension Parser
 				let pType = consumeType();
 				let pName = consume(.Identifier, "Expected parameter name.");
 
-				parameters.Add(new .(accessor, pName, pType, null));
+				parameters.Add(new .(accessor, pName, pType, null, null));
 			}
 			while (match(.Comma));
 		}
@@ -103,7 +103,7 @@ extension Parser
 			let pName = consume(.Identifier, "Expected parameter name.");
 			consume(.Semicolon, "Semicolon expected.");
 
-			fields.Add(new .(.Immutable, pName, pType, null));
+			fields.Add(new .(.Immutable, pName, pType, null, null));
 			// list.Add(scanNextStmt());
 			// fields.Add((AstNode.Stmt.VariableDeclaration)scanNextStmt());
 		}
@@ -259,17 +259,19 @@ extension Parser
 	{
 		let type = consumeType();
 		let name = consume(.Identifier, "Expected variable name.");
+		Token? op = null;
 
 		AstNode.Expression initializer = null;
 
 		if (match(.Equal))
 		{
+			op = previous();
 			initializer = getExpression();
 		}
 
 		consume(.Semicolon, "Semicolon expected.");
 
-		return new .(kind, name, type, initializer);
+		return new .(kind, name, type, op, initializer);
 	}
 
 	private AstNode.Stmt.ConstantDeclaration getConstStmt()

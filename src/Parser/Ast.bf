@@ -170,13 +170,15 @@ abstract class AstNode
 			public readonly DeclarationKind Kind;
 			public readonly Token Name;
 			public readonly Token Type;
+			public readonly Token? Operator;
 			public readonly Expression Initializer ~ if (_ != null) delete _;
 			
-			public this(DeclarationKind kind, Token name, Token type, Expression init)
+			public this(DeclarationKind kind, Token name, Token type, Token? op, Expression init)
 			{
 				this.Kind = kind;
 				this.Name = name;
 				this.Type = type;
+				this.Operator = op;
 				this.Initializer = init;
 			}
 
