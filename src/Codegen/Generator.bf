@@ -47,8 +47,8 @@ class Generator
 
 		#ifdef ZEN_PLATFORM_WINDOWS
 		#include <windows.h>
-		#endif
 
+			/*
 			void message_box(string text)
 			{
 				MessageBox(
@@ -58,6 +58,10 @@ class Generator
 					MB_OK | MB_ICONINFORMATION
 				);
 			}
+			*/
+		#endif
+
+		// #include <raylib.h>
 		""";
 
 		code.AppendLine(BOILERPLATE_TOP);

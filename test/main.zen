@@ -1,6 +1,7 @@
 #load "test.zen";
 #load "fibonacci.zen";
-#load "windows.zen";
+// #load "windows.zen";
+// #load "raylib.zen";
 
 fun void main()
 {
@@ -11,5 +12,7 @@ fun void main()
 
 	print_test();
 
-	message_box("Hello, Windows!");
+	// message_box("Hello, Windows!");
+
+	// test_game();
 }

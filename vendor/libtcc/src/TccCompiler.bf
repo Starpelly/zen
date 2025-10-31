@@ -21,13 +21,11 @@ public class TCCCompiler
 		let DEFAULT_INCLUDE_PATH = Path.Combine(.. scope .(), SDK_DIR_PATH, "include");
 		// let DEFAULT_TCC_INCLUDE_PATH = Path.Combine(.. scope .(), tccSDKDir, "libtcc");
 
+		// tcc_add_include_path(m_state, DEFAULT_TCC_INCLUDE_PATH);
+		tcc_add_include_path(m_state, DEFAULT_INCLUDE_PATH);
+
 #if BF_PLATFORM_WINDOWS
 		let DEFAULT_INCLUDE_WINDOWS = Path.Combine(.. scope .(), DEFAULT_INCLUDE_PATH, "winapi");
-#endif
-
-		tcc_add_include_path(m_state, DEFAULT_INCLUDE_PATH);
-		// tcc_add_include_path(m_state, DEFAULT_TCC_INCLUDE_PATH);
-#if BF_PLATFORM_WINDOWS
 		tcc_add_include_path(m_state, DEFAULT_INCLUDE_WINDOWS);
 		tcc_add_library(m_state, "user32");
 #endif
@@ -132,6 +130,11 @@ public class TCCCompiler
 	public libtcc_int SetOutputType(TccOutputType type)
 	{
 		return tcc_set_output_type(m_state, (libtcc_int)type);
+	}
+
+	public libtcc_int AddLibrary(StringView library)
+	{
+		return tcc_add_library(m_state, library.Ptr);
 	}
 
 	/// Equivalent to -Lpath option of TCC.

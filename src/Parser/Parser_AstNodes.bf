@@ -53,22 +53,22 @@ extension Parser
 		{
 			repeat
 			{
-				Token accessor = default;
+				DeclarationKind accessor = .Invalid;
 				if (peek().Kind == .Let || peek().Kind == .Var)
 				{
-					accessor = peek();
+					accessor = peek().Kind == .Let ? .Immutable : .Mutable;
+					advance();
 				}
 				else
 				{
-					reportError(peek(), "Expected parameter accessor type.");
+					// We'll just assume the variable is immutable for now.
+					accessor = .Immutable;
 				}
-
-				advance();
 
 				let pType = consumeType();
 				let pName = consume(.Identifier, "Expected parameter name.");
 
-				parameters.Add(new .((accessor.Kind == .Let) ? .Immutable : .Mutable, pName, pType, null));
+				parameters.Add(new .(accessor, pName, pType, null));
 			}
 			while (match(.Comma));
 		}

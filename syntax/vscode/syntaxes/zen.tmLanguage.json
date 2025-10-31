@@ -1,0 +1,139 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Zen",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#numbers"
+		},
+		{
+  			"include": "#builtin-functions"
+		},
+		{
+			"include": "#functions"
+		},
+		{
+			"include": "#types"
+		},
+		{
+			"include": "#preprocessor-rule-conditional"
+        },
+		{
+			"include": "#preprocessor-alias-definition"
+		},
+		{
+			"include": "#preprocessor-function-definition"
+		},
+		{
+			"include": "#preprocessor-load"
+		},
+		{
+            "include": "#match"
+        }
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.zen",
+				"match": "\\b(if|else|while|for|return|let|var|true|false|fun|event|using|static|defer|struct|const|enum|namespace|scope|new|delete|this|switch|case|mixin|extern)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.zen",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.zen",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+                    "name": "comment.block.zen",
+                    "begin": "/\\*",
+                    "beginCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.comment.zen"
+                        }
+                    },
+                    "end": "\\*/",
+                    "endCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.comment.zen"
+                        }
+                    }
+                },
+				{
+					"name": "comment.line.double-slash.zen",
+					"begin": "(\\/\\/)",
+					"end": "(?=\\n)"
+				}
+			]
+		},
+		"numbers": {
+			"patterns": [
+			  {
+				"name": "constant.numeric.zen",
+				"match": "\\b\\d+(\\.\\d+)?\\b"
+			  }
+			]
+		},
+		"types": {
+			"patterns": [
+			  {
+				"name": "storage.type.zen",
+				"match": "\\b(int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|float|float32|float64|double|char8|char16|char32|void|bool|char8|char16|char32|string_view)\\b"
+			  }
+			]
+		},
+		"builtin-functions": {
+			"patterns": [
+				{
+				"name": "support.function.builtin.zen",
+				"match": "\\b(print|println)\\b(?=\\s*\\()"
+				}
+			]
+		},
+		"functions": {
+			"patterns": [
+				{
+				"name": "entity.name.function.call.zen",
+				"match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()"
+				}
+			]
+		},
+		"preprocessor-load": {
+  "patterns": [
+    {
+      "name": "meta.preprocessor.load.zen",
+      "begin": "^(\\s*)(#)(\\s*)(load)\\b",
+      "beginCaptures": {
+        "2": { "name": "punctuation.definition.preprocessor.zen" },
+        "4": { "name": "keyword.control.import.load.zen" }
+      },
+      "end": "(?=$)",
+      "patterns": [
+        { "include": "#strings" },
+        {
+          "match": ";",
+          "name": "punctuation.terminator.statement.zen"
+        }
+      ]
+    }
+  ]
+}
+	},
+	"scopeName": "source.zen",
+	"fileTypes": ["zen"]
+}

@@ -28,8 +28,8 @@ typedef			 double		float64;
 
 #ifdef ZEN_PLATFORM_WINDOWS
 #include <windows.h>
-#endif
 
+	/*
 	void message_box(string text)
 	{
 		MessageBox(
@@ -39,6 +39,10 @@ typedef			 double		float64;
 			MB_OK | MB_ICONINFORMATION
 		);
 	}
+	*/
+#endif
+
+// #include <raylib.h>
 
 // --------------------------------------------------------------
 // Constants
@@ -61,7 +65,6 @@ typedef			 double		float64;
 	printf("%i\n", fib);
 	printf("%s\n", "Hello world!");
 	print_test();
-	message_box("Hello, Windows!");
 }
 /*static*/ int add (int x, int y)
 {

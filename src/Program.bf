@@ -85,6 +85,8 @@ class Program
 
 		let compiler = scope libtcc.TCCCompiler(tccPath);
 
+		// c_raylib_add(compiler);
+
 		if (compiler.CompileString(code) == -1)
 		{
 			fail!("TinyCC compilation failed");

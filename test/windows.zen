@@ -1,1 +1,1 @@
-extern fun void message_box(let string text);
+extern fun void message_box(string text);

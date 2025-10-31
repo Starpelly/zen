@@ -1,0 +1,29 @@
+{
+  "name": "zen",
+  "displayName": "zen language",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.105.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "zen",
+      "aliases": ["Zen", "zen"],
+      "extensions": [".zen"],
+      "configuration": "./language-configuration.json",
+      "icon": {
+        "dark": "images/icon.png",
+        "light": "images/icon.png"
+      }
+    }],
+    "grammars": [{
+      "language": "zen",
+      "scopeName": "source.zen",
+      "path": "./syntaxes/zen.tmLanguage.json"
+    }]
+  }
+}
