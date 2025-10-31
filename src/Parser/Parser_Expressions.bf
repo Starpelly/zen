@@ -151,16 +151,21 @@ extension Parser
 		{
 			if (match(.LeftParen))
 			{
-				// createNamespaces!();
 				expr = finishCallExpr((Expression.Variable)expr);
 			}
 			else if (match(.DoubleColon))
 			{
-				// createNamespaces!();
-				// namespaces.Add(((Expression.Variable)expr).Name);
-
+				// @HACK
+				// This feels kinda hacky...
 				delete expr;
-				expr = getExprPrimary();
+				retreat();
+				retreat();
+
+				let left = consume(.Identifier, "Expected identifier after '::'");
+				let separator = consume(.DoubleColon, "Expected '::'");
+				let right = getExprPrimary();
+
+				expr = new Expression.QualifiedName(left, separator, right);
 			}
 			else if (match(.Dot))
 			{

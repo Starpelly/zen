@@ -45,6 +45,15 @@ typedef			 double		float64;
 // #include <raylib.h>
 
 // --------------------------------------------------------------
+// Enums
+// --------------------------------------------------------------
+typedef enum {
+	Color_Red,
+	Color_Orange,
+	Color_Yellow,
+	Color_Cyan
+} Color;
+// --------------------------------------------------------------
 // Structs
 // --------------------------------------------------------------
 typedef struct {
@@ -58,46 +67,13 @@ typedef struct {
 // Forward Declarations
 // --------------------------------------------------------------
 void main();
-int add(int x, int y);
-void abc_test();
-void loop_test();
-void print_test();
 // --------------------------------------------------------------
 // Functions
 // --------------------------------------------------------------
 void main()
 {
-	Vector2 vec2;
-	vec2.x = 4.0f;
-	vec2.y = 2.0f;
-	printf("%f\n", vec2.y);
-	printf("%s\n", "Hello world!");
-	print_test();
-}
-int add(int x, int y)
-{
-	return x + y;
-}
-void abc_test()
-{
-	int a = add(1, 1);
-	int b = a + a;
-	int c = a + b;
-	printf("%i", c);
-}
-void loop_test()
-{
-	for (int i = 0; i < 10; i = i + 1)
-	{
-		printf("%s", "welcome to zen!");
-	}
-}
-void print_test()
-{
-	int val_int = 1;
-	float val_float = 1.0f;
-	bool val_bool = false;
-	printf("%i\n", val_int);
-	printf("%f\n", val_float);
-	printf("%s\n", val_bool  ? "true" : "false");
+	Color color;
+	color = Color_Red;
+	float a = Color_Red;
+	float b = "";
 }

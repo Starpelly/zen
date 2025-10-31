@@ -67,6 +67,24 @@ class Generator
 		code.AppendLine(BOILERPLATE_TOP);
 		code.AppendEmptyLine();
 
+		code.AppendBanner("Enums");
+		for (let node in m_ast)
+		{
+			if (let e = node as AstNode.Stmt.EnumDeclaration)
+			{
+				code.AppendLine("typedef enum {");
+				code.IncreaseTab();
+				for (let val in e.Values)
+				{
+					code.AppendLine(scope $"{e.Name.Lexeme}_{val.Name.Lexeme}");
+					if (val != e.Values.Back)
+						code.Append(",");
+				}
+				code.DecreaseTab();
+				code.AppendLine(scope $"\} {e.Name.Lexeme};");
+			}
+		}
+
 		code.AppendBanner("Structs");
 		for (let node in m_ast)
 		{
@@ -221,32 +239,19 @@ class Generator
 
 	private void emitExpr(AstNode.Expression expr, String outStr)
 	{
-		if (let bin = expr as AstNode.Expression.Binary)
+		switch (expr.GetKind())
 		{
+		case .Binary(let bin):
 			emitExpr(bin.Left, outStr);
 			outStr.Append(scope $" {bin.Op.Lexeme} ");
 			emitExpr(bin.Right, outStr);
-		}
+			break;
 
-		if (let lit = expr as AstNode.Expression.Literal)
-		{
-			outStr.Append(lit.Token.Lexeme);
-			if (lit.Type.IsTypeFloat())
-			{
-				// C appends the "f" at the end of floats...
-				// Not technically required, I don't think?
-				// But better to be safe than sorry.
-				outStr.Append("f");
-			}
-		}
-
-		if (let _var = expr as AstNode.Expression.Variable)
-		{
+		case .Variable(let _var):
 			outStr.Append(_var.Name.Lexeme);
-		}
+			break;
 
-		if (let call = expr as AstNode.Expression.Call)
-		{
+		case .Call(let call):
 			let arguments = scope CodeBuilder();
 			for (let arg in call.Arguments)
 			{
@@ -323,17 +328,46 @@ class Generator
 			{
 				outStr.Append(scope $"{emitExpr(call.Callee, .. scope .())}({arguments.Code})");
 			}
-		}
+			break;
 
-		if (let ass = expr as AstNode.Expression.Assign)
-		{
-			outStr.Append(scope $"{emitExpr(ass.Assignee, .. scope .())} {ass.Op.Lexeme} {emitExpr(ass.Value, .. scope .())}");
-		}
+		case .Logical(let logical):
+			break;
 
-		if (let get = expr as AstNode.Expression.Get)
-		{
+		case .Literal(let literal):
+			outStr.Append(literal.Token.Lexeme);
+			if (literal.Type.IsTypeFloat())
+			{
+				// C appends the "f" at the end of floats...
+				// Not technically required, I don't think?
+				// But better to be safe than sorry.
+				outStr.Append("f");
+			}
+			break;
+
+		case .Unary(let unary):
+			break;
+
+		case .Get(let get):
 			outStr.Append(scope $"{emitExpr(get.Object, .. scope .())}.{get.Name.Lexeme}");
 			// outStr.Append(scope $"{emitExpr(set.Object, .. scope .())}.{set.Name}");
+			break;
+
+		case .Set(let set):
+			break;
+
+		case .This(let _this):
+			break;
+
+		case .Grouping(let grouping):
+			break;
+
+		case .Assign(let assign):
+			outStr.Append(scope $"{emitExpr(assign.Assignee, .. scope .())} {assign.Op.Lexeme} {emitExpr(assign.Value, .. scope .())}");
+			break;
+
+		case .QualifiedName(let qn):
+			outStr.Append(scope $"{qn.Left.Lexeme}_{emitExpr(qn.Right, .. scope .())}");
+			break;
 		}
 	}
 

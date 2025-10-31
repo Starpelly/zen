@@ -33,4 +33,25 @@ class Scope
 
 		return .Err;
 	}
+
+	public Result<Entity> QualifiedLookup(params StringView[] path)
+	{
+		Entity current = this.Lookup(path[0]);
+		if (current == null) return .Err;
+
+		for (int i = 1; i < path.Count; i++)
+		{
+			if (current.Type != .Enum)
+				return .Err;
+			let typename = current as Entity.TypeName;
+			if (let newScope = typename.Decl as AstNode.Stmt.IScope)
+			{
+				current = newScope.Scope.Lookup(path[i]);
+			}
+			if (current == null)
+				return .Err;
+		}
+
+		return current;
+	}
 }

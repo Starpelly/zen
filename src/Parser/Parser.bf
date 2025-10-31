@@ -53,6 +53,10 @@ class Parser
 		{
 			return getStructStmt();
 		}
+		if (match(.Enum))
+		{
+			return getEnumStmt();
+		}
 		if (match(.Return))
 		{
 			return getReturnStmt();

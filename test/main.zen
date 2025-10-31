@@ -1,4 +1,4 @@
-#load "test.zen";
+// #load "test.zen";
 // #load "fibonacci.zen";
 // #load "windows.zen";
 // #load "raylib.zen";
@@ -9,22 +9,19 @@ struct Vector2
 	float y;
 }
 
+enum Color
+{
+	Red,
+	Orange,
+	Yellow,
+	Cyan
+}
+
 fun void main()
 {
-	// let int fib = fibonacci(10);
+	var Color color;
+	color = Color::Red;
 
-	let Vector2 vec2;
-	vec2.x = 4.0;
-	vec2.y = 2.0;
-
-	println(vec2.y);
-
-	// println(fib);
-	println("Hello world!");
-
-	print_test();
-
-	// message_box("Hello, Windows!");
-
-	// test_game();
+	let float a = Color::Red;
+	let float b = ""; // this should fail
 }

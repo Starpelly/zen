@@ -94,9 +94,9 @@ extension Parser
 		let name = consume(.Identifier, "Expected name.");
 
 		// Body
-		let fields = new List<AstNode.Stmt.VariableDeclaration>();
 		consume(.LeftBrace, "Expected '{'.");
 
+		let fields = new List<AstNode.Stmt.VariableDeclaration>();
 		while (!check(.RightBrace) && !isAtEnd())
 		{
 			let pType = consumeType();
@@ -111,6 +111,68 @@ extension Parser
 		consume(.RightBrace, "Expected '}'.");
 
 		return new .(name, fields);
+	}
+
+	private AstNode.Stmt.EnumDeclaration getEnumStmt()
+	{
+		let name = consume(.Identifier, "Expected name.");
+
+		// Body
+		consume(.LeftBrace, "Expected '{'.");
+
+		let values = new List<AstNode.Stmt.EnumFieldValue>();
+		int scopeDepth = 0;
+		int valueIndex = 0;
+		while (true && !isAtEnd())
+		{
+			mixin checkRightBrace()
+			{
+				if (check(.RightBrace))
+				{
+					if (scopeDepth <= 0)
+					{
+						break;
+					}
+
+					scopeDepth--;
+				}
+			}
+
+			if (check(.LeftBrace))
+			{
+				scopeDepth++;
+			}
+			checkRightBrace!();
+
+			if (valueIndex > 0)
+			{
+				consume(.Comma, "Expected comma.");
+
+				// Supports trailing commas.
+				checkRightBrace!();
+			}
+
+			let valueName = consume(.Identifier, "Member name expected.");
+			/*
+			var literal = default(Expr);
+
+			if (match(.Equal))
+			{
+				literal = Primary();
+			}
+			*/
+
+			AstNode.Expression value = null;
+			value = new AstNode.Expression.Literal(valueName, Variant.Create<int>(valueIndex));
+
+			values.Add(new .(valueName, value));
+
+			valueIndex++;
+		}
+
+		consume(.RightBrace, "Expected '}'.");
+
+		return new .(name, values);
 	}
 
 	private AstNode.Stmt.If getIfStmt()

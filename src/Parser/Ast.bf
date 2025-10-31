@@ -11,32 +11,37 @@ enum DeclarationKind
 	Count
 }
 
-enum AstNodeKind
+enum StmtKind
 {
-	case Invalid;
-
-	case Expression;
-	case Variable;
-	case Function;
-	case Return;
-	case Print;
-	case While;
-	case If;
+	case Return(AstNode.Stmt.Return);
+	case Block(AstNode.Stmt.Block);
+	case FunctionDecl(AstNode.Stmt.FunctionDeclaration);
+	case StructDecl(AstNode.Stmt.StructDeclaration);
+	case EnumDecl(AstNode.Stmt.EnumDeclaration);
+	case EnumField(AstNode.Stmt.EnumFieldValue);
+	case VarDecl(AstNode.Stmt.VariableDeclaration);
+	case ConstDecl(AstNode.Stmt.ConstantDeclaration);
+	case If(AstNode.Stmt.If);
+	case For(AstNode.Stmt.For);
+	case While(AstNode.Stmt.While);
+	case Expression(AstNode.Stmt.ExpressionStmt);
+	case BasicDirective(AstNode.Stmt.BasicDirective);
 }
 
 enum ExpressionKind
 {
-	case Binary;
-	case Variable;
-	case Call;
-	case Logical;
-	case Literal;
-	case Unary;
-	case Get;
-	case Set;
-	case This;
-	case Grouping;
-	case Assign;
+	case Binary(AstNode.Expression.Binary);
+	case Variable(AstNode.Expression.Variable);
+	case Call(AstNode.Expression.Call);
+	case Logical(AstNode.Expression.Logical);
+	case Literal(AstNode.Expression.Literal);
+	case Unary(AstNode.Expression.Unary);
+	case Get(AstNode.Expression.Get);
+	case Set(AstNode.Expression.Set);
+	case This(AstNode.Expression.This);
+	case Grouping(AstNode.Expression.Grouping);
+	case Assign(AstNode.Expression.Assign);
+	case QualifiedName(AstNode.Expression.QualifiedName);
 }
 
 abstract class AstNode
@@ -49,6 +54,8 @@ abstract class AstNode
 			public Scope Scope { get; set; }
 		}
 
+		public abstract StmtKind GetKind();
+
 		public class Return : Stmt
 		{
 			public readonly Token Token;
@@ -59,6 +66,8 @@ abstract class AstNode
 				this.Token = token;
 				this.Value = value;
 			}
+
+			public override StmtKind GetKind() => .Return(this);
 		}
 
 		public class Block : Stmt, IScope
@@ -75,6 +84,8 @@ abstract class AstNode
 				this.Open = open;
 				this.Close = close;
 			}
+
+			public override StmtKind GetKind() => .Block(this);
 		}
 
 		public class FunctionDeclaration : Stmt, IScope
@@ -102,6 +113,8 @@ abstract class AstNode
 				this.Body = body;
 				this.Parameters = parameters;
 			}
+
+			public override StmtKind GetKind() => .FunctionDecl(this);
 		}
 
 		public class StructDeclaration : Stmt, IScope
@@ -117,6 +130,73 @@ abstract class AstNode
 				this.Name = name;
 				this.Fields = fields;
 			}
+
+			public override StmtKind GetKind() => .StructDecl(this);
+		}
+
+		public class EnumDeclaration : Stmt, IScope
+		{
+			public readonly Token Name;
+			public readonly List<EnumFieldValue> Values ~ DeleteContainerAndItems!(_);
+
+			public Scope Scope { get => m_scope; set => m_scope = value; }
+			private Scope m_scope;
+
+			public this(Token name, List<EnumFieldValue> values)
+			{
+				this.Name = name;
+				this.Values = values;
+			}
+
+			public override StmtKind GetKind() => .EnumDecl(this);
+		}
+
+		public class EnumFieldValue : Stmt
+		{
+			public readonly Token Name;
+			public readonly Expression Value ~ delete _;
+
+			public this(Token name, Expression value)
+			{
+				this.Name = name;
+				this.Value = value;
+			}
+
+			public override StmtKind GetKind() => .EnumField(this);
+		}
+
+		public class VariableDeclaration : Stmt
+		{
+			public readonly DeclarationKind Kind;
+			public readonly Token Name;
+			public readonly Token Type;
+			public readonly Expression Initializer ~ if (_ != null) delete _;
+			
+			public this(DeclarationKind kind, Token name, Token type, Expression init)
+			{
+				this.Kind = kind;
+				this.Name = name;
+				this.Type = type;
+				this.Initializer = init;
+			}
+
+			public override StmtKind GetKind() => .VarDecl(this);
+		}
+
+		public class ConstantDeclaration : Stmt
+		{
+			public readonly Token Name;
+			public readonly Token Type;
+			public readonly Expression Initializer ~ delete _;
+
+			public this(Token name, Token type, Expression init)
+			{
+				this.Name = name;
+				this.Type = type;
+				this.Initializer = init;
+			}
+
+			public override StmtKind GetKind() => .ConstDecl(this);
 		}
 
 		public class If : Stmt, IScope
@@ -135,6 +215,8 @@ abstract class AstNode
 				if (elseBranch != null)
 					this.ElseBranch = .Ok(elseBranch);
 			}
+
+			public override StmtKind GetKind() => .If(this);
 		}
 
 		public class For : Stmt, IScope
@@ -154,6 +236,8 @@ abstract class AstNode
 				this.Updation = update;
 				this.Body = body;
 			}
+
+			public override StmtKind GetKind() => .For(this);
 		}
 
 		public class While : Stmt, IScope
@@ -169,36 +253,8 @@ abstract class AstNode
 				this.Condition = condition;
 				this.Body = body;
 			}
-		}
 
-		public class VariableDeclaration : Stmt
-		{
-			public readonly DeclarationKind Kind;
-			public readonly Token Name;
-			public readonly Token Type;
-			public readonly Expression Initializer ~ if (_ != null) delete _;
-			
-			public this(DeclarationKind kind, Token name, Token type, Expression init)
-			{
-				this.Kind = kind;
-				this.Name = name;
-				this.Type = type;
-				this.Initializer = init;
-			}
-		}
-
-		public class ConstantDeclaration : Stmt
-		{
-			public readonly Token Name;
-			public readonly Token Type;
-			public readonly Expression Initializer ~ delete _;
-
-			public this(Token name, Token type, Expression init)
-			{
-				this.Name = name;
-				this.Type = type;
-				this.Initializer = init;
-			}
+			public override StmtKind GetKind() => .While(this);
 		}
 
 		public class ExpressionStmt : Stmt
@@ -209,6 +265,8 @@ abstract class AstNode
 			{
 				this.InnerExpr = expr;
 			}
+
+			public override StmtKind GetKind() => .Expression(this);
 		}
 
 		public class BasicDirective : Stmt
@@ -221,6 +279,8 @@ abstract class AstNode
 				this.Token = token;
 				this.Name = name;
 			}
+
+			public override StmtKind GetKind() => .BasicDirective(this);
 		}
 	}
 
@@ -228,6 +288,8 @@ abstract class AstNode
 	public abstract class Expression : AstNode
 	{
 		public ZenType Type;
+
+		public abstract ExpressionKind GetKind();
 
 		public class Binary : Expression
 		{
@@ -243,6 +305,8 @@ abstract class AstNode
 				this.Right = right;
 				this.WasCompounded = wasCompounded;
 			}
+
+			public override ExpressionKind GetKind() => .Binary(this);
 		}
 
 		public class Variable : Expression
@@ -253,6 +317,8 @@ abstract class AstNode
 			{
 				this.Name = name;
 			}
+
+			public override ExpressionKind GetKind() => .Variable(this);
 		}
 
 		public class Call : Expression
@@ -265,6 +331,8 @@ abstract class AstNode
 				this.Callee = callee;
 				this.Arguments = arguments;
 			}
+
+			public override ExpressionKind GetKind() => .Call(this);
 		}
 
 		public class Logical : Expression
@@ -279,6 +347,8 @@ abstract class AstNode
 				this.Op = op;
 				this.Right = right;
 			}
+
+			public override ExpressionKind GetKind() => .Logical(this);
 		}
 
 		public class Literal : Expression
@@ -296,6 +366,8 @@ abstract class AstNode
 				this.Token = token;
 				this.Variant = value;
 			}
+
+			public override ExpressionKind GetKind() => .Literal(this);
 		}
 
 		public class Unary : Expression
@@ -308,6 +380,8 @@ abstract class AstNode
 				this.Operator = @operator;
 				this.Right = right;
 			}
+
+			public override ExpressionKind GetKind() => .Unary(this);
 		}
 
 		public class Get : Expression
@@ -320,6 +394,8 @@ abstract class AstNode
 				this.Object = object;
 				this.Name = name;
 			}
+
+			public override ExpressionKind GetKind() => .Get(this);
 		}
 
 		public class Set : Expression
@@ -334,6 +410,8 @@ abstract class AstNode
 				this.Name = name;
 				this.Value = value;
 			}
+
+			public override ExpressionKind GetKind() => .Set(this);
 		}
 
 		public class This : Expression
@@ -344,6 +422,8 @@ abstract class AstNode
 			{
 				this.Keyword = keyword;
 			}
+
+			public override ExpressionKind GetKind() => .This(this);
 		}
 
 		public class Grouping : Expression
@@ -354,6 +434,8 @@ abstract class AstNode
 			{
 				this.Expression = expression;
 			}
+
+			public override ExpressionKind GetKind() => .Grouping(this);
 		}
 
 		public class Assign : Expression
@@ -368,6 +450,24 @@ abstract class AstNode
 				this.Value = value;
 				this.Op = op;
 			}
+
+			public override ExpressionKind GetKind() => .Assign(this);
+		}
+
+		public class QualifiedName : Expression
+		{
+			public readonly Token Left;
+			public readonly Token Separator;
+			public readonly Expression Right ~ delete _;
+
+			public this(Token left, Token separator, Expression right)
+			{
+				this.Left = left;
+				this.Separator = separator;
+				this.Right = right;
+			}
+
+			public override ExpressionKind GetKind() => .QualifiedName(this);
 		}
 	}
 }

@@ -129,17 +129,17 @@ struct BasicType
 		return .Err;
 	}
 
-	public static Result<BasicType> FromKind(BasicKind kind)
+	public static BasicType FromKind(BasicKind kind)
 	{
 		for (let type in BasicTypes)
 		{
 			if (kind == type.Kind)
 			{
-				return .Ok(type);
+				return type;
 			}
 		}
 
-		return .Err;
+		Runtime.FatalError("This should never happen");
 	}
 }
 
@@ -149,6 +149,8 @@ public enum ZenType
 	case Basic(BasicType basic);
 	case Named(StringView name);
 	case Structure;
+	case Enum;
+	case Function;
 
 	public bool IsTypeVoid()
 	{
@@ -235,10 +237,14 @@ public enum ZenType
 			return "Invalid type";
 		case .Basic(let basic):
 			return basic.Name;
-		case .Structure:
-			return "Struct";
 		case .Named:
 			return "Named type";
+		case .Structure:
+			return "Struct";
+		case .Enum:
+			return "Enum";
+		case .Function:
+			return "Function";
 		}
 	}
 

@@ -67,7 +67,10 @@ class Checker
 			if (entity.Type case .Named(let name))
 			{
 				let lookupName = _scope.Lookup(name);
-				if (lookupName case .Err)
+				if (lookupName case .Ok(let lookup))
+				{
+				}
+				else if (lookupName case .Err)
 				{
 					reportError(_var.Type, "Unknown data type.");
 				}
@@ -135,8 +138,9 @@ class Checker
 			return type;
 		}
 
-		if (let lit = expr as AstNode.Expression.Literal)
+		switch (expr.GetKind())
 		{
+		case .Literal(let lit):
 			BasicKind kind = .Invalid;
 			Token basic_lit = lit.Token;
 
@@ -153,10 +157,8 @@ class Checker
 			}
 
 			returnVal!(ZenType.Basic(BasicType.FromKind(kind)));
-		}
 
-		if (let bin = expr as AstNode.Expression.Binary)
-		{
+		case .Binary(let bin):
 			// Check if it's a conditional boolean value.
 			switch (bin.Op.Kind)
 			{
@@ -166,7 +168,7 @@ class Checker
 				 .GreaterEqual,	// >=
 				 .EqualEqual,	// ==
 				 .BangEqual:	// !=
-				return .Basic(BasicType.FromKind(.UntypedBool));
+				returnVal!(ZenType.Basic(BasicType.FromKind(.UntypedBool)));
 			default:
 			}
 
@@ -176,46 +178,54 @@ class Checker
 
 			// If X and Y matches, we can just return X because they're the same type.
 			returnVal!(x);
-		}
 
-		if (let @var = expr as AstNode.Expression.Variable)
-		{
-			let entity = lookupScopeForIdentifier(_scope, @var.Name);
+		case .Variable(let variable):
+			let entity = lookupScopeForIdentifier(_scope, variable.Name);
 			if (entity case .Err)
 			{
 				return .Invalid;
+			}
+
+			// @FIX
+			// Idk how I feel about this, but basically we look at the variable's declaration to check what type it is.
+			// If it's an enum, we can just return an integer, since they're pretty much the same.
+			// I don't think we should do this here, Enums should probably be comparable to ints when we actually compare them.
+			// Especially when enums get the ability to specify their types. But this is OK for now.
+			if (let _var = entity.Value as Entity.Variable)
+			{
+				if (_scope.Lookup(_var.Decl.Type.Lexeme) case .Ok(let foundEntity))
+				{
+					if (foundEntity.Type == .Enum)
+					{
+						returnVal!(ZenType.Basic(.FromKind(.UntypedInteger)));
+					}
+				}
 			}
 
 			returnVal!(entity.Value.Type);
-		}
 
-		if (let funCall = expr as AstNode.Expression.Call)
-		{
-			let entity = lookupScopeForIdentifier(_scope, funCall.Callee.Name);
+		case .Call(let call):
+			let entity = lookupScopeForIdentifier(_scope, call.Callee.Name);
 			if (entity case .Err)
 			{
 				return .Invalid;
 			}
 
-			for (let arg in funCall.Arguments)
+			for (let arg in call.Arguments)
 			{
 				checkExpr(arg, _scope);
 			}
 
 			returnVal!(entity.Value.Type);
-		}
 
-		if (let ass = expr as AstNode.Expression.Assign)
-		{
+		case .Assign(let ass):
 			let x = checkExpr(ass.Assignee, _scope);
 			let y = checkExpr(ass.Value, _scope);
 			checkTypesComparable(ass.Op, x, y);
 
 			returnVal!(x);
-		}
 
-		if (let get = expr as AstNode.Expression.Get)
-		{
+		case .Get(let get):
 			let objType = checkExpr(get.Object, _scope);
 			if (objType case .Named(let name))
 			{
@@ -224,10 +234,46 @@ class Checker
 				let typenameEntity = _scope.Lookup(name).Value as Entity.TypeName;
 				if (let declScope = typenameEntity.Decl as AstNode.Stmt.IScope)
 				{
-					let entity = lookupScopeForIdentifier(declScope.Scope, get.Name);
-					if (entity case .Ok(let val))
+					if (typenameEntity.Decl is AstNode.Stmt.StructDeclaration)
 					{
-						returnVal!(val.Type);
+						let entity = lookupScopeForIdentifier(declScope.Scope, get.Name);
+						if (entity case .Ok(let val))
+						{
+							returnVal!(val.Type);
+						}
+					}
+					else
+					{
+						reportError(get.Name, "Expression must have a struct type.");
+					}
+				}
+			}
+
+			returnVal!(ZenType.Invalid);
+
+		case .Set(let set):
+			break;
+		case .Logical(let log):
+			break;
+		case .Unary(let un):
+			break;
+		case .Grouping(let group):
+			break;
+		case .This(let _this):
+			break;
+
+		case .QualifiedName(let qn):
+
+			let leftScope = _scope.Lookup(qn.Left.Lexeme);
+
+			if (leftScope case .Ok(let leftEntity))
+			{
+				if (let typename = leftEntity as Entity.TypeName)
+				{
+					if (let iScope = typename.Decl as AstNode.Stmt.IScope)
+					{
+						let val = checkExpr(qn.Right, iScope.Scope);
+						returnVal!(val);
 					}
 				}
 			}

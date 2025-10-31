@@ -50,7 +50,7 @@ class Scoper
 		for (let fun in BuiltinFunctions)
 		{
 			let token = Token(.Identifier, "", 0, 0, .Empty);
-			let entity = new Entity.Builtin(fun.Name, token, .Invalid);
+			let entity = new Entity.Builtin(fun.Name, token, .Function);
 			m_globalScope.Entities.Add(fun.Name, entity);
 		}
 	}
@@ -98,6 +98,13 @@ class Scoper
 			return m_currentScope;
 		}
 
+		if (let b = node as AstNode.Stmt.Block)
+		{
+			openNewScope("Block", b);
+			addStatementList(b.List);
+			closeScope();
+		}
+
 		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
 		{
 			openNewScope(scope $"Function ({fun.Name.Lexeme})", fun);
@@ -130,11 +137,24 @@ class Scoper
 			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, str.Name, .Structure));
 		}
 
-		if (let b = node as AstNode.Stmt.Block)
+		if (let _enum = node as AstNode.Stmt.EnumDeclaration)
 		{
-			openNewScope("Block", b);
-			addStatementList(b.List);
+			openNewScope(scope $"Enum ({_enum.Name.Lexeme})", _enum);
+
+			// Add values to scope
+			for (let value in _enum.Values)
+			{
+				addStatement(value);
+			}
+
 			closeScope();
+
+			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, _enum.Name, .Enum));
+		}
+
+		if (let enumVal = node as AstNode.Stmt.EnumFieldValue)
+		{
+			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(enumVal, default, enumVal.Name, .Basic(.FromKind(.UntypedInteger))));
 		}
 
 		if (let v = node as AstNode.Stmt.VariableDeclaration)
@@ -175,7 +195,7 @@ class Scoper
 		if (_scope.Entities.ContainsKey(name.Lexeme))
 		{
 			delete entity;
-			reportError(name, "Identifier already declared");
+			reportError(name, "Identifier has already declared");
 			return false;
 		}
 		_scope.Entities.Add(name.Lexeme, entity);
