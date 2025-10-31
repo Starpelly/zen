@@ -1,13 +1,25 @@
 #load "test.zen";
-#load "fibonacci.zen";
+// #load "fibonacci.zen";
 // #load "windows.zen";
 // #load "raylib.zen";
 
+struct Vector2
+{
+	float x;
+	float y;
+}
+
 fun void main()
 {
-	let int fib = fibonacci(10);
+	// let int fib = fibonacci(10);
 
-	println(fib);
+	let Vector2 vec2;
+	vec2.x = 4.0;
+	vec2.y = 2.0;
+
+	println(vec2.y);
+
+	// println(fib);
 	println("Hello world!");
 
 	print_test();

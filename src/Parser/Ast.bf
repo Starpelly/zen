@@ -104,6 +104,21 @@ abstract class AstNode
 			}
 		}
 
+		public class StructDeclaration : Stmt, IScope
+		{
+			public readonly Token Name;
+			public readonly List<VariableDeclaration> Fields ~ DeleteContainerAndItems!(_);
+
+			public Scope Scope { get => m_scope; set => m_scope = value; }
+			private Scope m_scope;
+
+			public this(Token name, List<VariableDeclaration> fields)
+			{
+				this.Name = name;
+				this.Fields = fields;
+			}
+		}
+
 		public class If : Stmt, IScope
 		{
 			public readonly Expression Condition ~ delete _;

@@ -143,37 +143,12 @@ struct BasicType
 	}
 }
 
-enum TypeKind
-{
-	Invalid,
-
-	Basic,
-	Array,
-	Struct,
-	Pointer,
-	Named,
-	Tuple,
-	Function,
-
-	Count
-}
-
 public enum ZenType
 {
 	case Invalid;
 	case Basic(BasicType basic);
-
-	/*
-	public class Basic : ZenType
-	{
-		public readonly BasicType Basic;
-
-		public this(BasicType basic)
-		{
-			this.Basic = basic;
-		}
-	}
-	*/
+	case Named(StringView name);
+	case Structure;
 
 	public bool IsTypeVoid()
 	{
@@ -260,6 +235,10 @@ public enum ZenType
 			return "Invalid type";
 		case .Basic(let basic):
 			return basic.Name;
+		case .Structure:
+			return "Struct";
+		case .Named:
+			return "Named type";
 		}
 	}
 

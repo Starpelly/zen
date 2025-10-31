@@ -89,6 +89,30 @@ extension Parser
 		return new .(isExtern ? .Extern : .Normal, name, type, body, parameters);
 	}
 
+	private AstNode.Stmt.StructDeclaration getStructStmt()
+	{
+		let name = consume(.Identifier, "Expected name.");
+
+		// Body
+		let fields = new List<AstNode.Stmt.VariableDeclaration>();
+		consume(.LeftBrace, "Expected '{'.");
+
+		while (!check(.RightBrace) && !isAtEnd())
+		{
+			let pType = consumeType();
+			let pName = consume(.Identifier, "Expected parameter name.");
+			consume(.Semicolon, "Semicolon expected.");
+
+			fields.Add(new .(.Immutable, pName, pType, null));
+			// list.Add(scanNextStmt());
+			// fields.Add((AstNode.Stmt.VariableDeclaration)scanNextStmt());
+		}
+
+		consume(.RightBrace, "Expected '}'.");
+
+		return new .(name, fields);
+	}
+
 	private AstNode.Stmt.If getIfStmt()
 	{
 		consume(.LeftParen, "Expected '(' after 'if'.");

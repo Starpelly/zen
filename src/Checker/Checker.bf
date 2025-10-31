@@ -63,7 +63,18 @@ class Checker
 
 		if (let _var = node as AstNode.Stmt.VariableDeclaration)
 		{
-			checkExpr(_var.Initializer, _scope);
+			let entity = _scope.Lookup(_var.Name.Lexeme).Value as Entity.Variable;
+			if (entity.Type case .Named(let name))
+			{
+				let lookupName = _scope.Lookup(name);
+				if (lookupName case .Err)
+				{
+					reportError(_var.Type, "Unknown data type.");
+				}
+			}
+
+			if (_var.Initializer != null)
+				checkExpr(_var.Initializer, _scope);
 		}
 
 		if (let ret = node as AstNode.Stmt.Return)
@@ -169,15 +180,10 @@ class Checker
 
 		if (let @var = expr as AstNode.Expression.Variable)
 		{
-			let entity = _scope.Lookup(@var.Name.Lexeme);
+			let entity = lookupScopeForIdentifier(_scope, @var.Name);
 			if (entity case .Err)
 			{
-				reportError(@var.Name, scope $"Undeclared identifier '{@var.Name.Lexeme}'");
 				return .Invalid;
-			}
-
-			if (let constant = entity.Value as Entity.Constant)
-			{
 			}
 
 			returnVal!(entity.Value.Type);
@@ -185,10 +191,9 @@ class Checker
 
 		if (let funCall = expr as AstNode.Expression.Call)
 		{
-			let entity = _scope.Lookup(funCall.Callee.Name.Lexeme);
+			let entity = lookupScopeForIdentifier(_scope, funCall.Callee.Name);
 			if (entity case .Err)
 			{
-				reportError(funCall.Callee.Name, scope $"Undeclared identifier '{funCall.Callee.Name.Lexeme}'");
 				return .Invalid;
 			}
 
@@ -209,6 +214,27 @@ class Checker
 			returnVal!(x);
 		}
 
+		if (let get = expr as AstNode.Expression.Get)
+		{
+			let objType = checkExpr(get.Object, _scope);
+			if (objType case .Named(let name))
+			{
+				// @FIX
+				// I don't know if this is guaranteed or not...
+				let typenameEntity = _scope.Lookup(name).Value as Entity.TypeName;
+				if (let declScope = typenameEntity.Decl as AstNode.Stmt.IScope)
+				{
+					let entity = lookupScopeForIdentifier(declScope.Scope, get.Name);
+					if (entity case .Ok(let val))
+					{
+						returnVal!(val.Type);
+					}
+				}
+			}
+
+			returnVal!(ZenType.Invalid);
+		}
+
 		Runtime.FatalError("Uh oh! How did you get here?");
 	}
 
@@ -221,6 +247,18 @@ class Checker
 			// Bad error message
 			reportError(token, scope $"Types mismatch ({x.GetName()}) to ({y.GetName()})");
 		}
+	}
+
+	private Result<Entity> lookupScopeForIdentifier(Scope _scope, Token name)
+	{
+		let entity = _scope.Lookup(name.Lexeme);
+		if (entity case .Err)
+		{
+			reportError(name, scope $"Undeclared identifier '{name.Lexeme}'");
+			return .Err;
+		}
+
+		return .Ok(entity);
 	}
 
 	private void checkExpressionIsTruthy(AstNode.Expression expr, Scope _scope)

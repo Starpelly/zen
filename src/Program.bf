@@ -61,7 +61,7 @@ class Program
 
 		File.WriteAllText(Path.Combine(.. scope .(), outputDirectory, "main.c"), c);
 
-		if (args.RunAfterBuild)
+		if (args.RunAfterBuild && !builder.HadErrors)
 		{
 			execute_c_code(c);
 		}

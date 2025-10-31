@@ -66,11 +66,23 @@ class Generator
 
 		code.AppendLine(BOILERPLATE_TOP);
 		code.AppendEmptyLine();
-		/*
-		code.AppendLine("int main()");
-		code.AppendLine("{");
-		code.IncreaseTab();
-*/
+
+		code.AppendBanner("Structs");
+		for (let node in m_ast)
+		{
+			if (let s = node as AstNode.Stmt.StructDeclaration)
+			{
+				code.AppendLine("typedef struct {");
+				code.IncreaseTab();
+				for (let field in s.Fields)
+				{
+					code.AppendLine(scope $"{field.Type.Lexeme} {field.Name.Lexeme};");
+				}
+				code.DecreaseTab();
+				code.AppendLine(scope $"\} {s.Name.Lexeme};");
+			}
+		}
+
 		code.AppendBanner("Constants");
 		for (let node in m_ast)
 		{
@@ -148,7 +160,11 @@ class Generator
 
 		if (let n = node as AstNode.Stmt.VariableDeclaration)
 		{
-			code.AppendLine(scope $"{n.Type.Lexeme} {n.Name.Lexeme} = {emitExpr(n.Initializer, .. scope .())}");
+			code.AppendLine(scope $"{n.Type.Lexeme} {n.Name.Lexeme}");
+			if (n.Initializer != null)
+			{
+				code.Append(scope $" = {emitExpr(n.Initializer, .. scope .())}");
+			}
 			addSemicolon!();
 		}
 
@@ -215,6 +231,13 @@ class Generator
 		if (let lit = expr as AstNode.Expression.Literal)
 		{
 			outStr.Append(lit.Token.Lexeme);
+			if (lit.Type.IsTypeFloat())
+			{
+				// C appends the "f" at the end of floats...
+				// Not technically required, I don't think?
+				// But better to be safe than sorry.
+				outStr.Append("f");
+			}
 		}
 
 		if (let _var = expr as AstNode.Expression.Variable)
@@ -306,6 +329,12 @@ class Generator
 		{
 			outStr.Append(scope $"{emitExpr(ass.Assignee, .. scope .())} {ass.Op.Lexeme} {emitExpr(ass.Value, .. scope .())}");
 		}
+
+		if (let get = expr as AstNode.Expression.Get)
+		{
+			outStr.Append(scope $"{emitExpr(get.Object, .. scope .())}.{get.Name.Lexeme}");
+			// outStr.Append(scope $"{emitExpr(set.Object, .. scope .())}.{set.Name}");
+		}
 	}
 
 	private void emitFunctionHead(AstNode.Stmt.FunctionDeclaration fun, CodeBuilder code)
@@ -318,7 +347,7 @@ class Generator
 				parameters.Append(", ");
 		}
 
-		code.AppendLine(scope $"/*static*/ {fun.Type.Lexeme} {fun.Name.Lexeme} ({parameters.Code})");
+		code.AppendLine(scope $"{fun.Type.Lexeme} {fun.Name.Lexeme}({parameters.Code})");
 	}
 
 	private void emitType(ZenType type, String outStr)

@@ -3,40 +3,67 @@ using System.Collections;
 
 namespace Zen;
 
-public enum EntityKind
-{
-	Invalid,
-	Constant,
-	Variable,
-	TypeName,
-	Function,
-	Builtin
-}
-
 /// An entity is a named "thing" in the language.
 abstract class Entity
 {
-	public Token Token;
-	public ZenType Type;
+	public readonly Token Token;
+	public readonly ZenType Type;
 
-	public class Function : Entity
+	public this(Token token, ZenType type)
 	{
-		public AstNode.Stmt.FunctionDeclaration Decl;
-	}
-
-	public class Variable : Entity
-	{
-		public AstNode.Stmt.VariableDeclaration Decl;
+		this.Token = token;
+		Type = type;
 	}
 
 	public class Constant : Entity
 	{
-		public AstNode.Stmt.ConstantDeclaration Decl;
-		public Variant Value ~ _.Dispose();
+		public readonly AstNode.Stmt.ConstantDeclaration Decl;
+		public readonly Variant Value ~ _.Dispose();
+
+		public this(AstNode.Stmt.ConstantDeclaration decl, Variant value, Token token, ZenType type) : base(token, type)
+		{
+			this.Decl = decl;
+			this.Value = Value;
+		}
+	}
+
+	public class Variable : Entity
+	{
+		public readonly AstNode.Stmt.VariableDeclaration Decl;
+
+		public this(AstNode.Stmt.VariableDeclaration decl, Token token, ZenType type) : base(token, type)
+		{
+			this.Decl = decl;
+		}
+	}
+
+	public class TypeName : Entity
+	{
+		public readonly AstNode.Stmt Decl;
+
+		public this(AstNode.Stmt decl, Token token, ZenType type) : base(token, type)
+		{
+			this.Decl = decl;
+		}
+	}
+
+	public class Function : Entity
+	{
+		public readonly AstNode.Stmt.FunctionDeclaration Decl;
+
+		public this(AstNode.Stmt.FunctionDeclaration decl, Token token, ZenType type) : base(token, type)
+		{
+			this.Decl = decl;
+		}
 	}
 
 	public class Builtin : Entity
 	{
-		public StringView Name;
+		public readonly StringView Name;
+
+		public this(StringView name, Token token, ZenType type) : base(token, type)
+		{
+			this.Name = name;
+		}
 	}
 }

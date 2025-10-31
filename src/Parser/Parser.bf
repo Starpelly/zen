@@ -49,6 +49,10 @@ class Parser
 		{
 			return getFunctionStmt(false);
 		}
+		if (match(.Struct))
+		{
+			return getStructStmt();
+		}
 		if (match(.Return))
 		{
 			return getReturnStmt();

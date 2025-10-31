@@ -7,4 +7,4 @@ StartupObject = "Zen.Program"
 DefaultNamespace = "Zen"
 
 [Configs.Debug.Win64]
-DebugCommandArguments = "$(WorkspaceDir)/test/main.zen -wait -run"
+DebugCommandArguments = "$(WorkspaceDir)/test/main.zen -wait"

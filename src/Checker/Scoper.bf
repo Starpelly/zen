@@ -49,22 +49,16 @@ class Scoper
 		// Built in functions
 		for (let fun in BuiltinFunctions)
 		{
-			let entity = new Entity.Builtin();
-			entity.Token = .(.Identifier, "", 0, 0, .Empty);
-			entity.Type = .Invalid;
-			entity.Name = fun.Name;
+			let token = Token(.Identifier, "", 0, 0, .Empty);
+			let entity = new Entity.Builtin(fun.Name, token, .Invalid);
 			m_globalScope.Entities.Add(fun.Name, entity);
 		}
 	}
 
 	private void addGlobalConstant(String name, ZenType type, Variant value)
 	{
-		let entity = new Entity.Constant();
-		entity.Decl = null;
-		entity.Token = .(.Identifier, name, 0, 0, .Empty);
-		entity.Type = type;
-		entity.Value = value;
-
+		let token = Token(.Identifier, name, 0, 0, .Empty);
+		let entity = new Entity.Constant(null, value, token, type);
 		m_globalScope.Entities.Add(name, entity);
 	}
 
@@ -118,11 +112,22 @@ class Scoper
 
 			closeScope();
 
-			let entity = new Entity.Function();
-			entity.Token = fun.Name;
-			entity.Decl = fun;
-			entity.Type = getTypeFromToken(fun.Type);
-			m_currentScope.TryDeclare(fun.Name.Lexeme, entity);
+			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, fun.Name, getTypeFromToken(fun.Type)));
+		}
+
+		if (let str = node as AstNode.Stmt.StructDeclaration)
+		{
+			openNewScope(scope $"Struct ({str.Name.Lexeme})", str);
+
+			// Add fields to scope
+			for (let field in str.Fields)
+			{
+				addStatement(field);
+			}
+
+			closeScope();
+
+			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, str.Name, .Structure));
 		}
 
 		if (let b = node as AstNode.Stmt.Block)
@@ -134,20 +139,12 @@ class Scoper
 
 		if (let v = node as AstNode.Stmt.VariableDeclaration)
 		{
-			let entity = new Entity.Variable();
-			entity.Token = v.Name;
-			entity.Decl = v;
-			entity.Type = getTypeFromToken(v.Type);
-			m_currentScope.TryDeclare(v.Name.Lexeme, entity);
+			scope_tryDeclare(m_currentScope, v.Name, new Entity.Variable(v, v.Name, getTypeFromToken(v.Type)));
 		}
 
 		if (let c = node as AstNode.Stmt.ConstantDeclaration)
 		{
-			let entity = new Entity.Constant();
-			entity.Token = c.Name;
-			entity.Decl = c;
-			entity.Type = getTypeFromToken(c.Type);
-			m_currentScope.TryDeclare(c.Name.Lexeme, entity);
+			scope_tryDeclare(m_currentScope, c.Name, new Entity.Constant(c, default, c.Name, .Invalid));
 		}
 
 		if (let _if = node as AstNode.Stmt.If)
@@ -171,6 +168,19 @@ class Scoper
 			addStatement(_while.Body, false);
 			closeScope();
 		}
+	}
+
+	private bool scope_tryDeclare(Scope _scope, Token name, Entity entity)
+	{
+		if (_scope.Entities.ContainsKey(name.Lexeme))
+		{
+			delete entity;
+			reportError(name, "Identifier already declared");
+			return false;
+		}
+		_scope.Entities.Add(name.Lexeme, entity);
+		// entity.Scope = this;
+		return true;
 	}
 
 	public static void PrintScopeTree(Scope _scope, int indent = 0)
@@ -199,8 +209,8 @@ class Scoper
 		if (res case .Ok(let val))
 			return .Basic(val);
 
-		reportError(token, "Unknown data type.");
-		return .Invalid;
+		// reportError(token, "Unknown data type.");
+		return .Named(token.Lexeme);
 	}
 
 	private void reportError(Token token, String message)

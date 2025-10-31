@@ -22,15 +22,6 @@ class Scope
 		}
 	}
 
-	public bool TryDeclare(StringView name, Entity entity)
-	{
-		if (Entities.ContainsKey(name))
-			return false;
-		Entities.Add(name, entity);
-		// entity.Scope = this;
-		return true;
-	}
-
 	public Result<Entity> Lookup(StringView name)
 	{
 		if (Entities.TryGetValue(name, let entity))
