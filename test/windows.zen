@@ -1,0 +1,1 @@
+extern fun void message_box(let string text);

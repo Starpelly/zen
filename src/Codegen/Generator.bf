@@ -33,6 +33,31 @@ class Generator
 		typedef			 char		int8;
 		typedef			 float		float32;
 		typedef			 double		float64;
+
+		#if defined(_WIN32)
+		#define ZEN_PLATFORM_WINDOWS
+			#ifdef _WIN64
+				#define ZEN_X64
+			#endif
+		#elif defined(__linux__)
+			#define ZEN_PLATFORM_LINUX
+		#else
+			#error "Unknown platform!"
+		#endif
+
+		#ifdef ZEN_PLATFORM_WINDOWS
+		#include <windows.h>
+		#endif
+
+			void message_box(string text)
+			{
+				MessageBox(
+					NULL,
+					text,
+					"Title",
+					MB_OK | MB_ICONINFORMATION
+				);
+			}
 		""";
 
 		code.AppendLine(BOILERPLATE_TOP);
@@ -62,15 +87,7 @@ class Generator
 					continue;
 				}
 
-				let parameters = scope CodeBuilder();
-				for (let param in fun.Parameters)
-				{
-					parameters.Append(scope $"{param.Type.Lexeme} {param.Name.Lexeme}");
-					if (param != fun.Parameters.Back)
-						parameters.Append(", ");
-				}
-
-				code.AppendLine(scope $"static {fun.Type.Lexeme} {fun.Name.Lexeme} ({parameters.Code})");
+				emitFunctionHead(fun, code);
 				code.Append(';');
 			}
 		}
@@ -121,15 +138,7 @@ class Generator
 				return;
 			}
 
-			let parameters = scope CodeBuilder();
-			for (let param in fun.Parameters)
-			{
-				parameters.Append(scope $"{param.Type.Lexeme} {param.Name.Lexeme}");
-				if (param != fun.Parameters.Back)
-					parameters.Append(", ");
-			}
-
-			code.AppendLine(scope $"static {fun.Type.Lexeme} {fun.Name.Lexeme} ({parameters.Code})");
+			emitFunctionHead(fun, code);
 			emitNode(fun.Body, code);
 		}
 
@@ -293,6 +302,19 @@ class Generator
 		{
 			outStr.Append(scope $"{emitExpr(ass.Assignee, .. scope .())} {ass.Op.Lexeme} {emitExpr(ass.Value, .. scope .())}");
 		}
+	}
+
+	private void emitFunctionHead(AstNode.Stmt.FunctionDeclaration fun, CodeBuilder code)
+	{
+		let parameters = scope CodeBuilder();
+		for (let param in fun.Parameters)
+		{
+			parameters.Append(scope $"{param.Type.Lexeme} {param.Name.Lexeme}");
+			if (param != fun.Parameters.Back)
+				parameters.Append(", ");
+		}
+
+		code.AppendLine(scope $"/*static*/ {fun.Type.Lexeme} {fun.Name.Lexeme} ({parameters.Code})");
 	}
 
 	private void emitType(ZenType type, String outStr)

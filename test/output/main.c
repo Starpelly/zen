@@ -15,46 +15,73 @@ typedef			 char		int8;
 typedef			 float		float32;
 typedef			 double		float64;
 
+#if defined(_WIN32)
+#define ZEN_PLATFORM_WINDOWS
+	#ifdef _WIN64
+		#define ZEN_X64
+	#endif
+#elif defined(__linux__)
+	#define ZEN_PLATFORM_LINUX
+#else
+	#error "Unknown platform!"
+#endif
+
+#ifdef ZEN_PLATFORM_WINDOWS
+#include <windows.h>
+#endif
+
+	void message_box(string text)
+	{
+		MessageBox(
+			NULL,
+			text,
+			"Title",
+			MB_OK | MB_ICONINFORMATION
+		);
+	}
+
 // --------------------------------------------------------------
 // Constants
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 // Forward Declarations
 // --------------------------------------------------------------
-static void main ();
-static int add (int x, int y);
-static void abc_test ();
-static void loop_test ();
-static void print_test ();
-static int fibonacci (int n);
+/*static*/ void main ();
+/*static*/ int add (int x, int y);
+/*static*/ void abc_test ();
+/*static*/ void loop_test ();
+/*static*/ void print_test ();
+/*static*/ int fibonacci (int n);
 // --------------------------------------------------------------
 // Functions
 // --------------------------------------------------------------
-static void main ()
+/*static*/ void main ()
 {
 	int fib = fibonacci(10);
+	printf("%i\n", fib);
 	printf("%s\n", "Hello world!");
 	print_test();
+	message_box("Hello, Windows!");
 }
-static int add (int x, int y)
+/*static*/ int add (int x, int y)
 {
 	return x + y;
 }
-static void abc_test ()
+/*static*/ void abc_test ()
 {
 	int a = add(1, 1);
 	int b = a + a;
 	int c = a + b;
 	printf("%i", c);
 }
-static void loop_test ()
+/*static*/ void loop_test ()
 {
 	for (int i = 0; i < 10; i = i + 1)
 	{
 		printf("%s", "welcome to zen!");
 	}
 }
-static void print_test ()
+/*static*/ void print_test ()
 {
 	int val_int = 1;
 	float val_float = 1.0;
@@ -63,7 +90,7 @@ static void print_test ()
 	printf("%f\n", val_float);
 	printf("%s\n", val_bool  ? "true" : "false");
 }
-static int fibonacci (int n)
+/*static*/ int fibonacci (int n)
 {
 	if (n <= 1)
 	{

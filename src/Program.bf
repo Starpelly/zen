@@ -48,18 +48,71 @@ class Program
 		// @TEMP
 		let mainFileDirectory = Path.GetDirectoryPath(args.MainFile, .. scope .());
 		let outputDirectory = Path.Combine(.. scope .(), mainFileDirectory, "output");
-		builder.Run(args.MainFile, outputDirectory, scope => finishCompile);
+		let c = builder.Run(args.MainFile, outputDirectory, scope => finishCompile, .. scope .());
 
 		Console.ResetColor();
 		if (!builder.HadErrors)
 		{
 			Console.ForegroundColor = .Green;
-			Console.WriteLine("Done!");
+			Console.Write("SUCCESS");
 			Console.ResetColor();
+			Console.WriteLine(": Build completed with no errors.");
 		}
 
+		File.WriteAllText(Path.Combine(.. scope .(), outputDirectory, "main.c"), c);
+
+		if (args.RunAfterBuild)
+		{
+			execute_c_code(c);
+		}
 		if (args.KeepOpen)
+		{
 			Console.ReadLine("");
+		}
+	}
+
+	private static void execute_c_code(String code)
+	{
+		mixin fail(String msg)
+		{
+			Console.ForegroundColor = .DarkRed;
+			Console.WriteLine(msg);
+			Console.ResetColor();
+			return;
+		}
+
+		let tccPath = Path.Combine(.. scope .(), Directory.GetCurrentDirectory(.. scope .()), "vendor", "libtcc", "vendor", "tcc");
+
+		let compiler = scope libtcc.TCCCompiler(tccPath);
+
+		if (compiler.CompileString(code) == -1)
+		{
+			fail!("TinyCC compilation failed");
+		}
+		if (compiler.Relocate(libtcc.Bindings.TccRealocateConst.TCC_RELOCATE_AUTO) < 0)
+		{
+			fail!("Relocation failed");
+		}
+
+		// let addSymbol = compiler.GetSymbol("add");
+		// let mulSymbol = compiler.GetSymbol("mul");
+		// let messageSymbol = compiler.GetSymbol("message");
+		let mainSymbol = compiler.GetSymbol("main");
+
+		if (mainSymbol == null)
+		{
+			fail!("The main symbol couldn't be found, so we can't run the program!");
+		}
+
+		// function int(int a, int b) add_func = (.)addSymbol;
+		// function int(int a, int b) mul_func = (.)mulSymbol;
+		// char8* msg_func = *(char8**)messageSymbol;
+		function void() main_func = (.)mainSymbol;
+
+		main_func();
+		// Console.WriteLine(add_func(4, 2));
+		// Console.WriteLine(mul_func(4, 2));
+		// Console.WriteLine(scope String(msg_func));
 	}
 
 	private static void finishCompile(Builder builder, bool hadErrors)

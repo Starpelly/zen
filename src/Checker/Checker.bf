@@ -69,7 +69,7 @@ class Checker
 		if (let ret = node as AstNode.Stmt.Return)
 		{
 			let retType = checkExpr(ret.Value, _scope);
-			if (!ZenType.AreTypesIdentical(m_functionStack.Back.Type, retType))
+			if (!ZenType.AreTypesIdenticalUntyped(m_functionStack.Back.Type, retType))
 			{
 				reportError(ret.Token, scope $"Return type mismatch: expected '{m_functionStack.Back.Type.GetName()}', got '{retType.GetName()}'");
 			}

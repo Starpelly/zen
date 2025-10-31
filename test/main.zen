@@ -1,10 +1,15 @@
 #load "test.zen";
 #load "fibonacci.zen";
+#load "windows.zen";
 
 fun void main()
 {
 	let int fib = fibonacci(10);
 
+	println(fib);
 	println("Hello world!");
+
 	print_test();
+
+	message_box("Hello, Windows!");
 }
