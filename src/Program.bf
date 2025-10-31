@@ -6,10 +6,49 @@ namespace Zen;
 
 class Program
 {
+	struct CLIArguments
+	{
+		public String MainFile;
+		public bool RunAfterBuild = false;
+		public bool KeepOpen = false;
+	}
+
 	public static int Main(String[] args)
 	{
+		CLIArguments cliArgs = default;
+
+		if (args.IsEmpty)
+		{
+			Console.WriteLine("Set an input file.");
+			return 0;
+		}
+
+		cliArgs.MainFile = args[0];
+		for (let arg in args)
+		{
+			switch (arg)
+			{
+			case "-run":
+				cliArgs.RunAfterBuild = true;
+				break;
+			case "-wait":
+				cliArgs.KeepOpen = true;
+				break;
+			}
+		}
+
+		run_compiler(cliArgs);
+		
+		return 0;
+	}
+
+	private static void run_compiler(CLIArguments args)
+	{
 		let builder = scope Builder();
-		builder.Run(scope => finishCompile);
+		// @TEMP
+		let mainFileDirectory = Path.GetDirectoryPath(args.MainFile, .. scope .());
+		let outputDirectory = Path.Combine(.. scope .(), mainFileDirectory, "output");
+		builder.Run(args.MainFile, outputDirectory, scope => finishCompile);
 
 		Console.ResetColor();
 		if (!builder.HadErrors)
@@ -19,45 +58,8 @@ class Program
 			Console.ResetColor();
 		}
 
-		Console.ReadLine("");
-
-		/*
-
-		if (parser.Run() case .Ok(let ast))
-		{
-			/*
-			for (let node in ast)
-			{
-				Console.WriteLine(scope $"{node.GetType().GetName(..scope .())}");
-				Console.WriteLine(printNode(node, .. scope .()));
-			}
-			*/
-
-			let gen = scope Generator(ast);
-			let c = gen.Run(.. scope .());
-
-			File.WriteAllText(Path.Combine(.. scope .(), testPath, "main.c"), c);
-		}
-		else
-		{
-		}
-
-		*/
-		return 0;
-	}
-
-	private static void printNode(AstNode node, String outBuffer)
-	{
-		if (let v = node as AstNode.Stmt.VariableDeclaration)
-		{
-			outBuffer.Append(scope $"{v.Kind}, {v.Name.Lexeme}");
-			printNode(v.Initializer, outBuffer);
-		}
-
-		if (let bin = node as AstNode.Expression.Binary)
-		{
-			outBuffer.Append(scope $"{bin.Left} {bin.Op.Lexeme}");
-		}
+		if (args.KeepOpen)
+			Console.ReadLine("");
 	}
 
 	private static void finishCompile(Builder builder, bool hadErrors)

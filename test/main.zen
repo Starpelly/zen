@@ -1,5 +1,4 @@
 #load "test.zen";
-
 #load "fibonacci.zen";
 
 fun void main()
@@ -8,21 +7,4 @@ fun void main()
 
 	println("Hello world!");
 	print_test();
-
-	while (true)
-	{
-		
-	}
-
-	/*
-	while (true)
-	{
-		printstr("hello!");
-	}
-	*/
-
-	for (let int i = 0; i < 20; i = i + 1)
-	{
-		
-	}
 }

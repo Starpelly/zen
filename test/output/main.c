@@ -35,12 +35,6 @@ static void main ()
 	int fib = fibonacci(10);
 	printf("%s\n", "Hello world!");
 	print_test();
-	while (true)
-	{
-	}
-	for (int i = 0; i < 20; i = i + 1)
-	{
-	}
 }
 static int add (int x, int y)
 {
