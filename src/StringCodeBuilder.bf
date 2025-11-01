@@ -79,7 +79,8 @@ public class StringCodeBuilder
 
 	public void AppendEmptyLine()
 	{
-		AppendLine("");
+		AppendNewLine();
+		AppendTabs();
 	}
 
 	public void AppendTabs()

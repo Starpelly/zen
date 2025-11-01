@@ -1,4 +1,4 @@
-// namespace rl;
+namespace raylib;
 
 extern struct Vector2
 {

@@ -44,6 +44,7 @@ enum ExpressionKind
 	case Grouping(AstNode.Expression.Grouping);
 	case Assign(AstNode.Expression.Assign);
 	case QualifiedName(AstNode.Expression.QualifiedName);
+	case NamedType(AstNode.Expression.NamedType);
 }
 
 abstract class AstNode
@@ -105,14 +106,14 @@ abstract class AstNode
 
 			public readonly FunctionKind Kind;
 			public readonly Token Name;
-			public readonly Token Type;
+			public readonly Expression.NamedType Type ~ delete _;
 			public readonly Block Body ~ delete _;
 			public List<AstNode.Stmt.VariableDeclaration> Parameters ~ DeleteContainerAndItems!(_);
 
 			public Scope Scope { get => m_scope; set => m_scope = value; }
 			private Scope m_scope;
 
-			public this(FunctionKind kind, Token name, Token type, Block body, List<AstNode.Stmt.VariableDeclaration> parameters)
+			public this(FunctionKind kind, Token name, Expression.NamedType type, Block body, List<AstNode.Stmt.VariableDeclaration> parameters)
 			{
 				this.Kind = kind;
 				this.Name = name;
@@ -184,11 +185,11 @@ abstract class AstNode
 		{
 			public readonly DeclarationKind Kind;
 			public readonly Token Name;
-			public readonly Token Type;
+			public readonly Expression.NamedType Type ~ delete _;
 			public readonly Token? Operator;
 			public readonly Expression Initializer ~ if (_ != null) delete _;
 			
-			public this(DeclarationKind kind, Token name, Token type, Token? op, Expression init)
+			public this(DeclarationKind kind, Token name, Expression.NamedType type, Token? op, Expression init)
 			{
 				this.Kind = kind;
 				this.Name = name;
@@ -203,10 +204,10 @@ abstract class AstNode
 		public class ConstantDeclaration : Stmt
 		{
 			public readonly Token Name;
-			public readonly Token Type;
+			public readonly Expression.NamedType Type ~ delete _;
 			public readonly Expression Initializer ~ delete _;
 
-			public this(Token name, Token type, Expression init)
+			public this(Token name, Expression.NamedType type, Expression init)
 			{
 				this.Name = name;
 				this.Type = type;
@@ -502,6 +503,32 @@ abstract class AstNode
 			}
 
 			public override ExpressionKind GetKind() => .QualifiedName(this);
+		}
+
+		public class NamedType : Expression
+		{
+			public enum Kind
+			{
+				case Simple(Token name);
+				case Qualified(QualifiedName name);
+			}
+
+			public readonly Kind Kind;
+
+			public this(Token name, Kind kind)
+			{
+				this.Kind = kind;
+			}
+
+			public ~this()
+			{
+				if (this.Kind case .Qualified(let q))
+				{
+					delete q;
+				}
+			}
+
+			public override ExpressionKind GetKind() => .NamedType(this);
 		}
 	}
 }

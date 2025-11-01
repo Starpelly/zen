@@ -8,31 +8,28 @@ struct Vector2I
 
 fun void main()
 {
-    InitWindow(1280, 720, "Zen");
+    raylib::InitWindow(1280, 720, "Zen");
 
 	let Vector2I playerPos;
 
-	while (WindowShouldClose() == false)
+	while (raylib::WindowShouldClose() == false)
 	{
-		BeginDrawing();
+		raylib::BeginDrawing();
 
-		let Color black;
+		let raylib::Color black;
 		black.r = 0; black.g = 0; black.b = 0; black.a = 255;
-		ClearBackground(black);
+		raylib::ClearBackground(black);
+		
+		raylib::DrawFPS(20, 20);
 
-		DrawFPS(20, 20);
+		playerPos.x = raylib::GetMouseX();
+		playerPos.y = raylib::GetMouseY();
 
-		playerPos.x = GetMouseX();
-		playerPos.y = GetMouseY();
+		let raylib::Color color;
+		color.r = 255; color.g = 255; color.b = 0; color.a = 255;
+		raylib::DrawRectangle(playerPos.x, playerPos.y, 32, 32, color);
 
-		let Color color;
-		color.r = 255;
-		color.g = 255;
-		color.b = 0;
-		color.a = 255;
-		DrawRectangle(playerPos.x, playerPos.y, 32, 32, color);
-
-		EndDrawing();
+		raylib::EndDrawing();
 	}
-	CloseWindow();
+	raylib::CloseWindow();
 }

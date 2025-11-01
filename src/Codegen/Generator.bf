@@ -206,7 +206,11 @@ class Generator
 						{
 							for (let field in _struct.Fields)
 							{
-								code.AppendLine(scope $"{field.Type.Lexeme} {field.Name.Lexeme};");
+								code.AppendNewLine();
+								code.AppendTabs();
+
+								emitExpr(field.Type, code, _scope);
+								code.Append(scope $" {field.Name.Lexeme};");
 							}
 						}
 						code.DecreaseTab();
@@ -258,12 +262,16 @@ class Generator
 		let parameters = scope StringCodeBuilder();
 		for (let param in func.Parameters)
 		{
-			parameters.Append(scope $"{param.Type.Lexeme} {param.Name.Lexeme}");
+			emitExpr(param.Type, code, func.Scope);
+			parameters.Append(scope $" {param.Name.Lexeme}");
 			if (param != func.Parameters.Back)
 				parameters.Append(", ");
 		}
 
-		code.AppendLine(scope $"{func.Type.Lexeme} {namespaceStack}_{func.Name.Lexeme}({parameters.Code})");
+		code.AppendEmptyLine();
+
+		emitExpr(func.Type, code, func.Scope);
+		code.Append(scope $" {namespaceStack}_{func.Name.Lexeme}({parameters.Code})");
 	}
 
 	private void emitFunctionStmt(AstNode.Stmt stmt, StringCodeBuilder code, Scope _scope, bool emitSemicolon = true)
@@ -298,34 +306,38 @@ class Generator
 
 			// @FIX
 			// I don't think the codegen should have to do this
-			let entity = _scope.Lookup(v.Type.Lexeme);
-			if (entity case .Ok(let found))
+			if (v.Type.Kind case .Simple(let typename))
 			{
-				if (let tn = found as Entity.TypeName)
+				let entity = _scope.Lookup(typename.Lexeme);
+				if (entity case .Ok(let found))
 				{
-					if (let s = tn.Decl as AstNode.Stmt.StructDeclaration)
+					if (let tn = found as Entity.TypeName)
 					{
-						isStructType = true;
-						if (s.Kind == .Extern)
+						if (let s = tn.Decl as AstNode.Stmt.StructDeclaration)
 						{
-							isExternType = true;
+							isStructType = true;
+							if (s.Kind == .Extern)
+							{
+								isExternType = true;
+							}
 						}
 					}
-				}
 
-				if (let t = found as IEntityNamespaceParent)
-				{
-					bool write = !isExternType;
-
-					if (write)
+					if (let t = found as IEntityNamespaceParent)
 					{
-						code.Append(buildNamespaceString(t, .. scope .()));
-						code.Append("_");
+						bool write = !isExternType;
+
+						if (write)
+						{
+							code.Append(buildNamespaceString(t, .. scope .()));
+							code.Append("_");
+						}
 					}
 				}
 			}
 
-			code.Append(scope $"{v.Type.Lexeme} {v.Name.Lexeme}");
+			emitExpr(v.Type, code, _scope);
+			code.Append(scope $" {v.Name.Lexeme}");
 			if (v.Initializer != null)
 			{
 				code.Append(scope $" = ");
@@ -567,22 +579,74 @@ class Generator
 			break;
 
 		case .QualifiedName(let qn):
-			code.Append("zen_");
 
-			// @FIX
-			// I don't think the codegen should have to do this
-			let entity = _scope.Lookup(qn.Left.Lexeme);
-			if (entity case .Ok(let found))
+			bool writeNamespace = true;
+
+			// @FIX @FIX @FIX
+			// This sucks fucking dick
+			// The checker should resolve all this, I'm tired of looking back up scopes to find this data...
+			if (let call = qn.Right as AstNode.Expression.Call)
 			{
-				if (let typename = found as Entity.TypeName)
+				let lookForScopeResult = _scope.Lookup(qn.Left.Lexeme);
+
+				if (lookForScopeResult case .Ok(let leftFound))
 				{
-					code.Append(typename.NamespaceParent.Token.Lexeme);
-					code.Append("_");
+					if (let foundScope = leftFound as Entity.Namespace)
+					{
+						let callRes = foundScope.Decl.Scope.Lookup(call.Callee.Name.Lexeme);
+						if (callRes case .Ok(let found))
+						{
+							if (let fun = found as Entity.Function)
+							{
+								if (fun.Decl.Kind == .Extern)
+								{
+									writeNamespace = false;
+								}
+							}
+						}
+					}
+				}
+			}
+			if (qn.Right.Type case .Structure(let str))
+			{
+				if (str.Kind == .Extern)
+				{
+					writeNamespace = false;
 				}
 			}
 
-			code.Append(scope $"{qn.Left.Lexeme}_");
+			if (writeNamespace)
+			{
+				code.Append("zen_");
+
+				// @FIX
+				// I don't think the codegen should have to do this
+				let entity = _scope.Lookup(qn.Left.Lexeme);
+				if (entity case .Ok(let found))
+				{
+					if (let typename = found as Entity.TypeName)
+					{
+						code.Append(typename.NamespaceParent.Token.Lexeme);
+						code.Append("_");
+					}
+				}
+
+				code.Append(scope $"{qn.Left.Lexeme}_");
+			}
+
 			emitExpr(qn.Right, code, _scope);
+			break;
+
+		case .NamedType(let type):
+			switch (type.Kind)
+			{
+			case .Simple(let name):
+				code.Append(name.Lexeme);
+				break;
+			case .Qualified(let qualified):
+				emitExpr(qualified, code, _scope);
+				break;
+			}
 			break;
 		}
 	}

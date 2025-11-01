@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Diagnostics;
 
 namespace Zen;
 
@@ -66,9 +67,11 @@ class Checker
 		if (let _var = node as AstNode.Stmt.VariableDeclaration)
 		{
 			let entity = _scope.Lookup(_var.Name.Lexeme).Value as Entity.Variable;
-			if (entity.Type case .Named(let name))
+			if (entity.Type case .SimpleNamed(let simpleName))
 			{
-				let lookupName = _scope.Lookup(name);
+				lookupScopeForIdentifier(_scope, simpleName).IgnoreError();
+				/*
+				let lookupName = _scope.Lookup(name.Lexeme);
 				if (lookupName case .Ok(let lookup))
 				{
 				}
@@ -76,6 +79,11 @@ class Checker
 				{
 					reportError(_var.Type, "Unknown data type.");
 				}
+				*/
+			}
+			if (entity.Type case .QualifiedNamed(let qualifiedName))
+			{
+				checkExpr(qualifiedName, _scope);
 			}
 
 			if (_var.Initializer != null)
@@ -137,7 +145,7 @@ class Checker
 		}
 	}
 
-	private ZenType checkExpr(AstNode.Expression expr, Scope _scope)
+	private ZenType checkExpr(AstNode.Expression expr, Scope _scope, Scope callScope = null)
 	{
 		mixin returnVal(ZenType type)
 		{
@@ -198,6 +206,7 @@ class Checker
 			// If it's an enum, we can just return an integer, since they're pretty much the same.
 			// I don't think we should do this here, Enums should probably be comparable to ints when we actually compare them.
 			// Especially when enums get the ability to specify their types. But this is OK for now.
+			/*
 			if (let _var = entity.Value as Entity.Variable)
 			{
 				if (_scope.Lookup(_var.Decl.Type.Lexeme) case .Ok(let foundEntity))
@@ -208,6 +217,7 @@ class Checker
 					}
 				}
 			}
+			*/
 
 			returnVal!(entity.Value.Type);
 
@@ -220,7 +230,7 @@ class Checker
 
 			for (let arg in call.Arguments)
 			{
-				checkExpr(arg, _scope);
+				checkExpr(arg, (callScope == null) ? _scope : callScope);
 			}
 
 			returnVal!(entity.Value.Type);
@@ -234,24 +244,53 @@ class Checker
 
 		case .Get(let get):
 			let objType = checkExpr(get.Object, _scope);
-			if (objType case .Named(let name))
+
+			mixin lookupScope(Scope _scope, Token name)
+			{
+				let tres = lookupScopeForIdentifier(_scope, name);
+				if (tres case .Ok(let found))
+				{
+					if (let typename = found as Entity.TypeName)
+					{
+						if (let declScope = typename.Decl as AstNode.Stmt.IScope)
+						{
+							if (typename.Decl is AstNode.Stmt.StructDeclaration)
+							{
+								let entity = lookupScopeForIdentifier(declScope.Scope, get.Name);
+								if (entity case .Ok(let val))
+								{
+									returnVal!(val.Type);
+								}
+							}
+							else
+							{
+								reportError(get.Name, "Expression must have a struct type.");
+							}
+						}
+					}
+				}
+			}
+
+			if (objType case .SimpleNamed(let simpleName))
 			{
 				// @FIX
 				// I don't know if this is guaranteed or not...
-				let typenameEntity = _scope.Lookup(name).Value as Entity.TypeName;
-				if (let declScope = typenameEntity.Decl as AstNode.Stmt.IScope)
+				lookupScope!(_scope, simpleName);
+			}
+			if (objType case .QualifiedNamed(let qualifiedName))
+			{
+				let leftNamespaceScope = lookupScopeForIdentifier(_scope, qualifiedName.Left);
+
+				if (leftNamespaceScope case .Ok(let leftNamespaceEntity))
 				{
-					if (typenameEntity.Decl is AstNode.Stmt.StructDeclaration)
+					if (let decl = leftNamespaceEntity as IEntityDeclaration)
 					{
-						let entity = lookupScopeForIdentifier(declScope.Scope, get.Name);
-						if (entity case .Ok(let val))
+						if (let iScope = decl.Decl as AstNode.Stmt.IScope)
 						{
-							returnVal!(val.Type);
+							Debug.Assert(qualifiedName.Right is AstNode.Expression.Variable);
+							let _var = qualifiedName.Right as AstNode.Expression.Variable;
+							lookupScope!(iScope.Scope, _var.Name);
 						}
-					}
-					else
-					{
-						reportError(get.Name, "Expression must have a struct type.");
 					}
 				}
 			}
@@ -278,13 +317,25 @@ class Checker
 				{
 					if (let iScope = decl.Decl as AstNode.Stmt.IScope)
 					{
-						let val = checkExpr(qn.Right, iScope.Scope);
+						let val = checkExpr(qn.Right, iScope.Scope, _scope);
 						returnVal!(val);
 					}
 				}
 			}
 
 			returnVal!(ZenType.Invalid);
+
+		case .NamedType(let type):
+
+			/*
+			switch (type.Kind)
+			{
+			case .Simple(let name):
+				returnVal!();
+			case .Qualified(let qualified):
+				returnVal!(checkExpr(qualified, _scope));
+			}*/
+			break;
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");

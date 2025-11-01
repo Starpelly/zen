@@ -13,7 +13,7 @@ void zen_main()
 	while (WindowShouldClose() == false)
 	{
 		BeginDrawing();
-		Color black = {};
+		Color black;
 		black.r = 0;
 		black.g = 0;
 		black.b = 0;
@@ -22,7 +22,7 @@ void zen_main()
 		DrawFPS(20, 20);
 		playerPos.x = GetMouseX();
 		playerPos.y = GetMouseY();
-		Color color = {};
+		Color color;
 		color.r = 255;
 		color.g = 255;
 		color.b = 0;

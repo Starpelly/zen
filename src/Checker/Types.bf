@@ -147,8 +147,9 @@ public enum ZenType
 {
 	case Invalid;
 	case Basic(BasicType basic);
-	case Named(StringView name);
-	case Structure;
+	case SimpleNamed(Token token);
+	case QualifiedNamed(AstNode.Expression.QualifiedName name);
+	case Structure(AstNode.Stmt.StructDeclaration _struct);
 	case Enum;
 	case Function;
 	case Namespace;
@@ -238,8 +239,10 @@ public enum ZenType
 			return "Invalid type";
 		case .Basic(let basic):
 			return basic.Name;
-		case .Named:
-			return "Named type";
+		case .SimpleNamed:
+			return "Simple named type";
+		case .QualifiedNamed:
+			return "Qualified named type";
 		case .Structure:
 			return "Struct";
 		case .Enum:

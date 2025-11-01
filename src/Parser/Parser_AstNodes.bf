@@ -20,10 +20,17 @@ extension Parser
 		return list;
 	}
 
-	private Token consumeType()
+	private AstNode.Expression.NamedType consumeType()
 	{
-		let token = consume(.Identifier, "Expected type.");
-		return token;
+		let token = consume(.Identifier, "Expected identifier.");
+		if (match(.DoubleColon))
+		{
+			let name = consume(.Identifier, "Expected identifier.");
+			let qualified = new AstNode.Expression.QualifiedName(token, past(2), new AstNode.Expression.Variable(name));
+			return new .(name, .Qualified(qualified));
+		}
+
+		return new .(token, .Simple(token));
 	}
 
 	private AstNode.Stmt.Return getReturnStmt()

@@ -156,7 +156,7 @@ class Scoper
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, getNamespaceParent(), fun.Name, getTypeFromToken(fun.Type)));
+			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, getNamespaceParent(), fun.Name, getTypeFromTypeExpr(fun.Type)));
 		}
 
 		if (let str = node as AstNode.Stmt.StructDeclaration)
@@ -171,7 +171,7 @@ class Scoper
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, getNamespaceParent(), str.Name, .Structure));
+			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, getNamespaceParent(), str.Name, .Structure(str)));
 		}
 
 		if (let _enum = node as AstNode.Stmt.EnumDeclaration)
@@ -196,7 +196,7 @@ class Scoper
 
 		if (let v = node as AstNode.Stmt.VariableDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, v.Name, new Entity.Variable(v, v.Name, getTypeFromToken(v.Type)));
+			scope_tryDeclare(m_currentScope, v.Name, new Entity.Variable(v, v.Name, getTypeFromTypeExpr(v.Type)));
 		}
 
 		if (let c = node as AstNode.Stmt.ConstantDeclaration)
@@ -264,6 +264,17 @@ class Scoper
 		}
 	}
 
+	private ZenType getTypeFromTypeExpr(AstNode.Expression.NamedType type)
+	{
+		switch (type.Kind)
+		{
+		case .Simple(let name):
+			return getTypeFromToken(name);
+		case .Qualified(let qualified):
+			return .QualifiedNamed(qualified);
+		}
+	}
+
 	// @NOTE
 	// I'm thinking this should be a separate pass, like "Typer" or something that types all the entities...
 	// Maybe this is fine and should change from "Scoper" to "Entity creator" or something? Hmmmm....
@@ -274,7 +285,7 @@ class Scoper
 			return .Basic(val);
 
 		// reportError(token, "Unknown data type.");
-		return .Named(token.Lexeme);
+		return .SimpleNamed(token);
 	}
 
 	private void reportError(Token token, String message)
