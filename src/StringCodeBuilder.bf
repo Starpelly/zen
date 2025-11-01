@@ -2,7 +2,7 @@ using System;
 
 namespace Zen;
 
-public class CodeBuilder
+public class StringCodeBuilder
 {
 	private String m_code = new .() ~ delete _;
 	private int m_tabCount;

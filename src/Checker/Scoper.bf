@@ -34,6 +34,8 @@ class Scoper
 
 	private readonly List<CompilerError> m_errors;
 
+	private List<AstNode.Stmt.NamespaceDeclaration> m_namespaceStackFileScope = new .() ~ delete _;
+
 	public this(Ast ast, List<CompilerError> errs)
 	{
 		this.m_ast = ast;
@@ -96,6 +98,23 @@ class Scoper
 
 			m_currentScope = m_currentScope.Parent.Value;
 			return m_currentScope;
+		}
+
+		if (let namespc = node as AstNode.Stmt.NamespaceDeclaration)
+		{
+			scope_tryDeclare(m_currentScope, namespc.Name, new Entity.Namespace(namespc, namespc.Name, .Namespace));
+
+			openNewScope(scope $"Namespace ({namespc.Name.Lexeme})", namespc);
+			m_namespaceStackFileScope.Add(namespc);
+		}
+
+		if (let eof = node as AstNode.Stmt.EOF)
+		{
+			for (let ns in m_namespaceStackFileScope)
+			{
+				closeScope();
+			}
+			m_namespaceStackFileScope.Clear();
 		}
 
 		if (let b = node as AstNode.Stmt.Block)
@@ -211,7 +230,7 @@ class Scoper
 
 		for (let e in _scope.Entities)
 		{
-			Console.WriteLine(scope $"{pad}  - {e.value.GetType().GetName(.. scope .())} {e.key}: {e.value.Type}");
+			Console.WriteLine(scope $"{pad}  - {e.value.GetType().GetName(.. scope .())} {e.key}: type({e.value.Type})");
 		}
 
 		for (let child in _scope.Children)

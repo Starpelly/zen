@@ -79,4 +79,16 @@ abstract class Entity
 			this.Name = name;
 		}
 	}
+
+	public class Namespace : Entity, IEntityDeclaration
+	{
+		public readonly AstNode.Stmt.NamespaceDeclaration Decl;
+
+		public this(AstNode.Stmt.NamespaceDeclaration decl, Token token, ZenType type) : base(token, type)
+		{
+			this.Decl = decl;
+		}
+
+		public AstNode.Stmt IEntityDeclaration.Decl => Decl;
+	}
 }

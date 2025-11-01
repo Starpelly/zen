@@ -151,6 +151,7 @@ public enum ZenType
 	case Structure;
 	case Enum;
 	case Function;
+	case Namespace;
 
 	public bool IsTypeVoid()
 	{
@@ -245,6 +246,8 @@ public enum ZenType
 			return "Enum";
 		case .Function:
 			return "Function";
+		case .Namespace:
+			return "Namespace";
 		}
 	}
 

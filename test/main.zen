@@ -1,5 +1,5 @@
-// #load "test.zen";
-// #load "fibonacci.zen";
+#load "test.zen";
+#load "fibonacci.zen";
 // #load "windows.zen";
 // #load "raylib.zen";
 
@@ -9,19 +9,10 @@ struct Vector2
 	float y;
 }
 
-enum Color
-{
-	Red,
-	Orange,
-	Yellow,
-	Cyan
-}
-
 fun void main()
 {
-	var Color color;
-	color = Color::Red;
+	let int fib = math::fibonacci(10);
+	let int x = tests::add(1, 1);
 
-	let int a = Color::Red;
-	let float b = ""; // this should fail
+	println(fib);
 }

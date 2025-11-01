@@ -163,7 +163,7 @@ extension Parser
 
 				let left = consume(.Identifier, "Expected identifier after '::'");
 				let separator = consume(.DoubleColon, "Expected '::'");
-				let right = getExprPrimary();
+				let right = getExprCall();
 
 				expr = new Expression.QualifiedName(left, separator, right);
 			}

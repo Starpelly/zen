@@ -54,4 +54,22 @@ class Scope
 
 		return current;
 	}
+
+	public void BuildScopeNamespaces(List<Entity.Namespace> outList)
+	{
+		if (Parent case .Ok(let parent))
+		{
+			if (parent.Parent case .Ok(let parentparent))
+			{
+				for (let entity in parentparent.Entities)
+				{
+					if (let ns = entity.value as Entity.Namespace)
+					{
+						if (ns.Decl.Scope == parent)
+						outList.Add(ns);
+					}
+				}
+			}
+		}
+	}
 }

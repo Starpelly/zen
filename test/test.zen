@@ -1,9 +1,11 @@
+namespace tests;
+
 fun int add(int x, int y)
 {
 	return x + y;
 }
 
-fun void abc_test()
+fun void abc()
 {
 	let int a = add(1, 1);	// 2
 	let int b = a + a;		// 4
@@ -12,7 +14,7 @@ fun void abc_test()
 	print(c);
 }
 
-fun void loop_test()
+fun void loop()
 {
 	for (let int i = 0; i < 10; i = i + 1)
 	{
@@ -20,7 +22,7 @@ fun void loop_test()
 	}
 }
 
-fun void print_test()
+fun void prints()
 {
 	let int val_int = 1;
 	let float val_float = 1.0;
@@ -29,4 +31,18 @@ fun void print_test()
 	println(val_int);
 	println(val_float);
 	println(val_bool);
+}
+
+enum Color
+{
+	Red,
+	Orange,
+	Yellow,
+	Cyan
+}
+
+fun void enums()
+{
+	var Color color;
+	color = Color::Red;
 }

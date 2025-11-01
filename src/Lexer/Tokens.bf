@@ -120,6 +120,9 @@ public enum TokenKind
 	[RegisterKeyword("extern")]
 	case Extern;
 
+	[RegisterKeyword("namespace")]
+	case Namespace;
+
 	public Result<RegisterKeywordAttribute> GetKeyword()
 	{
 		var memInfo = typeof(Self).GetField(this.ToString(.. scope .())).Value;

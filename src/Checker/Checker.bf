@@ -266,14 +266,13 @@ class Checker
 			break;
 
 		case .QualifiedName(let qn):
-
 			let leftScope = _scope.Lookup(qn.Left.Lexeme);
 
 			if (leftScope case .Ok(let leftEntity))
 			{
-				if (let typename = leftEntity as Entity.TypeName)
+				if (let decl = leftEntity as IEntityDeclaration)
 				{
-					if (let iScope = typename.Decl as AstNode.Stmt.IScope)
+					if (let iScope = decl.Decl as AstNode.Stmt.IScope)
 					{
 						let val = checkExpr(qn.Right, iScope.Scope);
 						returnVal!(val);

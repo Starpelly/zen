@@ -15,12 +15,14 @@ enum StmtKind
 {
 	case Return(AstNode.Stmt.Return);
 	case Block(AstNode.Stmt.Block);
+	case EOF(AstNode.Stmt.EOF);
 	case FunctionDecl(AstNode.Stmt.FunctionDeclaration);
 	case StructDecl(AstNode.Stmt.StructDeclaration);
 	case EnumDecl(AstNode.Stmt.EnumDeclaration);
 	case EnumField(AstNode.Stmt.EnumFieldValue);
 	case VarDecl(AstNode.Stmt.VariableDeclaration);
 	case ConstDecl(AstNode.Stmt.ConstantDeclaration);
+	case NamespaceDecl(AstNode.Stmt.NamespaceDeclaration);
 	case If(AstNode.Stmt.If);
 	case For(AstNode.Stmt.For);
 	case While(AstNode.Stmt.While);
@@ -86,6 +88,11 @@ abstract class AstNode
 			}
 
 			public override StmtKind GetKind() => .Block(this);
+		}
+
+		public class EOF : Stmt
+		{
+			public override StmtKind GetKind() => .EOF(this);
 		}
 
 		public class FunctionDeclaration : Stmt, IScope
@@ -199,6 +206,23 @@ abstract class AstNode
 			}
 
 			public override StmtKind GetKind() => .ConstDecl(this);
+		}
+
+		public class NamespaceDeclaration : Stmt, IScope
+		{
+			public readonly Token Name;
+			public readonly Token Token;
+
+			public Scope Scope { get => m_scope; set => m_scope = value; }
+			private Scope m_scope;
+
+			public this(Token name, Token token)
+			{
+				this.Name = name;
+				this.Token = token;
+			}
+
+			public override StmtKind GetKind() => .NamespaceDecl(this);
 		}
 
 		public class If : Stmt, IScope

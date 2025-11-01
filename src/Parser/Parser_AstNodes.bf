@@ -175,6 +175,16 @@ extension Parser
 		return new .(name, values);
 	}
 
+	private AstNode.Stmt.NamespaceDeclaration getNamespaceStmt()
+	{
+		let token = previous();
+		let name = consume(.Identifier, "Expected name.");
+
+		consume(.Semicolon, "Semicolon expected.");
+
+		return new .(name, token);
+	}
+
 	private AstNode.Stmt.If getIfStmt()
 	{
 		consume(.LeftParen, "Expected '(' after 'if'.");

@@ -54,7 +54,7 @@ class Tokenizer
 			scanNextToken();
 		}
 
-		addToken(.EOF);
+		addToken(.EOF, "");
 		return m_tokens;
 	}
 
@@ -360,16 +360,16 @@ class Tokenizer
 			type = .Number_Float;
 		}
 
-		let substring = substring(m_start, m_current);
+		// let substring = substring(m_start, m_current);
 
 		switch (type)
 		{
 		case .Number_Int:
-			let literal = int.Parse(substring);
+			// let literal = int.Parse(substring);
 			addToken(.Number_Int/*, Variant.Create<int>(literal)*/);
 			break;
 		case .Number_Float:
-			let literal = float.Parse(substring);
+			// let literal = float.Parse(substring);
 			addToken(.Number_Float/*, Variant.Create<double>(literal)*/);
 			break;
 		default:

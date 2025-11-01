@@ -33,6 +33,7 @@ class Parser
 			}
 		}
 
+		m_ast.Add(new AstNode.Stmt.EOF());
 		return .Ok(m_ast);
 	}
 
@@ -56,6 +57,10 @@ class Parser
 		if (match(.Enum))
 		{
 			return getEnumStmt();
+		}
+		if (match(.Namespace))
+		{
+			return getNamespaceStmt();
 		}
 		if (match(.Return))
 		{

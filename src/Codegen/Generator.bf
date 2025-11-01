@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 
 namespace Zen;
 
 class Generator
 {
-	private Ast m_ast;
+	private readonly Ast m_ast;
+	private readonly List<StringView> m_namespaceStack = new .() ~ delete _;
 
 	public this(Ast ast)
 	{
@@ -13,7 +15,7 @@ class Generator
 
 	public void Run(String str)
 	{
-		let code = scope CodeBuilder();
+		let code = scope StringCodeBuilder();
 
 		const String BOILERPLATE_TOP =
 		"""
@@ -67,21 +69,38 @@ class Generator
 		code.AppendLine(BOILERPLATE_TOP);
 		code.AppendEmptyLine();
 
+		void checkNamespaces(AstNode.Stmt node)
+		{
+			if (let namespc = node as AstNode.Stmt.NamespaceDeclaration)
+			{
+				m_namespaceStack.Add(namespc.Name.Lexeme);
+			}
+			if (let eof = node as AstNode.Stmt.EOF)
+			{
+				m_namespaceStack.Clear();
+			}
+		}
+
 		code.AppendBanner("Enums");
+		m_namespaceStack.Clear();
 		for (let node in m_ast)
 		{
+			checkNamespaces(node);
+
 			if (let e = node as AstNode.Stmt.EnumDeclaration)
 			{
+				let nsStr = buildNamespaceStr(m_namespaceStack, .. scope .());
+
 				code.AppendLine("typedef enum {");
 				code.IncreaseTab();
 				for (let val in e.Values)
 				{
-					code.AppendLine(scope $"{e.Name.Lexeme}_{val.Name.Lexeme}");
+					code.AppendLine(scope $"{nsStr}{e.Name.Lexeme}_{val.Name.Lexeme}");
 					if (val != e.Values.Back)
 						code.Append(",");
 				}
 				code.DecreaseTab();
-				code.AppendLine(scope $"\} {e.Name.Lexeme};");
+				code.AppendLine(scope $"\} {nsStr}{e.Name.Lexeme};");
 			}
 		}
 
@@ -128,8 +147,22 @@ class Generator
 
 		code.AppendBanner("Functions");
 
+		// main fun
+		{
+			code.AppendLine("void main()");
+			code.AppendLine("{");
+			code.IncreaseTab();
+			{
+				code.AppendLine("CZEN_main();");
+			}
+			code.DecreaseTab();
+			code.AppendLine("}");
+		}
+
 		for (let node in m_ast)
 		{
+
+
 			emitNode(node, code, true);
 		}
 
@@ -143,7 +176,7 @@ class Generator
 		str.Append(code.Code);
 	}
 
-	private void emitNode(AstNode node, CodeBuilder code, bool semicolon = true)
+	private void emitNode(AstNode node, StringCodeBuilder code, bool semicolon = true)
 	{
 		mixin addSemicolon()
 		{
@@ -200,7 +233,7 @@ class Generator
 
 		if (let _for = node as AstNode.Stmt.For)
 		{
-			let body = scope CodeBuilder();
+			let body = scope StringCodeBuilder();
 			// Init
 			// body.Append(emitExpr(_for.Initialization, .. scope .()));
 			emitNode(_for.Initialization, body, false);
@@ -228,16 +261,9 @@ class Generator
 			code.AppendLine(emitExpr(expr.InnerExpr, .. scope .()));
 			addSemicolon!();
 		}
-
-		/*
-		if (let n = node as AstNode.Stmt.Print)
-		{
-			code.AppendLine(scope $"printf(\"%d\\n\", {emitExpr(n.Expr, .. scope .())});");
-		}
-		*/
 	}
 
-	private void emitExpr(AstNode.Expression expr, String outStr)
+	private void emitExpr(AstNode.Expression expr, String outStr, bool applyQualifiedNameHack = true)
 	{
 		switch (expr.GetKind())
 		{
@@ -252,7 +278,7 @@ class Generator
 			break;
 
 		case .Call(let call):
-			let arguments = scope CodeBuilder();
+			let arguments = scope StringCodeBuilder();
 			for (let arg in call.Arguments)
 			{
 				arguments.Append(scope $"{emitExpr(arg, .. scope .())}");
@@ -366,14 +392,14 @@ class Generator
 			break;
 
 		case .QualifiedName(let qn):
-			outStr.Append(scope $"{qn.Left.Lexeme}_{emitExpr(qn.Right, .. scope .())}");
+			outStr.Append(scope $"CZEN_{qn.Left.Lexeme}_{emitExpr(qn.Right, .. scope .(), false)}");
 			break;
 		}
 	}
 
-	private void emitFunctionHead(AstNode.Stmt.FunctionDeclaration fun, CodeBuilder code)
+	private void emitFunctionHead(AstNode.Stmt.FunctionDeclaration fun, StringCodeBuilder code)
 	{
-		let parameters = scope CodeBuilder();
+		let parameters = scope StringCodeBuilder();
 		for (let param in fun.Parameters)
 		{
 			parameters.Append(scope $"{param.Type.Lexeme} {param.Name.Lexeme}");
@@ -381,7 +407,30 @@ class Generator
 				parameters.Append(", ");
 		}
 
-		code.AppendLine(scope $"{fun.Type.Lexeme} {fun.Name.Lexeme}({parameters.Code})");
+		let namespaceStr = buildNamespaceStr(fun.Scope.BuildScopeNamespaces(.. scope .()), .. scope .());
+		code.AppendLine(scope $"{fun.Type.Lexeme} {namespaceStr}{fun.Name.Lexeme}({parameters.Code})");
+	}
+
+	private void buildNamespaceStr(List<Entity.Namespace> namespaces, String outStr)
+	{
+		outStr.Append("CZEN_");
+
+		for (let ns in namespaces)
+		{
+			outStr.Append(ns.Decl.Name.Lexeme);
+			outStr.Append("_");
+		}
+	}
+
+	private void buildNamespaceStr(List<StringView> namespaces, String outStr)
+	{
+		outStr.Append("CZEN_");
+
+		for (let ns in namespaces)
+		{
+			outStr.Append(ns);
+			outStr.Append("_");
+		}
 	}
 
 	private void emitType(ZenType type, String outStr)
