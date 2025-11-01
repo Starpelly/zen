@@ -21,16 +21,16 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 #====================================================================
 project(Zen)
 
-set(ZEN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../)
+set(ZEN_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 
-# file(GLOB_RECURSE ZEN_FILES
-#     ${ZEN_SOURCE_DIR}/*.c
-#     ${ZEN_SOURCE_DIR}/*.h
-# )
-
-set(ZEN_FILES
-    ${ZEN_SOURCE_DIR}/main.c
+file(GLOB_RECURSE ZEN_FILES
+    ${ZEN_SOURCE_DIR}/*.c
+    ${ZEN_SOURCE_DIR}/*.h
 )
+
+#set(ZEN_FILES
+#    ${ZEN_SOURCE_DIR}/main.c
+#)
 
 add_executable(Zen ${ZEN_FILES})
 

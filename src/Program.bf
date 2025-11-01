@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections;
 using System.Globalization;
 
 namespace Zen;
@@ -42,13 +43,15 @@ class Program
 		return 0;
 	}
 
+	private static let outputFiles = new List<CFile>() ~ DeleteContainerAndItems!(_);
+
 	private static void run_compiler(CLIArguments args)
 	{
 		let builder = scope Builder();
 		// @TEMP
 		let mainFileDirectory = Path.GetDirectoryPath(args.MainFile, .. scope .());
-		let outputDirectory = Path.Combine(.. scope .(), mainFileDirectory, "output");
-		let c = builder.Run(args.MainFile, outputDirectory, scope => finishCompile, .. scope .());
+		let outputDirectory = Path.Combine(.. scope .(), mainFileDirectory, "output", "src");
+		let cRes = builder.Run(args.MainFile, outputDirectory, scope => finishCompile, outputFiles);
 
 		Console.ResetColor();
 		if (!builder.HadErrors)
@@ -59,11 +62,18 @@ class Program
 			Console.WriteLine(": Build completed with no errors.");
 		}
 
-		File.WriteAllText(Path.Combine(.. scope .(), outputDirectory, "main.c"), c);
-
-		if (args.RunAfterBuild && !builder.HadErrors)
+		if (cRes case .Ok(let c))
 		{
-			execute_c_code(c);
+			for (let file in cRes.Value.Files)
+			{
+				let outputDir = Path.Combine(.. scope .(), outputDirectory, scope $"{file.Name}");
+				File.WriteAllText(outputDir, file.Text);
+			}
+
+			if (args.RunAfterBuild && !builder.HadErrors)
+			{
+				execute_c_code(cRes.Value.MainFile.Text, outputDirectory);
+			}
 		}
 		if (args.KeepOpen)
 		{
@@ -71,7 +81,7 @@ class Program
 		}
 	}
 
-	private static void execute_c_code(String code)
+	private static void execute_c_code(String code, String includePath)
 	{
 		mixin fail(String msg)
 		{
@@ -86,6 +96,7 @@ class Program
 		let compiler = scope libtcc.TCCCompiler(tccPath);
 
 		// c_raylib_add(compiler);
+		compiler.AddIncludePath(includePath);
 
 		if (compiler.CompileString(code) == -1)
 		{
@@ -139,7 +150,7 @@ class Program
 
 			let lexerTime = builder.StopwatchLexer.Elapsed.TotalSeconds;
 			let parserTime = builder.StopwatchParser.Elapsed.TotalSeconds;
-			let compilerTime = builder.StopwatchCompiler.Elapsed.TotalSeconds;
+			let checkerTime = builder.StopwatchChecker.Elapsed.TotalSeconds;
 			let codegenTime = builder.StopwatchCodegen.Elapsed.TotalSeconds;
 
 			/*
@@ -150,9 +161,9 @@ class Program
 			writeTimeOutput("Total     time:", lexerTime + parserTime + compilerTime + codegenTime);
 			*/
 
-			writeTimeOutput("Frontend time:", lexerTime + parserTime);
-			writeTimeOutput("Backend  time:", compilerTime + codegenTime);
-			writeTimeOutput("Total    time:", lexerTime + parserTime + compilerTime + codegenTime);
+			writeTimeOutput("Frontend time:", lexerTime + parserTime + checkerTime);
+			writeTimeOutput("Backend  time:", codegenTime);
+			writeTimeOutput("Total    time:", lexerTime + parserTime + checkerTime + codegenTime);
 
 			Console.ResetColor();
 		}

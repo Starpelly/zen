@@ -6,18 +6,16 @@ namespace Zen;
 class Generator
 {
 	private readonly Ast m_ast;
-	private readonly List<StringView> m_namespaceStack = new .() ~ delete _;
+	private readonly Scope m_globalScope;
+	private readonly List<CFile> m_outputFilesList;
 
-	public this(Ast ast)
+	public struct GeneratorResult
 	{
-		this.m_ast = ast;
+		public readonly CFile MainFile;
+		public readonly List<CFile> Files;
 	}
 
-	public void Run(String str)
-	{
-		let code = scope StringCodeBuilder();
-
-		const String BOILERPLATE_TOP =
+	const String BOILERPLATE =
 		"""
 		#include <stdio.h>
 		#include <stdlib.h>
@@ -49,239 +47,332 @@ class Generator
 
 		#ifdef ZEN_PLATFORM_WINDOWS
 		#include <windows.h>
-
-			/*
-			void message_box(string text)
-			{
-				MessageBox(
-					NULL,
-					text,
-					"Title",
-					MB_OK | MB_ICONINFORMATION
-				);
-			}
-			*/
 		#endif
-
-		// #include <raylib.h>
 		""";
 
-		code.AppendLine(BOILERPLATE_TOP);
-		code.AppendEmptyLine();
+	public this(Ast ast, Scope globalScope, List<CFile> cfilesList)
+	{
+		this.m_ast = ast;
+		this.m_globalScope = globalScope;
+		this.m_outputFilesList = cfilesList;
+	}
 
-		void checkNamespaces(AstNode.Stmt node)
+	public GeneratorResult Generate()
+	{
+		createNewFile(new .("zen.h", BOILERPLATE));
+
+		let headerCode = doAST(m_ast, .. scope .());
+
+		let mainCode = scope StringCodeBuilder();
+		mainCode.AppendLine("#include <zen.h>");
+		mainCode.AppendEmptyLine();
+		mainCode.AppendLine(headerCode.Code);
+		mainCode.AppendEmptyLine();
+		mainCode.AppendLine(
+		"""
+		void main()
 		{
-			if (let namespc = node as AstNode.Stmt.NamespaceDeclaration)
-			{
-				m_namespaceStack.Add(namespc.Name.Lexeme);
-			}
-			if (let eof = node as AstNode.Stmt.EOF)
-			{
-				m_namespaceStack.Clear();
-			}
+			zen_main();
 		}
+		""");
+		let mainFile = createNewFile(new .("main.c", mainCode.Code));
 
-		code.AppendBanner("Enums");
-		m_namespaceStack.Clear();
-		for (let node in m_ast)
+		return .() {
+			MainFile = mainFile,
+			Files = m_outputFilesList
+		};
+	}
+
+	private void doAST(Ast ast, StringCodeBuilder headerCode)
+	{
+		void doScopeRecursive(DoScopeKind kind, Scope _scope, StringCodeBuilder code)
 		{
-			checkNamespaces(node);
-
-			if (let e = node as AstNode.Stmt.EnumDeclaration)
+			doScope(kind, _scope, code);
+			for (let entity in _scope.Entities)
 			{
-				let nsStr = buildNamespaceStr(m_namespaceStack, .. scope .());
-
-				code.AppendLine("typedef enum {");
-				code.IncreaseTab();
-				for (let val in e.Values)
+				if (let ns = entity.value as Entity.Namespace)
 				{
-					code.AppendLine(scope $"{nsStr}{e.Name.Lexeme}_{val.Name.Lexeme}");
-					if (val != e.Values.Back)
-						code.Append(",");
+					// namespaceStack.Append(scope $"_{ns.Decl.Name.Lexeme}");
+					// doScope(.NamedTypeDeclares, ns.Decl.Scope, namespaceStackStr, headerCode);
+					doScopeRecursive(kind, ns.Decl.Scope, code);
 				}
-				code.DecreaseTab();
-				code.AppendLine(scope $"\} {nsStr}{e.Name.Lexeme};");
 			}
 		}
 
-		code.AppendBanner("Structs");
-		for (let node in m_ast)
+		doScopeRecursive(.NamedTypeDeclares, m_globalScope, headerCode);
+		doScopeRecursive(.FunctionDeclares, m_globalScope, headerCode);
+		doScopeRecursive(.NamedTypeImpls, m_globalScope, headerCode);
+		doScopeRecursive(.FunctionImpls, m_globalScope, headerCode);
+	}
+
+	enum DoScopeKind
+	{
+		NamedTypeDeclares,
+		FunctionDeclares,
+		NamedTypeImpls,
+		FunctionImpls
+	}
+
+	private void buildNamespaceString(IEntityNamespaceParent entity, String outStr)
+	{
+		outStr.Append("zen");
+		if (entity.NamespaceParent != null)
 		{
-			if (let s = node as AstNode.Stmt.StructDeclaration)
+			outStr.Append("_");
+			outStr.Append(entity.NamespaceParent.Token.Lexeme);
+		}
+	}
+
+	private void doScope(DoScopeKind kind, Scope _scope, StringCodeBuilder code)
+	{
+		if (kind == .NamedTypeDeclares)
+		{
+			for (let entity in _scope.Entities)
 			{
-				code.AppendLine("typedef struct {");
-				code.IncreaseTab();
-				for (let field in s.Fields)
+				switch (entity.value.GetKind())
 				{
-					code.AppendLine(scope $"{field.Type.Lexeme} {field.Name.Lexeme};");
+				case .TypeName(let typename):
+					let namespaceStr = buildNamespaceString(typename, .. scope .());
+					switch (typename.Decl.GetKind())
+					{
+					case .StructDecl(let _struct):
+						let name = scope $"{namespaceStr}_{_struct.Name.Lexeme}";
+						code.AppendLine(scope $"typedef struct {name};");
+						break;
+					case .EnumDecl(let _enum):
+
+						let enumName = scope $"{namespaceStr}_{_enum.Name.Lexeme}";
+						code.AppendLine(scope $"typedef enum \{");
+						code.IncreaseTab();
+						{
+							for (let value in _enum.Values)
+							{
+								code.AppendLine(scope $"{enumName}_{value.Name.Lexeme}");
+								if (value != _enum.Values.Back)
+									code.Append(',');
+							}
+						}
+						code.DecreaseTab();
+						code.AppendLine(scope $"\} {enumName};");
+						break;
+					default:
+					}
+					break;
+				default:
 				}
-				code.DecreaseTab();
-				code.AppendLine(scope $"\} {s.Name.Lexeme};");
 			}
 		}
 
-		code.AppendBanner("Constants");
-		for (let node in m_ast)
+		if (kind == .FunctionDeclares)
 		{
-			if (let c = node as AstNode.Stmt.ConstantDeclaration)
+			for (let entity in _scope.Entities)
 			{
-				code.AppendLine(scope $"#define {c.Name.Lexeme} {emitExpr(c.Initializer, .. scope .())}");
-			}
-		}
-
-		code.AppendBanner("Forward Declarations");
-		for (let node in m_ast)
-		{
-			if (let fun = node as AstNode.Stmt.FunctionDeclaration)
-			{
-				if (fun.Kind == .Extern)
+				if (let funEnt = entity.value as Entity.Function)
 				{
-					// I guess we'll trust that it exists?
-					continue;
-				}
+					let fun = funEnt.Decl;
 
-				emitFunctionHead(fun, code);
+					if (fun.Kind == .Extern)
+						continue;
+
+					let namespaceStr = buildNamespaceString(funEnt, .. scope .());
+					appendFunctionHead(fun, namespaceStr, code);
+					code.Append(';');
+				}
+			}
+		}
+
+		if (kind == .NamedTypeImpls)
+		{
+			for (let entity in _scope.Entities)
+			{
+				switch (entity.value.GetKind())
+				{
+				case .TypeName(let typename):
+					let namespaceStr = buildNamespaceString(typename, .. scope .());
+					switch (typename.Decl.GetKind())
+					{
+					case .StructDecl(let _struct):
+						let name = scope $"{namespaceStr}_{_struct.Name.Lexeme}";
+						code.AppendLine(scope $"struct {name} \{");
+						code.IncreaseTab();
+						{
+							for (let field in _struct.Fields)
+							{
+								code.AppendLine(scope $"{field.Type.Lexeme} {field.Name.Lexeme};");
+							}
+						}
+						code.DecreaseTab();
+						code.AppendLine("};"); // <- Yah, struct implementations need semicolons for TinyCC:
+											   // https://lists.gnu.org/archive/html/tinycc-devel/2008-09/msg00033.html
+						break;
+					default:
+					}
+					break;
+				default:
+				}
+			}
+		}
+
+		if (kind == .FunctionImpls)
+		{
+			for (let entity in _scope.Entities)
+			{
+				switch (entity.value.GetKind())
+				{
+				case .Function(let entity):
+
+					let fun = entity.Decl;
+
+					if (fun.Kind == .Extern)
+						break;
+
+					let namespaceStr = buildNamespaceString(entity, .. scope .());
+					appendFunctionHead(fun, namespaceStr, code);
+					code.AppendLine("{");
+					code.IncreaseTab();
+					{
+						for (let stmt in fun.Body.List)
+						{
+							emitFunctionStmt(stmt, code, fun.Scope);
+						}
+					}
+					code.DecreaseTab();
+					code.AppendLine("}");
+					break;
+				default:
+				}
+			}
+		}
+	}
+
+	private void appendFunctionHead(AstNode.Stmt.FunctionDeclaration func, String namespaceStack, StringCodeBuilder code)
+	{
+		let parameters = scope StringCodeBuilder();
+		for (let param in func.Parameters)
+		{
+			parameters.Append(scope $"{param.Type.Lexeme} {param.Name.Lexeme}");
+			if (param != func.Parameters.Back)
+				parameters.Append(", ");
+		}
+
+		code.AppendLine(scope $"{func.Type.Lexeme} {namespaceStack}_{func.Name.Lexeme}({parameters.Code})");
+	}
+
+	private void emitFunctionStmt(AstNode.Stmt stmt, StringCodeBuilder code, Scope _scope, bool emitSemicolon = true)
+	{
+		mixin addSemicolon()
+		{
+			if (emitSemicolon)
+			{
 				code.Append(';');
 			}
 		}
 
-		code.AppendBanner("Functions");
-
-		// main fun
+		switch (stmt.GetKind())
 		{
-			code.AppendLine("void main()");
+		case .Block(let block):
 			code.AppendLine("{");
 			code.IncreaseTab();
+			for (let n in block.List)
 			{
-				code.AppendLine("CZEN_main();");
+				emitFunctionStmt(n, code, _scope);
 			}
 			code.DecreaseTab();
 			code.AppendLine("}");
-		}
+			break;
 
-		for (let node in m_ast)
-		{
+		case .VarDecl(let v):
+			code.AppendNewLine();
+			code.AppendTabs();
 
-
-			emitNode(node, code, true);
-		}
-
-		/*
-		code.AppendLine("for (;;) {}");
-
-		code.DecreaseTab();
-		code.AppendLine("}");
-		*/
-
-		str.Append(code.Code);
-	}
-
-	private void emitNode(AstNode node, StringCodeBuilder code, bool semicolon = true)
-	{
-		mixin addSemicolon()
-		{
-			if (semicolon)
+			// @FIX
+			// I don't think the codegen should have to do this
+			let entity = _scope.Lookup(v.Type.Lexeme);
+			if (entity case .Ok(let found))
 			{
-				code.Append(";");
-			}
-		}
-
-		if (let b = node as AstNode.Stmt.Block)
-		{
-			code.AppendLine("{");
-			code.IncreaseTab();
-			for (let n in b.List)
-			{
-				emitNode(n, code);
-			}
-			code.DecreaseTab();
-			code.AppendLine("}");
-		}
-
-		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
-		{
-			if (fun.Kind == .Extern)
-			{
-				return;
+				if (let t = found as IEntityNamespaceParent)
+				{
+					code.Append(buildNamespaceString(t, .. scope .()));
+					code.Append("_");
+				}
 			}
 
-			emitFunctionHead(fun, code);
-			emitNode(fun.Body, code);
-		}
-
-		if (let n = node as AstNode.Stmt.VariableDeclaration)
-		{
-			code.AppendLine(scope $"{n.Type.Lexeme} {n.Name.Lexeme}");
-			if (n.Initializer != null)
+			code.Append(scope $"{v.Type.Lexeme} {v.Name.Lexeme}");
+			if (v.Initializer != null)
 			{
-				code.Append(scope $" = {emitExpr(n.Initializer, .. scope .())}");
+				code.Append(scope $" = ");
+				emitExpr(v.Initializer, code, _scope);
 			}
 			addSemicolon!();
-		}
+			break;
 
-		if (let r = node as AstNode.Stmt.Return)
-		{
-			code.AppendLine(scope $"return {emitExpr(r.Value, .. scope .())}");
+		case .Return(let ret):
+			code.AppendLine(scope $"return ");
+			emitExpr(ret.Value, code, _scope);
 			addSemicolon!();
-		}
+			break;
 
-		if (let _if = node as AstNode.Stmt.If)
-		{
-			code.AppendLine(scope $"if ({emitExpr(_if.Condition, .. scope .())})");
-			emitNode(_if.ThenBranch, code);
-		}
+		case .If(let _if):
+			let condition = emitExpr(_if.Condition, .. scope .(), _scope);
+			code.AppendLine(scope $"if ({condition.Code})");
+			emitFunctionStmt(_if.ThenBranch, code, _scope);
+			break;
 
-		if (let _for = node as AstNode.Stmt.For)
-		{
+		case .For(let _for):
 			let body = scope StringCodeBuilder();
 			// Init
 			// body.Append(emitExpr(_for.Initialization, .. scope .()));
-			emitNode(_for.Initialization, body, false);
+			emitFunctionStmt(_for.Initialization, body, _scope, false);
 			body.Append(';');
 			// Condition
 			if (_for.Condition != null) body.Append(' ');
-			body.Append(emitExpr(_for.Condition, .. scope .()));
+			emitExpr(_for.Condition, body, _scope);
 			body.Append(';');
 			// Update
 			if (_for.Updation != null) body.Append(' ');
-			body.Append(emitExpr(_for.Updation, .. scope .()));
+			emitExpr(_for.Updation, body, _scope);
 
 			code.AppendLine(scope $"for ({body.Code})");
-			emitNode(_for.Body, code);
-		}
+			emitFunctionStmt(_for.Body, code, _scope);
+			break;
 
-		if (let _while = node as AstNode.Stmt.While)
-		{
-			code.AppendLine(scope $"while ({emitExpr(_while.Condition, .. scope .())})");
-			emitNode(_while.Body, code);
-		}
+		case .While(let _while):
+			let condition = emitExpr(_while.Condition, .. scope .(), _scope);
+			code.AppendLine(scope $"while ({condition.Code})");
+			emitFunctionStmt(_while.Body, code, _scope);
+			break;
 
-		if (let expr = node as AstNode.Stmt.ExpressionStmt)
-		{
-			code.AppendLine(emitExpr(expr.InnerExpr, .. scope .()));
+		case .Expression(let expr):
+			code.AppendNewLine();
+			code.AppendTabs();
+			emitExpr(expr.InnerExpr, code, _scope);
 			addSemicolon!();
+			break;
+
+		default:
 		}
 	}
 
-	private void emitExpr(AstNode.Expression expr, String outStr, bool applyQualifiedNameHack = true)
+	private void emitExpr(AstNode.Expression expr, StringCodeBuilder code, Scope _scope)
 	{
 		switch (expr.GetKind())
 		{
 		case .Binary(let bin):
-			emitExpr(bin.Left, outStr);
-			outStr.Append(scope $" {bin.Op.Lexeme} ");
-			emitExpr(bin.Right, outStr);
+			emitExpr(bin.Left, code, _scope);
+			code.Append(scope $" {bin.Op.Lexeme} ");
+			emitExpr(bin.Right, code, _scope);
 			break;
 
 		case .Variable(let _var):
-			outStr.Append(_var.Name.Lexeme);
+			code.Append(_var.Name.Lexeme);
 			break;
 
 		case .Call(let call):
 			let arguments = scope StringCodeBuilder();
 			for (let arg in call.Arguments)
 			{
-				arguments.Append(scope $"{emitExpr(arg, .. scope .())}");
+				// arguments.Append(scope $"{emitExpr(arg, .. scope .())}");
+				emitExpr(arg, arguments, _scope);
 				if (arg != call.Arguments.Back)
 					arguments.Append(", ");
 			}
@@ -335,24 +426,37 @@ class Generator
 					if (builtinName == "println")
 						format.Append("\\n");
 
-					outStr.Append("printf");
-					outStr.Append("(");
+					code.Append("printf");
+					code.Append("(");
 					if (!format.IsEmpty)
 					{
-						outStr.Append(scope $"\"{format}\", ");
+						code.Append(scope $"\"{format}\", ");
 					}
-					outStr.Append(arguments.Code);
+					code.Append(arguments.Code);
 					if (!extra.IsEmpty)
 					{
-						outStr.Append(scope $" {extra}");
+						code.Append(scope $" {extra}");
 					}
-					outStr.Append(")");
+					code.Append(")");
 					break;
 				}
 			}
 			else
 			{
-				outStr.Append(scope $"{emitExpr(call.Callee, .. scope .())}({arguments.Code})");
+				// @FIX
+				// I don't think the codegen should have to do this
+				let entity = _scope.Lookup(call.Callee.Name.Lexeme);
+				if (entity case .Ok(let found))
+				{
+					if (let t = found as IEntityNamespaceParent)
+					{
+						code.Append(buildNamespaceString(t, .. scope .()));
+						code.Append("_");
+					}
+				}
+
+				emitExpr(call.Callee, code, _scope);
+				code.Append(scope $"({arguments.Code})");
 			}
 			break;
 
@@ -360,13 +464,13 @@ class Generator
 			break;
 
 		case .Literal(let literal):
-			outStr.Append(literal.Token.Lexeme);
+			code.Append(literal.Token.Lexeme);
 			if (literal.Type.IsTypeFloat())
 			{
 				// C appends the "f" at the end of floats...
 				// Not technically required, I don't think?
 				// But better to be safe than sorry.
-				outStr.Append("f");
+				code.Append("f");
 			}
 			break;
 
@@ -374,7 +478,7 @@ class Generator
 			break;
 
 		case .Get(let get):
-			outStr.Append(scope $"{emitExpr(get.Object, .. scope .())}.{get.Name.Lexeme}");
+			// outStr.Append(scope $"{emitExpr(get.Object, .. scope .())}.{get.Name.Lexeme}");
 			// outStr.Append(scope $"{emitExpr(set.Object, .. scope .())}.{set.Name}");
 			break;
 
@@ -388,58 +492,36 @@ class Generator
 			break;
 
 		case .Assign(let assign):
-			outStr.Append(scope $"{emitExpr(assign.Assignee, .. scope .())} {assign.Op.Lexeme} {emitExpr(assign.Value, .. scope .())}");
+			emitExpr(assign.Assignee, code, _scope);
+			code.Append(scope $" {assign.Op.Lexeme} ");
+			emitExpr(assign.Value, code, _scope);
 			break;
 
 		case .QualifiedName(let qn):
-			outStr.Append(scope $"CZEN_{qn.Left.Lexeme}_{emitExpr(qn.Right, .. scope .(), false)}");
+			code.Append("zen_");
+
+			// @FIX
+			// I don't think the codegen should have to do this
+			let entity = _scope.Lookup(qn.Left.Lexeme);
+			if (entity case .Ok(let found))
+			{
+				if (let typename = found as Entity.TypeName)
+				{
+					code.Append(typename.NamespaceParent.Token.Lexeme);
+					code.Append("_");
+				}
+			}
+
+			code.Append(scope $"{qn.Left.Lexeme}_");
+			emitExpr(qn.Right, code, _scope);
 			break;
 		}
 	}
 
-	private void emitFunctionHead(AstNode.Stmt.FunctionDeclaration fun, StringCodeBuilder code)
+	private CFile createNewFile(CFile file)
 	{
-		let parameters = scope StringCodeBuilder();
-		for (let param in fun.Parameters)
-		{
-			parameters.Append(scope $"{param.Type.Lexeme} {param.Name.Lexeme}");
-			if (param != fun.Parameters.Back)
-				parameters.Append(", ");
-		}
+		m_outputFilesList.Add(file);
 
-		let namespaceStr = buildNamespaceStr(fun.Scope.BuildScopeNamespaces(.. scope .()), .. scope .());
-		code.AppendLine(scope $"{fun.Type.Lexeme} {namespaceStr}{fun.Name.Lexeme}({parameters.Code})");
-	}
-
-	private void buildNamespaceStr(List<Entity.Namespace> namespaces, String outStr)
-	{
-		outStr.Append("CZEN_");
-
-		for (let ns in namespaces)
-		{
-			outStr.Append(ns.Decl.Name.Lexeme);
-			outStr.Append("_");
-		}
-	}
-
-	private void buildNamespaceStr(List<StringView> namespaces, String outStr)
-	{
-		outStr.Append("CZEN_");
-
-		for (let ns in namespaces)
-		{
-			outStr.Append(ns);
-			outStr.Append("_");
-		}
-	}
-
-	private void emitType(ZenType type, String outStr)
-	{
-		/*
-		if (let b = type as ZenType.Basic)
-		{
-			outStr.Append(scope $"{b.Basic.Name}");
-		}
-		*/
+		return file;
 	}
 }

@@ -34,7 +34,13 @@ class Scoper
 
 	private readonly List<CompilerError> m_errors;
 
-	private List<AstNode.Stmt.NamespaceDeclaration> m_namespaceStackFileScope = new .() ~ delete _;
+	private List<Namespace> m_namespaceStackFileScope = new .() ~ delete _;
+
+	private struct Namespace
+	{
+		public AstNode.Stmt.NamespaceDeclaration Node;
+		public Entity.Namespace Entity;
+	}
 
 	public this(Ast ast, List<CompilerError> errs)
 	{
@@ -100,12 +106,24 @@ class Scoper
 			return m_currentScope;
 		}
 
+		Entity.Namespace getNamespaceParent()
+		{
+			if (!m_namespaceStackFileScope.IsEmpty)
+				return m_namespaceStackFileScope.Back.Entity;
+			return null;
+		}
+
 		if (let namespc = node as AstNode.Stmt.NamespaceDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, namespc.Name, new Entity.Namespace(namespc, namespc.Name, .Namespace));
+			let entity = new Entity.Namespace(namespc, namespc.Name, .Namespace);
+			scope_tryDeclare(m_currentScope, namespc.Name, entity);
 
 			openNewScope(scope $"Namespace ({namespc.Name.Lexeme})", namespc);
-			m_namespaceStackFileScope.Add(namespc);
+			m_namespaceStackFileScope.Add(.()
+			{
+				Node = namespc,
+				Entity = entity
+			});
 		}
 
 		if (let eof = node as AstNode.Stmt.EOF)
@@ -138,7 +156,7 @@ class Scoper
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, fun.Name, getTypeFromToken(fun.Type)));
+			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, getNamespaceParent(), fun.Name, getTypeFromToken(fun.Type)));
 		}
 
 		if (let str = node as AstNode.Stmt.StructDeclaration)
@@ -153,7 +171,7 @@ class Scoper
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, str.Name, .Structure));
+			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, getNamespaceParent(), str.Name, .Structure));
 		}
 
 		if (let _enum = node as AstNode.Stmt.EnumDeclaration)
@@ -168,7 +186,7 @@ class Scoper
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, _enum.Name, .Enum));
+			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, getNamespaceParent(), _enum.Name, .Enum));
 		}
 
 		if (let enumVal = node as AstNode.Stmt.EnumFieldValue)

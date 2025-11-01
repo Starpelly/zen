@@ -1,4 +1,4 @@
-#load "test.zen";
+#load "tests.zen";
 #load "fibonacci.zen";
 // #load "windows.zen";
 // #load "raylib.zen";
@@ -9,10 +9,36 @@ struct Vector2
 	float y;
 }
 
+struct Vector3
+{
+	float x;
+	float y;
+	float z;
+}
+
+enum Color
+{
+	Red,
+	Orange,
+	Yellow,
+	Green,
+	Blue,
+	Purple,
+}
+
 fun void main()
 {
 	let int fib = math::fibonacci(10);
 	let int x = tests::add(1, 1);
 
 	println(fib);
+	
+	var int i = 50;
+
+	while (i > 10)
+	{
+		i = i - 1;
+	}
+
+	println("Hello");
 }

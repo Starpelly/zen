@@ -58,7 +58,7 @@ class Builder
 
 	public readonly Stopwatch StopwatchLexer = new .() ~ delete _;
 	public readonly Stopwatch StopwatchParser = new .() ~ delete _;
-	public readonly Stopwatch StopwatchCompiler = new .() ~ delete _;
+	public readonly Stopwatch StopwatchChecker = new .() ~ delete _;
 	public readonly Stopwatch StopwatchCodegen = new .() ~ delete _;
 
 	typealias FinishCompCallback = delegate void(Self builder, bool hadErros);
@@ -68,14 +68,14 @@ class Builder
 		Console.ResetColor();
 	}
 
-	public void Run(String mainFilePath, String outputDirectory, FinishCompCallback finishCompCallback, String outCCode)
+	public Result<Generator.GeneratorResult> Run(String mainFilePath, String outputDirectory, FinishCompCallback finishCompCallback, List<CFile> outCFiles)
 	{
 		// Load files
 		let testFile = pleaseDoFile(mainFilePath, m_compFiles);
 		searchForLoads(testFile.Ast, m_compFiles);
 
 		if (m_hadErrors)
-			return;
+			return .Err;
 
 		let finalAst = scope Ast();
 		for (let file in m_compFiles)
@@ -87,23 +87,23 @@ class Builder
 
 		let errors = scope List<CompilerError>();
 
-		StopwatchCompiler.Start();
+		StopwatchChecker.Start();
 
 		let scoper = scope Scoper(finalAst, errors);
 		let globalScope = scoper.Run();
 
-		StopwatchCompiler.Stop();
+		StopwatchChecker.Stop();
 
 		Scoper.PrintScopeTree(globalScope);
 
 		// Checker
 
-		StopwatchCompiler.Start();
+		StopwatchChecker.Start();
 
 		let checker = scope Checker(finalAst, globalScope, errors);
 		checker.Run();
 
-		StopwatchCompiler.Stop();
+		StopwatchChecker.Stop();
 
 		for (let err in errors)
 		{
@@ -111,18 +111,20 @@ class Builder
 		}
 
 		if (m_hadErrors)
-			return;
+			return .Err;
 
 		// Code gen
 
 		StopwatchCodegen.Start();
 
-		let gen = scope Generator(finalAst);
-		gen.Run(outCCode);
+		let gen = scope Generator(finalAst, globalScope, outCFiles);
+		let c = gen.Generate();
 
 		StopwatchCodegen.Stop();
 
 		finishCompCallback(this, m_hadErrors);
+
+		return .Ok(c);
 	}
 
 	private CompFile compFile(String filePath, Guid fileID)

@@ -8,6 +8,21 @@ public interface IEntityDeclaration
 	public AstNode.Stmt Decl { get; }
 }
 
+public interface IEntityNamespaceParent
+{
+	public readonly Entity.Namespace NamespaceParent { get; }
+}
+
+enum EntityKind
+{
+	case Constant(Entity.Constant);
+	case Variable(Entity.Variable);
+	case TypeName(Entity.TypeName);
+	case Function(Entity.Function);
+	case Builtin(Entity.Builtin);
+	case Namespace(Entity.Namespace);
+}
+
 /// An entity is a named "thing" in the language.
 abstract class Entity
 {
@@ -19,6 +34,8 @@ abstract class Entity
 		this.Token = token;
 		Type = type;
 	}
+
+	public abstract EntityKind GetKind();
 
 	public class Constant : Entity, IEntityDeclaration
 	{
@@ -32,6 +49,7 @@ abstract class Entity
 		}
 
 		public AstNode.Stmt IEntityDeclaration.Decl => Decl;
+		public override EntityKind GetKind() => .Constant(this);
 	}
 
 	public class Variable : Entity, IEntityDeclaration
@@ -44,30 +62,39 @@ abstract class Entity
 		}
 
 		public AstNode.Stmt IEntityDeclaration.Decl => Decl;
+		public override EntityKind GetKind() => .Variable(this);
 	}
 
-	public class TypeName : Entity, IEntityDeclaration
+	public class TypeName : Entity, IEntityDeclaration, IEntityNamespaceParent
 	{
 		public readonly AstNode.Stmt Decl;
+		public readonly Namespace NamespaceParent;
 
-		public this(AstNode.Stmt decl, Token token, ZenType type) : base(token, type)
+		public this(AstNode.Stmt decl, Namespace namespaceParent, Token token, ZenType type) : base(token, type)
 		{
 			this.Decl = decl;
+			this.NamespaceParent = namespaceParent;
 		}
 
 		public AstNode.Stmt IEntityDeclaration.Decl => Decl;
+		public Namespace IEntityNamespaceParent.NamespaceParent => NamespaceParent;
+		public override EntityKind GetKind() => .TypeName(this);
 	}
 
-	public class Function : Entity, IEntityDeclaration
+	public class Function : Entity, IEntityDeclaration, IEntityNamespaceParent
 	{
 		public readonly AstNode.Stmt.FunctionDeclaration Decl;
+		public readonly Namespace NamespaceParent;
 
-		public this(AstNode.Stmt.FunctionDeclaration decl, Token token, ZenType type) : base(token, type)
+		public this(AstNode.Stmt.FunctionDeclaration decl, Namespace namespaceParent, Token token, ZenType type) : base(token, type)
 		{
 			this.Decl = decl;
+			this.NamespaceParent = namespaceParent;
 		}
 
 		public AstNode.Stmt IEntityDeclaration.Decl => Decl;
+		public Namespace IEntityNamespaceParent.NamespaceParent => NamespaceParent;
+		public override EntityKind GetKind() => .Function(this);
 	}
 
 	public class Builtin : Entity
@@ -78,6 +105,8 @@ abstract class Entity
 		{
 			this.Name = name;
 		}
+
+		public override EntityKind GetKind() => .Builtin(this);
 	}
 
 	public class Namespace : Entity, IEntityDeclaration
@@ -90,5 +119,6 @@ abstract class Entity
 		}
 
 		public AstNode.Stmt IEntityDeclaration.Decl => Decl;
+		public override EntityKind GetKind() => .Namespace(this);
 	}
 }
