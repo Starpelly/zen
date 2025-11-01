@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Diagnostics;
 
 namespace Zen;
 
@@ -191,9 +192,24 @@ extension Parser
 		let condition = getExpression();
 		consume(.RightParen, "Expected ')' after condition.");
 
-		let thenBranch = node();
+		AstNode.Stmt.Block thenBranch = null;
+		AstNode.Stmt.Block elseBranch = null;
 
-		return new .(condition, thenBranch, null);
+		// "Then" branch
+		{
+			let thenBlock = scanBlock(.. new .(), var open, var close);
+			thenBranch = new AstNode.Stmt.Block(thenBlock, open, close);
+		}
+
+		// "Else" branch
+		if (match(.Else))
+		{
+			let elseBlock = scanBlock(.. new .(), var open, var close);
+			elseBranch = new AstNode.Stmt.Block(elseBlock, open, close);
+		}
+
+		Debug.Assert(thenBranch != null);
+		return new .(condition, thenBranch, elseBranch);
 	}
 
 	private AstNode.Stmt.For getForStmt()

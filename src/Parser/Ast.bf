@@ -225,16 +225,16 @@ abstract class AstNode
 			public override StmtKind GetKind() => .NamespaceDecl(this);
 		}
 
-		public class If : Stmt, IScope
+		public class If : Stmt//, IScope
 		{
 			public readonly Expression Condition ~ delete _;
-			public readonly AstNode.Stmt ThenBranch ~ delete _;
-			public readonly Result<AstNode.Stmt> ElseBranch ~ if (ElseBranch case .Ok) delete _.Value;
+			public readonly Block ThenBranch ~ delete _;
+			public readonly Result<Block> ElseBranch = .Err ~ if (ElseBranch case .Ok) delete _.Value;
 
-			public Scope Scope { get => m_scope; set => m_scope = value; }
-			private Scope m_scope;
+			// public Scope Scope { get => m_scope; set => m_scope = value; }
+			// private Scope m_scope;
 
-			public this(Expression condition, AstNode.Stmt thenBranch, AstNode.Stmt elseBranch)
+			public this(Expression condition, Block thenBranch, Block elseBranch)
 			{
 				this.Condition = condition;
 				this.ThenBranch = thenBranch;

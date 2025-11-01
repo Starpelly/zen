@@ -1,4 +1,4 @@
-#load "tests.zen";
+// #load "tests.zen";
 #load "fibonacci.zen";
 // #load "windows.zen";
 // #load "raylib.zen";
@@ -28,17 +28,13 @@ enum Color
 
 fun void main()
 {
-	let int fib = math::fibonacci(10);
-	let int x = tests::add(1, 1);
+	let int fib = math::fibonacci_recursive(10);
+	// let int x = tests::add(1, 1);
 
 	println(fib);
 	
-	var int i = 50;
-
-	while (i > 10)
-	{
-		i = i - 1;
-	}
+	var Vector2 vec;
+	vec.x = 0.0;
 
 	println("Hello");
 }

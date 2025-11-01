@@ -53,10 +53,12 @@ class Checker
 			// @HACK, @TODO
 			// Just to remember this should be an error, functions that don't have a "void" value should always return a value.
 			// Generally this is not taking into account other scopes and ifs and stuff, so we definitely need to do that.
+			/*
 			if ((fun.Body.List.IsEmpty || !fun.Body.List.Back is AstNode.Stmt.Return) && !entity.Type.IsTypeVoid())
 			{
-				reportError(fun.Body.Close, scope $"Function of type '{entity.Type.GetName()}' must return value");
+				reportError(fun.Body.Close, scope $"Function of type '{entity.Type.GetName()}' must return a value");
 			}
+			*/
 
 			m_functionStack.PopBack();
 		}
@@ -95,7 +97,9 @@ class Checker
 		if (let _if = node as AstNode.Stmt.If)
 		{
 			checkExpressionIsTruthy(_if.Condition, _scope);
-			checkStatement(_if.ThenBranch, _scope);
+			checkStatement(_if.ThenBranch, _if.ThenBranch.Scope);
+			if (_if.ElseBranch case .Ok(let _else))
+				checkStatement(_else, _else.Scope);
 		}
 
 		if (let _for = node as AstNode.Stmt.For)

@@ -137,7 +137,7 @@ class Generator
 					{
 					case .StructDecl(let _struct):
 						let name = scope $"{namespaceStr}_{_struct.Name.Lexeme}";
-						code.AppendLine(scope $"typedef struct {name};");
+						code.AppendLine(scope $"typedef struct {name} {name};");
 						break;
 					case .EnumDecl(let _enum):
 
@@ -316,6 +316,13 @@ class Generator
 			let condition = emitExpr(_if.Condition, .. scope .(), _scope);
 			code.AppendLine(scope $"if ({condition.Code})");
 			emitFunctionStmt(_if.ThenBranch, code, _scope);
+
+			if (_if.ElseBranch case .Ok(let _else))
+			{
+				code.AppendLine("else");
+				emitFunctionStmt(_else, code, _scope);
+			}
+
 			break;
 
 		case .For(let _for):
@@ -478,11 +485,13 @@ class Generator
 			break;
 
 		case .Get(let get):
-			// outStr.Append(scope $"{emitExpr(get.Object, .. scope .())}.{get.Name.Lexeme}");
-			// outStr.Append(scope $"{emitExpr(set.Object, .. scope .())}.{set.Name}");
+			emitExpr(get.Object, code, _scope);
+			code.Append(scope $".{get.Name.Lexeme}");
 			break;
 
 		case .Set(let set):
+			emitExpr(set.Object, code, _scope);
+			code.Append(scope $".{set.Name}");
 			break;
 
 		case .This(let _this):

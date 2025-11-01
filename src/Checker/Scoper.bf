@@ -206,9 +206,16 @@ class Scoper
 
 		if (let _if = node as AstNode.Stmt.If)
 		{
-			openNewScope("If", _if);
+			openNewScope("If Then", _if.ThenBranch);
 			addStatement(_if.ThenBranch, false);
 			closeScope();
+
+			if (_if.ElseBranch case .Ok(let _else))
+			{
+				openNewScope("If Else", _else);
+				addStatement(_else, false);
+				closeScope();
+			}
 		}
 
 		if (let _for = node as AstNode.Stmt.For)

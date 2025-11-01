@@ -1,7 +1,7 @@
 #include <zen.h>
 
-typedef struct zen_Vector2;
-typedef struct zen_Vector3;
+typedef struct zen_Vector2 zen_Vector2;
+typedef struct zen_Vector3 zen_Vector3;
 typedef enum {
 	zen_Color_Red,
 	zen_Color_Orange,
@@ -10,19 +10,9 @@ typedef enum {
 	zen_Color_Blue,
 	zen_Color_Purple
 } zen_Color;
-typedef enum {
-	zen_tests_Color_Red,
-	zen_tests_Color_Orange,
-	zen_tests_Color_Yellow,
-	zen_tests_Color_Cyan
-} zen_tests_Color;
 void zen_main();
-int zen_tests_add(int x, int y);
-void zen_tests_abc();
-void zen_tests_loop();
-void zen_tests_prints();
-void zen_tests_enums();
 int zen_math_fibonacci(int n);
+int zen_math_fibonacci_recursive(int n);
 struct zen_Vector2 {
 	float x;
 	float y;
@@ -34,47 +24,11 @@ struct zen_Vector3 {
 };
 void zen_main()
 {
-	int fib = zen_math_fibonacci(10);
-	int x = zen_tests_add(1, 1);
+	int fib = zen_math_fibonacci_recursive(10);
 	printf("%i\n", fib);
-	int i = 50;
-	while (i > 10)
-	{
-		i = i - 1;
-	}
+	zen_Vector2 vec;
+	vec.x = 0.0f;
 	printf("%s\n", "Hello");
-}
-int zen_tests_add(int x, int y)
-{
-	return x + y;
-}
-void zen_tests_abc()
-{
-	int a = zen_tests_add(1, 1);
-	int b = a + a;
-	int c = a + b;
-	printf("%i", c);
-}
-void zen_tests_loop()
-{
-	for (int i = 0; i < 10; i = i + 1)
-	{
-		printf("%s", "welcome to zen!");
-	}
-}
-void zen_tests_prints()
-{
-	int val_int = 1;
-	float val_float = 1.0f;
-	bool val_bool = false;
-	printf("%i\n", val_int);
-	printf("%f\n", val_float);
-	printf("%s\n", val_bool  ? "true" : "false");
-}
-void zen_tests_enums()
-{
-	zen_tests_Color color;
-	color = zen_tests_Color_Red;
 }
 int zen_math_fibonacci(int n)
 {
@@ -91,6 +45,17 @@ int zen_math_fibonacci(int n)
 		result = sum;
 	}
 	return result;
+}
+int zen_math_fibonacci_recursive(int n)
+{
+	if (n <= 1)
+	{
+		return n;
+	}
+	else
+	{
+		return zen_math_fibonacci_recursive(n - 1) + zen_math_fibonacci_recursive(n - 2);
+	}
 }
 
 void main()
