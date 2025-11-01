@@ -1,5 +1,5 @@
 FileVersion = 1
-Dependencies = {corlib = "*", libtcc = "*"}
+Dependencies = {corlib = "*", libtcc = "*", raylib-beef = "*"}
 
 [Project]
 Name = "zen"

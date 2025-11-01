@@ -1,61 +1,36 @@
 #include <zen.h>
 
-typedef struct zen_Vector2 zen_Vector2;
-typedef struct zen_Vector3 zen_Vector3;
-typedef enum {
-	zen_Color_Red,
-	zen_Color_Orange,
-	zen_Color_Yellow,
-	zen_Color_Green,
-	zen_Color_Blue,
-	zen_Color_Purple
-} zen_Color;
+typedef struct zen_Vector2I zen_Vector2I;
 void zen_main();
-int zen_math_fibonacci(int n);
-int zen_math_fibonacci_recursive(int n);
-struct zen_Vector2 {
-	float x;
-	float y;
-};
-struct zen_Vector3 {
-	float x;
-	float y;
-	float z;
+struct zen_Vector2I {
+	int x;
+	int y;
 };
 void zen_main()
 {
-	int fib = zen_math_fibonacci_recursive(10);
-	printf("%i\n", fib);
-	zen_Vector2 vec;
-	vec.x = 0.0f;
-	printf("%s\n", "Hello");
-}
-int zen_math_fibonacci(int n)
-{
-	if (n <= 1)
+	InitWindow(1280, 720, "Zen");
+	zen_Vector2I playerPos = {};
+	while (WindowShouldClose() == false)
 	{
-		return n;
+		BeginDrawing();
+		Color black = {};
+		black.r = 0;
+		black.g = 0;
+		black.b = 0;
+		black.a = 255;
+		ClearBackground(black);
+		DrawFPS(20, 20);
+		playerPos.x = GetMouseX();
+		playerPos.y = GetMouseY();
+		Color color = {};
+		color.r = 255;
+		color.g = 255;
+		color.b = 0;
+		color.a = 255;
+		DrawRectangle(playerPos.x, playerPos.y, 32, 32, color);
+		EndDrawing();
 	}
-	int prev = 0;
-	int result = 1;
-	for (int i = 2; i <= n; i = i + 1)
-	{
-		int sum = result + prev;
-		prev = result;
-		result = sum;
-	}
-	return result;
-}
-int zen_math_fibonacci_recursive(int n)
-{
-	if (n <= 1)
-	{
-		return n;
-	}
-	else
-	{
-		return zen_math_fibonacci_recursive(n - 1) + zen_math_fibonacci_recursive(n - 2);
-	}
+	CloseWindow();
 }
 
 void main()

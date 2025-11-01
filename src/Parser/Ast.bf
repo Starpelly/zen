@@ -126,14 +126,22 @@ abstract class AstNode
 
 		public class StructDeclaration : Stmt, IScope
 		{
+			public enum StructKind
+			{
+				Normal,
+				Extern
+			}
+
+			public readonly StructKind Kind;
 			public readonly Token Name;
 			public readonly List<VariableDeclaration> Fields ~ DeleteContainerAndItems!(_);
 
 			public Scope Scope { get => m_scope; set => m_scope = value; }
 			private Scope m_scope;
 
-			public this(Token name, List<VariableDeclaration> fields)
+			public this(StructKind kind, Token name, List<VariableDeclaration> fields)
 			{
+				this.Kind = kind;
 				this.Name = name;
 				this.Fields = fields;
 			}

@@ -1,5 +1,4 @@
 using System.IO;
-/*
 static
 {
 	// This was supposed to be at comptime, but Beef kept crashing

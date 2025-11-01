@@ -12,6 +12,7 @@ class Program
 		public String MainFile;
 		public bool RunAfterBuild = false;
 		public bool KeepOpen = false;
+		public bool DontBuild = false;
 	}
 
 	public static int Main(String[] args)
@@ -35,6 +36,9 @@ class Program
 			case "-wait":
 				cliArgs.KeepOpen = true;
 				break;
+			case "-nobuild":
+				cliArgs.DontBuild = true;
+				break;
 			}
 		}
 
@@ -47,10 +51,22 @@ class Program
 
 	private static void run_compiler(CLIArguments args)
 	{
-		let builder = scope Builder();
 		// @TEMP
 		let mainFileDirectory = Path.GetDirectoryPath(args.MainFile, .. scope .());
 		let outputDirectory = Path.Combine(.. scope .(), mainFileDirectory, "output", "src");
+
+		if (args.DontBuild)
+		{
+			if (args.RunAfterBuild)
+			{
+				let path = Path.Combine(.. scope .(), outputDirectory, "main.c");
+				execute_c_code(File.ReadAllText(path, .. scope .()), outputDirectory);
+			}
+
+			return;
+		}
+
+		let builder = scope Builder();
 		let cRes = builder.Run(args.MainFile, outputDirectory, scope => finishCompile, outputFiles);
 
 		Console.ResetColor();
@@ -95,8 +111,8 @@ class Program
 
 		let compiler = scope libtcc.TCCCompiler(tccPath);
 
-		// c_raylib_add(compiler);
 		compiler.AddIncludePath(includePath);
+		c_raylib_add(compiler);
 
 		if (compiler.CompileString(code) == -1)
 		{

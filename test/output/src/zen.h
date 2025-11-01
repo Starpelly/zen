@@ -27,5 +27,7 @@ typedef			 double		float64;
 #endif
 
 #ifdef ZEN_PLATFORM_WINDOWS
-#include <windows.h>
+// #include <windows.h>
 #endif
+
+#include <raylib.h>

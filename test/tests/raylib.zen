@@ -1,0 +1,31 @@
+// namespace rl;
+
+extern struct Vector2
+{
+	float x;
+	float y;
+}
+
+extern struct Color
+{
+	uint8 r;
+	uint8 g;
+	uint8 b;
+	uint8 a;
+}
+
+extern fun void InitWindow(int width, int height, string title);
+extern fun void CloseWindow();
+extern fun bool WindowShouldClose();
+
+extern fun void BeginDrawing();
+extern fun void EndDrawing();
+
+extern fun void ClearBackground(Color color);
+
+extern fun void DrawRectangle(int x, int y, int w, int h, Color color);
+
+extern fun int GetMouseX();
+extern fun int GetMouseY();
+
+extern fun void DrawFPS(int x, int y);

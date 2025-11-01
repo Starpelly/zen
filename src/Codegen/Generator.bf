@@ -46,8 +46,10 @@ class Generator
 		#endif
 
 		#ifdef ZEN_PLATFORM_WINDOWS
-		#include <windows.h>
+		// #include <windows.h>
 		#endif
+
+		#include <raylib.h>
 		""";
 
 	public this(Ast ast, Scope globalScope, List<CFile> cfilesList)
@@ -136,6 +138,9 @@ class Generator
 					switch (typename.Decl.GetKind())
 					{
 					case .StructDecl(let _struct):
+						if (_struct.Kind == .Extern)
+							break;
+
 						let name = scope $"{namespaceStr}_{_struct.Name.Lexeme}";
 						code.AppendLine(scope $"typedef struct {name} {name};");
 						break;
@@ -192,6 +197,9 @@ class Generator
 					switch (typename.Decl.GetKind())
 					{
 					case .StructDecl(let _struct):
+						if (_struct.Kind == .Extern)
+							break;
+
 						let name = scope $"{namespaceStr}_{_struct.Name.Lexeme}";
 						code.AppendLine(scope $"struct {name} \{");
 						code.IncreaseTab();
@@ -285,15 +293,35 @@ class Generator
 			code.AppendNewLine();
 			code.AppendTabs();
 
+			bool isExternType = false;
+			bool isStructType = false;
+
 			// @FIX
 			// I don't think the codegen should have to do this
 			let entity = _scope.Lookup(v.Type.Lexeme);
 			if (entity case .Ok(let found))
 			{
+				if (let tn = found as Entity.TypeName)
+				{
+					if (let s = tn.Decl as AstNode.Stmt.StructDeclaration)
+					{
+						isStructType = true;
+						if (s.Kind == .Extern)
+						{
+							isExternType = true;
+						}
+					}
+				}
+
 				if (let t = found as IEntityNamespaceParent)
 				{
-					code.Append(buildNamespaceString(t, .. scope .()));
-					code.Append("_");
+					bool write = !isExternType;
+
+					if (write)
+					{
+						code.Append(buildNamespaceString(t, .. scope .()));
+						code.Append("_");
+					}
 				}
 			}
 
@@ -302,6 +330,15 @@ class Generator
 			{
 				code.Append(scope $" = ");
 				emitExpr(v.Initializer, code, _scope);
+			}
+			else
+			{
+				if (isStructType)
+				{
+					// Because C doesn't initialize structs automatically without an initializer (but we want to),
+					// we'll have to tell it to do so manually.
+					code.Append(scope $" = \{\}");
+				}
 			}
 			addSemicolon!();
 			break;
@@ -378,7 +415,19 @@ class Generator
 			let arguments = scope StringCodeBuilder();
 			for (let arg in call.Arguments)
 			{
-				// arguments.Append(scope $"{emitExpr(arg, .. scope .())}");
+				/*
+				let entity = _scope.Lookup(call.Callee.Name.Lexeme);
+				if (entity case .Ok(let found))
+				{
+					if (let fun = found as Entity.Function)
+					{
+						if (fun.Decl.Kind == .Extern)
+						{
+							arguments.Append("*(Color*)&");
+						}
+					}
+				}
+				*/
 				emitExpr(arg, arguments, _scope);
 				if (arg != call.Arguments.Back)
 					arguments.Append(", ");
@@ -457,8 +506,19 @@ class Generator
 				{
 					if (let t = found as IEntityNamespaceParent)
 					{
-						code.Append(buildNamespaceString(t, .. scope .()));
-						code.Append("_");
+						bool writeNamespace = true;
+
+						if (let fun = t as Entity.Function)
+						{
+							if (fun.Decl.Kind == .Extern)
+								writeNamespace = false;
+						}
+
+						if (writeNamespace)
+						{
+							code.Append(buildNamespaceString(t, .. scope .()));
+							code.Append("_");
+						}
 					}
 				}
 

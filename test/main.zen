@@ -1,40 +1,38 @@
-// #load "tests.zen";
-#load "fibonacci.zen";
-// #load "windows.zen";
-// #load "raylib.zen";
+#load "tests/raylib.zen";
 
-struct Vector2
+struct Vector2I
 {
-	float x;
-	float y;
-}
-
-struct Vector3
-{
-	float x;
-	float y;
-	float z;
-}
-
-enum Color
-{
-	Red,
-	Orange,
-	Yellow,
-	Green,
-	Blue,
-	Purple,
+	int x;
+	int y;
 }
 
 fun void main()
 {
-	let int fib = math::fibonacci_recursive(10);
-	// let int x = tests::add(1, 1);
+    InitWindow(1280, 720, "Zen");
 
-	println(fib);
-	
-	var Vector2 vec;
-	vec.x = 0.0;
+	let Vector2I playerPos;
 
-	println("Hello");
+	while (WindowShouldClose() == false)
+	{
+		BeginDrawing();
+
+		let Color black;
+		black.r = 0; black.g = 0; black.b = 0; black.a = 255;
+		ClearBackground(black);
+
+		DrawFPS(20, 20);
+
+		playerPos.x = GetMouseX();
+		playerPos.y = GetMouseY();
+
+		let Color color;
+		color.r = 255;
+		color.g = 255;
+		color.b = 0;
+		color.a = 255;
+		DrawRectangle(playerPos.x, playerPos.y, 32, 32, color);
+
+		EndDrawing();
+	}
+	CloseWindow();
 }
