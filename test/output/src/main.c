@@ -16,7 +16,6 @@ typedef enum {
 	zen_tests_Color_Yellow,
 	zen_tests_Color_Cyan
 } zen_tests_Color;
-typedef struct zen_math_Hello;
 void zen_main();
 int zen_tests_add(int x, int y);
 void zen_tests_abc();
@@ -32,8 +31,6 @@ struct zen_Vector3 {
 	float x;
 	float y;
 	float z;
-};
-struct zen_math_Hello {
 };
 void zen_main()
 {

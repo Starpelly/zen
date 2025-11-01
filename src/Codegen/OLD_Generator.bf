@@ -75,7 +75,7 @@ class OLD_Generator
 			{
 				m_namespaceStack.Add(namespc.Name.Lexeme);
 			}
-			if (let eof = node as AstNode.Stmt.EOF)
+			if (node is AstNode.Stmt.EOF)
 			{
 				m_namespaceStack.Clear();
 			}

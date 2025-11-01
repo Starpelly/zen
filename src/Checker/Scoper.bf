@@ -126,7 +126,7 @@ class Scoper
 			});
 		}
 
-		if (let eof = node as AstNode.Stmt.EOF)
+		if (node is AstNode.Stmt.EOF)
 		{
 			for (let ns in m_namespaceStackFileScope)
 			{

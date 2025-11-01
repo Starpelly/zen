@@ -5,40 +5,6 @@ using System.Diagnostics;
 
 namespace Zen;
 
-class CompFile
-{
-	public readonly String Path = new .() ~ delete _;
-
-	public readonly String Name = new .() ~ delete _;
-	public readonly String Text ~ delete _;
-	public readonly List<StringView> Lines = new .() ~ delete _;
-
-	public readonly Tokenizer Tokenizer ~ delete _;
-	public readonly Parser Parser ~ delete _;
-
-	public readonly List<Token> Tokens;
-	public readonly Ast Ast;
-
-	public this(String path, String name, String text, Tokenizer tokenizer, Parser parser, List<Token> tokens, Ast ast)
-	{
-		this.Path.Set(path);
-		this.Name.Set(name);
-		this.Text = text;
-
-		this.Tokenizer = tokenizer;
-		this.Parser = parser;
-
-		this.Tokens = tokens;
-		this.Ast = ast;
-
-		let split = text.Split('\n');
-		for (let line in split)
-		{
-			this.Lines.Add(line);
-		}
-	}
-}
-
 class Builder
 {
 	private const ConsoleColor CONSOLE_CODE_COLOR = .Gray;
@@ -71,8 +37,7 @@ class Builder
 	public Result<Generator.GeneratorResult> Run(String mainFilePath, String outputDirectory, FinishCompCallback finishCompCallback, List<CFile> outCFiles)
 	{
 		// Load files
-		let testFile = pleaseDoFile(mainFilePath, m_compFiles);
-		searchForLoads(testFile.Ast, m_compFiles);
+		pleaseDoFile(mainFilePath, m_compFiles);
 
 		if (m_hadErrors)
 			return .Err;
@@ -166,8 +131,19 @@ class Builder
 		return comp;
 	}
 
+	private CompFile pleaseDoFile(String path, Dictionary<Guid, CompFile> list)
+	{
+		let fileID = Guid.Create();
+		let comp = compFile(Path.GetActualPathName(path, .. scope .()), fileID);
+		list.Add(fileID, comp);
+
+		searchForLoads(comp, comp.Ast, list);
+
+		return comp;
+	}
+
 	// @TEMP?
-	private void searchForLoads(Ast ast, Dictionary<Guid, CompFile> list)
+	private void searchForLoads(CompFile currentFile, Ast ast, Dictionary<Guid, CompFile> list)
 	{
 		for (let stmt in ast)
 		{
@@ -184,15 +160,34 @@ class Builder
 					let offset = (isMultiline) ? 3 : 1;
 
 					let loadFileName = directive.Name.Lexeme.Substring(offset, directive.Name.Lexeme.Length - 1 - offset);
-					let loadFilePath = Path.Combine(.. scope .(), directiveFileDirectory, loadFileName);
+					let loadFilePath = Path.GetActualPathName(Path.Combine(.. scope .(), directiveFileDirectory, loadFileName), .. scope .());
 
-					if (File.Exists(loadFilePath))
+					if (currentFile.Path == loadFilePath)
 					{
-						pleaseDoFile(loadFilePath, list);
+						addError(directiveCompFile, new .(directive.Name, "File is attempting to load itself"));
 					}
-					else
+
+					bool tryLoadFile = true;
+					for (let file in m_compFiles)
 					{
-						addError(directiveCompFile, new .(directive.Name, "File not found"));
+						// This file is already loaded, we can safely ignore it.
+						if (file.value.Path == loadFilePath)
+						{
+							tryLoadFile = false;
+							break;
+						}
+					}
+
+					if (tryLoadFile)
+					{
+						if (File.Exists(loadFilePath))
+						{
+							pleaseDoFile(loadFilePath, list);
+						}
+						else
+						{
+							addError(directiveCompFile, new .(directive.Name, "File not found"));
+						}
 					}
 				}
 				else
@@ -202,15 +197,6 @@ class Builder
 				}
 			}
 		}
-	}
-
-	private CompFile pleaseDoFile(String path, Dictionary<Guid, CompFile> list)
-	{
-		let fileID = Guid.Create();
-		let comp = compFile(path, fileID);
-		list.Add(fileID, comp);
-
-		return comp;
 	}
 
 	private void addError(CompFile file, CompilerError err)
