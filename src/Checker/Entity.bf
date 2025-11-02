@@ -39,16 +39,34 @@ abstract class Entity
 
 	public class Constant : Entity, IEntityDeclaration
 	{
-		public readonly AstNode.Stmt Decl;
+		public enum ConstantDecl
+		{
+			case Untyped;
+			case Basic(AstNode.Stmt.ConstantDeclaration decl);
+			case EnumField(AstNode.Stmt.EnumFieldValue field);
+		}
+
+		public readonly ConstantDecl Node;
 		public readonly Variant Value ~ _.Dispose();
 
-		public this(AstNode.Stmt decl, Variant value, Token token, ZenType type) : base(token, type)
+		public this(ConstantDecl node, Variant value, Token token, ZenType type) : base(token, type)
 		{
-			this.Decl = decl;
+			this.Node = node;
 			this.Value = Value;
 		}
 
-		public AstNode.Stmt IEntityDeclaration.Decl => Decl;
+		public AstNode.Stmt IEntityDeclaration.Decl
+		{
+			get
+			{
+				switch (Node)
+				{
+				case .Untyped: return null;
+				case .Basic(let decl): return decl;
+				case .EnumField(let decl): return decl;
+				}
+			}
+		}
 		public override EntityKind GetKind() => .Constant(this);
 	}
 

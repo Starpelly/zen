@@ -66,7 +66,7 @@ class Scoper
 	private void addGlobalConstant(String name, ZenType type, Variant value)
 	{
 		let token = Token(.Identifier, name, 0, 0, .Empty);
-		let entity = new Entity.Constant(null, value, token, type);
+		let entity = new Entity.Constant(.Untyped, value, token, type);
 		m_globalScope.DeclareWithName(entity, name);
 	}
 
@@ -198,7 +198,7 @@ class Scoper
 
 		if (let enumVal = node as AstNode.Stmt.EnumFieldValue)
 		{
-			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(enumVal, default, enumVal.Name, .Basic(.FromKind(.UntypedInteger))), node);
+			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(.EnumField(enumVal), default, enumVal.Name, .Basic(.FromKind(.UntypedInteger))), node);
 		}
 
 		if (let vari = node as AstNode.Stmt.VariableDeclaration)
@@ -208,7 +208,7 @@ class Scoper
 
 		if (let constant = node as AstNode.Stmt.ConstantDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(constant, default, constant.Name, .Invalid), constant);
+			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Basic(constant), default, constant.Name, getTypeFromTypeExpr(constant.Type)), constant);
 		}
 
 		if (let _if = node as AstNode.Stmt.If)

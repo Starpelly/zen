@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Diagnostics;
 
 namespace Zen;
 
@@ -189,6 +190,19 @@ class Generator
 					let namespaceStr = buildNamespaceString(funEnt, .. scope .());
 					appendFunctionHead(fun, namespaceStr, code);
 					code.Append(';');
+				}
+				if (let constant = entity.value as Entity.Constant)
+				{
+					// This means it's a built in constant, so like int32s and stuff. We can safely ignore those as they're defined in the zen.h header.
+					if (constant.Node case .Builtin)
+						continue;
+
+					Debug.Assert(constant.Node case .Basic(let basic));
+
+					// @TODO
+					// Macros are a bit wack, does c have constant expressions or something?
+					code.AppendLine(scope $"#define {basic.Name.Lexeme} ");
+					emitExpr(basic.Initializer, code, _scope);
 				}
 			}
 		}

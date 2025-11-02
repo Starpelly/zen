@@ -114,10 +114,12 @@ typedef enum {
 	zen_raylib_KeyboardKey_VOLUME_DOWN = 25
 } zen_raylib_KeyboardKey;
 void zen_main();
+#define PLAYER_SPEED 500.0
 void zen_game_start_game();
 void zen_game_draw_game();
 struct zen_game_Player {
 	Vector2 pos;
+	Color color;
 };
 void zen_main()
 {
@@ -132,6 +134,10 @@ void zen_game_start_game()
 	black.b = 0;
 	black.a = 255;
 	InitWindow(1280, 720, "Zen");
+	player.color.r = 255;
+	player.color.g = 255;
+	player.color.b = 0;
+	player.color.a = 255;
 	while (WindowShouldClose() == false)
 	{
 		BeginDrawing();
@@ -144,29 +150,23 @@ void zen_game_start_game()
 }
 void zen_game_draw_game()
 {
-	Color color;
-	color.r = 255;
-	color.g = 255;
-	color.b = 0;
-	color.a = 255;
-	float playerSpeed = 500.0f;
 	if (IsKeyDown(zen_raylib_KeyboardKey_LEFT))
 	{
-		player.pos.x -= playerSpeed * GetFrameTime();
+		player.pos.x -= PLAYER_SPEED * GetFrameTime();
 	}
 	if (IsKeyDown(zen_raylib_KeyboardKey_RIGHT))
 	{
-		player.pos.x += playerSpeed * GetFrameTime();
+		player.pos.x += PLAYER_SPEED * GetFrameTime();
 	}
 	if (IsKeyDown(zen_raylib_KeyboardKey_UP))
 	{
-		player.pos.y -= playerSpeed * GetFrameTime();
+		player.pos.y -= PLAYER_SPEED * GetFrameTime();
 	}
 	if (IsKeyDown(zen_raylib_KeyboardKey_DOWN))
 	{
-		player.pos.y += playerSpeed * GetFrameTime();
+		player.pos.y += PLAYER_SPEED * GetFrameTime();
 	}
-	DrawRectangle(player.pos.x, player.pos.y, 32, 32, color);
+	DrawRectangle(player.pos.x, player.pos.y, 32, 32, player.color);
 }
 
 void main()
