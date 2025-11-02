@@ -45,6 +45,7 @@ enum ExpressionKind
 	case Assign(AstNode.Expression.Assign);
 	case QualifiedName(AstNode.Expression.QualifiedName);
 	case NamedType(AstNode.Expression.NamedType);
+	case Cast(AstNode.Expression.Cast);
 }
 
 abstract class AstNode
@@ -533,6 +534,22 @@ abstract class AstNode
 			}
 
 			public override ExpressionKind GetKind() => .NamedType(this);
+		}
+
+		public class Cast : Expression
+		{
+			public readonly Expression Value ~ delete _;
+			public readonly NamedType TargetType ~ delete _;
+			public readonly Token CastKeyword;
+
+			public this(Expression value, NamedType targetType, Token keyword)
+			{
+				this.Value = value;
+				this.TargetType = targetType;
+				this.CastKeyword = keyword;
+			}
+
+			public override ExpressionKind GetKind() => .Cast(this);
 		}
 	}
 }

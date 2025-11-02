@@ -155,6 +155,11 @@ class Generator
 							for (let value in _enum.Values)
 							{
 								code.AppendLine(scope $"{enumName}_{value.Name.Lexeme}");
+								if (value.Value != null)
+								{
+									code.Append(" = ");
+									emitExpr(value.Value, code, _enum.Scope);
+								}
 								if (value != _enum.Values.Back)
 									code.Append(',');
 							}
@@ -426,7 +431,7 @@ class Generator
 		}
 	}
 
-	private void emitExpr(AstNode.Expression expr, StringCodeBuilder code, Scope _scope)
+	private void emitExpr(AstNode.Expression expr, StringCodeBuilder code, Scope _scope, bool zenNamespacePrefix = true)
 	{
 		switch (expr.GetKind())
 		{
@@ -441,6 +446,12 @@ class Generator
 			break;
 
 		case .Call(let call):
+
+			if (call.Callee.Name.Lexeme == "IsKeyDown")
+			{
+				var a = 0;
+			}
+
 			let arguments = scope StringCodeBuilder();
 			for (let arg in call.Arguments)
 			{
@@ -634,6 +645,7 @@ class Generator
 
 			if (writeNamespace)
 			{
+				if (zenNamespacePrefix)
 				code.Append("zen_");
 
 				// @FIX
@@ -651,7 +663,7 @@ class Generator
 				code.Append(scope $"{qn.Left.Lexeme}_");
 			}
 
-			emitExpr(qn.Right, code, _scope);
+			emitExpr(qn.Right, code, _scope, false);
 			break;
 
 		case .NamedType(let type):
@@ -664,6 +676,13 @@ class Generator
 				emitExpr(qualified, code, _scope);
 				break;
 			}
+			break;
+
+		case .Cast(let cast):
+			code.Append("(");
+			emitExpr(cast.TargetType, code, _scope);
+			code.Append(")");
+			emitExpr(cast.Value, code, _scope);
 			break;
 		}
 	}

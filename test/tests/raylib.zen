@@ -18,6 +18,8 @@ extern fun void InitWindow(int width, int height, string title);
 extern fun void CloseWindow();
 extern fun bool WindowShouldClose();
 
+extern fun float GetFrameTime();
+
 extern fun void BeginDrawing();
 extern fun void EndDrawing();
 
@@ -32,9 +34,9 @@ extern fun int GetMouseY();
 extern fun bool IsKeyDown(int key);
 
 extern fun void DrawFPS(int x, int y);
+extern fun void DrawText(string text, int x, int y, int fontSize, Color color);
 
-/*
-extern enum KeyboardKey
+enum KeyboardKey
 {
 	NULL            = 0,        // Key: NULL, used for no key pressed
 	// Alphanumeric keys
@@ -151,4 +153,3 @@ extern enum KeyboardKey
 	VOLUME_UP       = 24,       // Key: Android volume up button
 	VOLUME_DOWN     = 25        // Key: Android volume down button
 }
-*/

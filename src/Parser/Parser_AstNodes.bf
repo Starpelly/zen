@@ -164,16 +164,15 @@ extension Parser
 
 			// @FIX
 			// To prevent infinite parsing loops, but eventually we'll want to store this.
-			var literal = default(AstNode.Expression);
+			AstNode.Expression value = null;
 			if (match(.Equal))
 			{
-				literal = getExprPrimary();
+				value = getExprPrimary();
 			}
-			if (literal != null)
-				delete literal;
-
-			AstNode.Expression value = null;
-			value = new AstNode.Expression.Literal(valueName, Variant.Create<int>(valueIndex));
+			else
+			{
+				value = new AstNode.Expression.Literal(valueName, Variant.Create<int>(valueIndex));
+			}
 
 			values.Add(new .(valueName, value));
 

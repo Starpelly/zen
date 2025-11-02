@@ -1,7 +1,0 @@
-#load "tests/raylib.zen";
-
-fun void main()
-{
-    var raylib::Color color;
-    color.r = 0;
-}

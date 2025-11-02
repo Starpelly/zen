@@ -1,0 +1,58 @@
+
+namespace game;
+
+struct Player
+{
+	raylib::Vector2 pos;
+}
+
+var Player player;
+
+fun void start_game()
+{
+    let raylib::Color black;
+	black.r = 0; black.g = 0; black.b = 0; black.a = 255;
+
+    raylib::InitWindow(1280, 720, "Zen");
+	// raylib::SetTargetFPS(60);
+
+	while (raylib::WindowShouldClose() == false)
+	{
+		raylib::BeginDrawing();
+		raylib::ClearBackground(black);
+		
+		draw_game();
+
+		raylib::DrawFPS(20, 20);
+
+		raylib::EndDrawing();
+	}
+	raylib::CloseWindow();
+}
+
+fun void draw_game()
+{
+	let raylib::Color color;
+	color.r = 255; color.g = 255; color.b = 0; color.a = 255;
+
+	let float playerSpeed = 500.0;
+
+	if (raylib::IsKeyDown(raylib::KeyboardKey::LEFT))
+	{
+		player.pos.x -= playerSpeed * raylib::GetFrameTime();
+	}
+	if (raylib::IsKeyDown(raylib::KeyboardKey::RIGHT))
+	{
+		player.pos.x += playerSpeed * raylib::GetFrameTime();
+	}
+	if (raylib::IsKeyDown(raylib::KeyboardKey::UP))
+	{
+		player.pos.y -= playerSpeed * raylib::GetFrameTime();
+	}
+	if (raylib::IsKeyDown(raylib::KeyboardKey::DOWN))
+	{
+		player.pos.y += playerSpeed * raylib::GetFrameTime();
+	}
+
+	raylib::DrawRectangle(player.pos.x, player.pos.y, 32, 32, color);
+}

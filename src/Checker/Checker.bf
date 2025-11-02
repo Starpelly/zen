@@ -35,7 +35,7 @@ class Checker
 	{
 		if (let block = node as AstNode.Stmt.Block)
 		{
-			checkStatementList(block.List, _scope);
+			checkStatementList(block.List, block.Scope ?? _scope);
 		}
 
 		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
@@ -328,16 +328,28 @@ class Checker
 			returnVal!(ZenType.Invalid);
 
 		case .NamedType(let type):
-
-			/*
 			switch (type.Kind)
 			{
 			case .Simple(let name):
-				returnVal!();
+				let res = BasicType.FromName(name.Lexeme);
+				if (res case .Ok(let val))
+					return .Basic(val);
+				Runtime.FatalError("not implemented! :(");
+				break;
+
 			case .Qualified(let qualified):
 				returnVal!(checkExpr(qualified, _scope));
-			}*/
-			break;
+			}
+
+		case .Cast(let cast):
+			// These should really be separated into separate functions just for sanity purposes
+			// It just goes to the named type procedure, whatever.
+			let castType = checkExpr(cast.TargetType, _scope);
+
+			// @TODO
+			// We should actually validate that this cast is valid, but I'm lazy
+			// so for now, we'll assume you can cast anything into anything (even if it's nonsensical)
+			returnVal!(castType);
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");

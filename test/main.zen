@@ -1,54 +1,7 @@
+#load "game/game.zen";
 #load "tests/raylib.zen";
-
-struct Vector2I
-{
-	int x;
-	int y;
-}
-
-struct Player
-{
-	Vector2I pos;
-}
-
-let Player player;
 
 fun void main()
 {
-    raylib::InitWindow(1280, 720, "Zen");
-	raylib::SetTargetFPS(60);
-
-	while (raylib::WindowShouldClose() == false)
-	{
-		raylib::BeginDrawing();
-
-		let raylib::Color black;
-		black.r = 0; black.g = 0; black.b = 0; black.a = 255;
-		raylib::ClearBackground(black);
-		
-		raylib::DrawFPS(20, 20);
-
-		draw_game();
-
-		raylib::EndDrawing();
-	}
-	raylib::CloseWindow();
-}
-
-fun void draw_game()
-{
-	player.pos.x = raylib::GetMouseX();
-	// player.pos.y = raylib::GetMouseY();
-
-	let raylib::Color color;
-	color.r = 255; color.g = 255; color.b = 0; color.a = 255;
-
-	if (raylib::IsKeyDown(32))
-	{
-		color.r = 0;
-		player.pos.y += 1;
-		println("space key!");
-	}
-
-	raylib::DrawRectangle(player.pos.x, player.pos.y, 32, 32, color);
+	game::start_game();
 }

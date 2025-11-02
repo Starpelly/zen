@@ -129,6 +129,22 @@ extension Parser
 			return new Expression.Unary(op, right);
 		}
 
+		bool isCasting = false;
+		Token? castToken = ?;
+		Expression.NamedType castType = ?;
+
+		if (match(.Cast))
+		{
+			isCasting = true;
+			castToken = previous();
+
+			consume(.LeftParen, "Expected '('");
+			castType = consumeType();
+			consume(.RightParen, "Expected ')'");
+
+			return new AstNode.Expression.Cast(getExprCall(), castType, castToken.Value);
+		}
+
 		return getExprCall();
 	}
 
@@ -157,6 +173,11 @@ extension Parser
 			{
 				// @HACK
 				// This feels kinda hacky...
+
+				if (expr is Expression.Cast)
+				{
+					var a = 0;
+				}
 				delete expr;
 				retreat();
 				retreat();
@@ -205,6 +226,17 @@ extension Parser
 
 	private Expression getExprPrimary()
 	{
+		mixin returnValue(Expression returnExpr)
+		{
+			/*
+			if (isCasting)
+			{
+				return new AstNode.Expression.Cast(returnExpr, castType, castToken.Value);
+			}
+			*/
+			return returnExpr;
+		}
+
 		mixin returnLiteral(Token prevToken, Variant? value)
 		{
 			/*
@@ -233,7 +265,7 @@ extension Parser
 			default:
 			}
 			*/
-			return new Expression.Literal(/*new PrimitiveDataType(PrimitiveType.GetFromLiteralToken(prevToken), typeName, prevToken),*/ prevToken, value);
+			returnValue!(new Expression.Literal(/*new PrimitiveDataType(PrimitiveType.GetFromLiteralToken(prevToken), typeName, prevToken),*/ prevToken, value));
 		}
 
 		if (match(.Number_Int, .Number_Float, .String))
@@ -259,7 +291,7 @@ extension Parser
 
 		if (match(.This))
 		{
-			return new Expression.This(previous());
+			returnValue!(new Expression.This(previous()));
 		}
 
 		if (match(.Identifier))
@@ -301,14 +333,14 @@ extension Parser
 			}
 			*/
 
-			return new Expression.Variable(previous());
+			returnValue!(new Expression.Variable(previous()));
 		}
 
 		if (match(.LeftParen))
 		{
 			let expr = getExpression();
 			consume(.RightParen, "Expected ')' after expression.");
-			return new Expression.Grouping(expr);
+			returnValue!(new Expression.Grouping(expr));
 		}
 
 		reportError(peek(), "Expected expression.");

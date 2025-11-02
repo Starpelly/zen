@@ -1,0 +1,5 @@
+fun void main()
+{
+    var int a = cast(int)5;
+    println(a);
+}

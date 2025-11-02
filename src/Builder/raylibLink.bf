@@ -45,8 +45,8 @@ static
 
 	public static void c_raylib_add(libtcc.TCCCompiler compiler)
 	{
-		let raylibPath = @"C:\Users\Braedon\Downloads\raylib-5.5_win64_msvc16\raylib-5.5_win64_msvc16";
-		compiler.AddIncludePath(Path.Combine(.. scope .(), raylibPath, "include"));
+		let includePath = @"D:\zen\test\output\include";
+		compiler.AddIncludePath(includePath);
 
 #if BF_PLATFORM_WINDOWS
 		compiler.AddLibrary("gdi32");
