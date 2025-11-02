@@ -40,7 +40,7 @@ class Checker
 
 		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
 		{
-			let entity = fun.Scope.Lookup(fun.Name.Lexeme).Value as Entity.Function;
+			let entity = fun.Scope.LookupName(fun.Name.Lexeme).Value as Entity.Function;
 
 			if (fun.Kind == .Extern)
 			{
@@ -66,20 +66,14 @@ class Checker
 
 		if (let _var = node as AstNode.Stmt.VariableDeclaration)
 		{
-			let entity = _scope.Lookup(_var.Name.Lexeme).Value as Entity.Variable;
+			let entity = _scope.LookupName(_var.Name.Lexeme).Value as Entity.Variable;
 			if (entity.Type case .SimpleNamed(let simpleName))
 			{
-				lookupScopeForIdentifier(_scope, simpleName).IgnoreError();
-				/*
-				let lookupName = _scope.Lookup(name.Lexeme);
-				if (lookupName case .Ok(let lookup))
+				let lookup = lookupScopeForIdentifier(_scope, simpleName);
+				if (lookup case .Ok(let res))
 				{
+					entity.ResolvedTypeEntity = res;
 				}
-				else if (lookupName case .Err)
-				{
-					reportError(_var.Type, "Unknown data type.");
-				}
-				*/
 			}
 			if (entity.Type case .QualifiedNamed(let qualifiedName))
 			{
@@ -128,6 +122,14 @@ class Checker
 		{
 			checkExpressionIsTruthy(_while.Condition, _while.Scope);
 			checkStatement(_while.Body, _while.Scope);
+		}
+
+		if (let _struct = node as AstNode.Stmt.StructDeclaration)
+		{
+			for (let field in _struct.Fields)
+			{
+				checkStatement(field, _struct.Scope);
+			}
 		}
 
 		if (let expr = node as AstNode.Stmt.ExpressionStmt)
@@ -309,7 +311,7 @@ class Checker
 			break;
 
 		case .QualifiedName(let qn):
-			let leftScope = _scope.Lookup(qn.Left.Lexeme);
+			let leftScope = _scope.LookupName(qn.Left.Lexeme);
 
 			if (leftScope case .Ok(let leftEntity))
 			{
@@ -354,7 +356,7 @@ class Checker
 
 	private Result<Entity> lookupScopeForIdentifier(Scope _scope, Token name)
 	{
-		let entity = _scope.Lookup(name.Lexeme);
+		let entity = _scope.LookupName(name.Lexeme);
 		if (entity case .Err)
 		{
 			reportError(name, scope $"Undeclared identifier '{name.Lexeme}'");

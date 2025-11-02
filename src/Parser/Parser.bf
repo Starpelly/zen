@@ -45,6 +45,8 @@ class Parser
 				return getFunctionStmt(true);
 			else if (match(.Struct))
 				return getStructStmt(true);
+			else if (match(.Enum))
+				return getEnumStmt(true);
 			else
 				reportError(previous(), "Only functions can be declared as 'extern'");
 		}
@@ -58,7 +60,7 @@ class Parser
 		}
 		if (match(.Enum))
 		{
-			return getEnumStmt();
+			return getEnumStmt(false);
 		}
 		if (match(.Namespace))
 		{

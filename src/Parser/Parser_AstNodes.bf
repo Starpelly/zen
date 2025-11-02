@@ -121,7 +121,7 @@ extension Parser
 		return new .(isExtern ? .Extern : .Normal, name, fields);
 	}
 
-	private AstNode.Stmt.EnumDeclaration getEnumStmt()
+	private AstNode.Stmt.EnumDeclaration getEnumStmt(bool isExtern)
 	{
 		let name = consume(.Identifier, "Expected name.");
 
@@ -182,7 +182,7 @@ extension Parser
 
 		consume(.RightBrace, "Expected '}'.");
 
-		return new .(name, values);
+		return new .(isExtern ? .Extern : .Normal, name, values);
 	}
 
 	private AstNode.Stmt.NamespaceDeclaration getNamespaceStmt()

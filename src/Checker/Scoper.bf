@@ -59,7 +59,7 @@ class Scoper
 		{
 			let token = Token(.Identifier, "", 0, 0, .Empty);
 			let entity = new Entity.Builtin(fun.Name, token, .Invalid);
-			m_globalScope.Entities.Add(fun.Name, entity);
+			m_globalScope.DeclareWithName(entity, fun.Name);
 		}
 	}
 
@@ -67,7 +67,7 @@ class Scoper
 	{
 		let token = Token(.Identifier, name, 0, 0, .Empty);
 		let entity = new Entity.Constant(null, value, token, type);
-		m_globalScope.Entities.Add(name, entity);
+		m_globalScope.DeclareWithName(entity, name);
 	}
 
 	public Result<Scope> Run()
@@ -116,7 +116,7 @@ class Scoper
 		if (let namespc = node as AstNode.Stmt.NamespaceDeclaration)
 		{
 			let entity = new Entity.Namespace(namespc, namespc.Name, .Namespace(namespc));
-			scope_tryDeclare(m_currentScope, namespc.Name, entity);
+			scope_tryDeclare(m_currentScope, namespc.Name, entity, namespc);
 
 			openNewScope(scope $"Namespace ({namespc.Name.Lexeme})", namespc);
 			m_namespaceStackFileScope.Add(.()
@@ -156,7 +156,7 @@ class Scoper
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, getNamespaceParent(), fun.Name, getTypeFromTypeExpr(fun.Type)));
+			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, getNamespaceParent(), fun.Name, getTypeFromTypeExpr(fun.Type)), fun);
 		}
 
 		if (let str = node as AstNode.Stmt.StructDeclaration)
@@ -171,7 +171,7 @@ class Scoper
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, getNamespaceParent(), str.Name, .Structure(str)));
+			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, getNamespaceParent(), str.Name, .Structure(str)), str);
 		}
 
 		if (let _enum = node as AstNode.Stmt.EnumDeclaration)
@@ -186,22 +186,22 @@ class Scoper
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, getNamespaceParent(), _enum.Name, .Enum(_enum)));
+			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, getNamespaceParent(), _enum.Name, .Enum(_enum)), _enum);
 		}
 
 		if (let enumVal = node as AstNode.Stmt.EnumFieldValue)
 		{
-			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(enumVal, default, enumVal.Name, .Basic(.FromKind(.UntypedInteger))));
+			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(enumVal, default, enumVal.Name, .Basic(.FromKind(.UntypedInteger))), node);
 		}
 
-		if (let v = node as AstNode.Stmt.VariableDeclaration)
+		if (let vari = node as AstNode.Stmt.VariableDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, v.Name, new Entity.Variable(v, v.Name, getTypeFromTypeExpr(v.Type)));
+			scope_tryDeclare(m_currentScope, vari.Name, new Entity.Variable(vari, vari.Name, getTypeFromTypeExpr(vari.Type)), vari);
 		}
 
-		if (let c = node as AstNode.Stmt.ConstantDeclaration)
+		if (let constant = node as AstNode.Stmt.ConstantDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, c.Name, new Entity.Constant(c, default, c.Name, .Invalid));
+			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(constant, default, constant.Name, .Invalid), constant);
 		}
 
 		if (let _if = node as AstNode.Stmt.If)
@@ -234,15 +234,16 @@ class Scoper
 		}
 	}
 
-	private bool scope_tryDeclare(Scope _scope, Token name, Entity entity)
+	private bool scope_tryDeclare(Scope _scope, Token name, Entity entity, AstNode.Stmt stmt)
 	{
-		if (_scope.Entities.ContainsKey(name.Lexeme))
+		if (_scope.EntityMap.ContainsKey(name.Lexeme))
 		{
 			delete entity;
 			reportError(name, "Identifier has already declared");
 			return false;
 		}
-		_scope.Entities.Add(name.Lexeme, entity);
+
+		_scope.DeclareWithAstNode(entity, name.Lexeme, stmt);
 		// entity.Scope = this;
 		return true;
 	}
@@ -253,7 +254,7 @@ class Scoper
 
 		Console.WriteLine(scope $"{pad}Scope: {_scope.Name}");
 
-		for (let e in _scope.Entities)
+		for (let e in _scope.EntityMap)
 		{
 			Console.WriteLine(scope $"{pad}  - {e.value.GetType().GetName(.. scope .())} {e.key}: type({e.value.Type})");
 		}

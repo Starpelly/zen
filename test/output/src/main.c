@@ -1,15 +1,21 @@
 #include <zen.h>
 
 typedef struct zen_Vector2I zen_Vector2I;
+typedef struct zen_Player zen_Player;
 void zen_main();
+void zen_draw_game();
 struct zen_Vector2I {
 	int x;
 	int y;
 };
+struct zen_Player {
+	zen_Vector2I pos;
+};
+zen_Player player = {};
 void zen_main()
 {
 	InitWindow(1280, 720, "Zen");
-	zen_Vector2I playerPos = {};
+	SetTargetFPS(60);
 	while (WindowShouldClose() == false)
 	{
 		BeginDrawing();
@@ -20,17 +26,26 @@ void zen_main()
 		black.a = 255;
 		ClearBackground(black);
 		DrawFPS(20, 20);
-		playerPos.x = GetMouseX();
-		playerPos.y = GetMouseY();
-		Color color;
-		color.r = 255;
-		color.g = 255;
-		color.b = 0;
-		color.a = 255;
-		DrawRectangle(playerPos.x, playerPos.y, 32, 32, color);
+		zen_draw_game();
 		EndDrawing();
 	}
 	CloseWindow();
+}
+void zen_draw_game()
+{
+	player.pos.x = GetMouseX();
+	Color color;
+	color.r = 255;
+	color.g = 255;
+	color.b = 0;
+	color.a = 255;
+	if (IsKeyDown(32))
+	{
+		color.r = 0;
+		player.pos.y = player.pos.y + 1;
+		printf("%s\n", "space key!");
+	}
+	DrawRectangle(player.pos.x, player.pos.y, 32, 32, color);
 }
 
 void main()

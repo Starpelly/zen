@@ -152,14 +152,22 @@ abstract class AstNode
 
 		public class EnumDeclaration : Stmt, IScope
 		{
+			public enum EnumKind
+			{
+				Normal,
+				Extern
+			}
+
+			public readonly EnumKind Kind;
 			public readonly Token Name;
 			public readonly List<EnumFieldValue> Values ~ DeleteContainerAndItems!(_);
 
 			public Scope Scope { get => m_scope; set => m_scope = value; }
 			private Scope m_scope;
 
-			public this(Token name, List<EnumFieldValue> values)
+			public this(EnumKind kind, Token name, List<EnumFieldValue> values)
 			{
+				this.Kind = kind;
 				this.Name = name;
 				this.Values = values;
 			}
@@ -188,7 +196,7 @@ abstract class AstNode
 			public readonly Expression.NamedType Type ~ delete _;
 			public readonly Token? Operator;
 			public readonly Expression Initializer ~ if (_ != null) delete _;
-			
+
 			public this(DeclarationKind kind, Token name, Expression.NamedType type, Token? op, Expression init)
 			{
 				this.Kind = kind;
@@ -234,14 +242,11 @@ abstract class AstNode
 			public override StmtKind GetKind() => .NamespaceDecl(this);
 		}
 
-		public class If : Stmt//, IScope
+		public class If : Stmt
 		{
 			public readonly Expression Condition ~ delete _;
 			public readonly Block ThenBranch ~ delete _;
 			public readonly Result<Block> ElseBranch = .Err ~ if (ElseBranch case .Ok) delete _.Value;
-
-			// public Scope Scope { get => m_scope; set => m_scope = value; }
-			// private Scope m_scope;
 
 			public this(Expression condition, Block thenBranch, Block elseBranch)
 			{
@@ -388,7 +393,6 @@ abstract class AstNode
 
 		public class Literal : Expression
 		{
-			//public readonly DataType Type ~ delete _;
 			public readonly Token Token;
 			public readonly Variant? Variant ~ if (HasValue) _.Value.Dispose();
 

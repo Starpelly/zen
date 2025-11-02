@@ -90,7 +90,7 @@ class Generator
 		void doScopeRecursive(DoScopeKind kind, Scope _scope, StringCodeBuilder code)
 		{
 			doScope(kind, _scope, code);
-			for (let entity in _scope.Entities)
+			for (let entity in _scope.EntityMap)
 			{
 				if (let ns = entity.value as Entity.Namespace)
 				{
@@ -129,7 +129,7 @@ class Generator
 	{
 		if (kind == .NamedTypeDeclares)
 		{
-			for (let entity in _scope.Entities)
+			for (let entity in _scope.EntityMap)
 			{
 				switch (entity.value.GetKind())
 				{
@@ -145,6 +145,8 @@ class Generator
 						code.AppendLine(scope $"typedef struct {name} {name};");
 						break;
 					case .EnumDecl(let _enum):
+						if (_enum.Kind == .Extern)
+							break;
 
 						let enumName = scope $"{namespaceStr}_{_enum.Name.Lexeme}";
 						code.AppendLine(scope $"typedef enum \{");
@@ -170,7 +172,7 @@ class Generator
 
 		if (kind == .FunctionDeclares)
 		{
-			for (let entity in _scope.Entities)
+			for (let entity in _scope.EntityMap)
 			{
 				if (let funEnt = entity.value as Entity.Function)
 				{
@@ -188,7 +190,7 @@ class Generator
 
 		if (kind == .NamedTypeImpls)
 		{
-			for (let entity in _scope.Entities)
+			for (let entity in _scope.EntityMap)
 			{
 				switch (entity.value.GetKind())
 				{
@@ -209,7 +211,17 @@ class Generator
 								code.AppendNewLine();
 								code.AppendTabs();
 
-								emitExpr(field.Type, code, _scope);
+								let lookup = _struct.Scope.LookupStmtAs<Entity.Variable>(field);
+								if (lookup case .Ok(let val))
+								{
+									if (let ns = val.ResolvedTypeEntity as IEntityNamespaceParent)
+									{
+										code.Append(buildNamespaceString(ns, .. scope .()));
+										code.Append("_");
+									}
+								}
+
+								emitExpr(field.Type, code, _struct.Scope);
 								code.Append(scope $" {field.Name.Lexeme};");
 							}
 						}
@@ -227,7 +239,7 @@ class Generator
 
 		if (kind == .FunctionImpls)
 		{
-			for (let entity in _scope.Entities)
+			for (let entity in _scope.EntityMap)
 			{
 				switch (entity.value.GetKind())
 				{
@@ -250,6 +262,11 @@ class Generator
 					}
 					code.DecreaseTab();
 					code.AppendLine("}");
+					break;
+				case .Variable(let ent):
+					// It might be okay to do this here?
+					// For variables at the global (or non functional) scope at least...?
+					emitFunctionStmt(ent.Decl, code, _scope);
 					break;
 				default:
 				}
@@ -308,30 +325,30 @@ class Generator
 			// I don't think the codegen should have to do this
 			if (v.Type.Kind case .Simple(let typename))
 			{
-				let entity = _scope.Lookup(typename.Lexeme);
-				if (entity case .Ok(let found))
+				// This is better because we're no longer searching through scopes, but I'm still not entirely sure.
+
+				let entity = _scope.LookupStmtAs<Entity.Variable>(v).Value;
+				let resolved = entity.ResolvedTypeEntity;
+				if (let resolvedTypename = resolved as Entity.TypeName)
 				{
-					if (let tn = found as Entity.TypeName)
+					if (let s = resolvedTypename.Decl as AstNode.Stmt.StructDeclaration)
 					{
-						if (let s = tn.Decl as AstNode.Stmt.StructDeclaration)
+						isStructType = true;
+						if (s.Kind == .Extern)
 						{
-							isStructType = true;
-							if (s.Kind == .Extern)
-							{
-								isExternType = true;
-							}
+							isExternType = true;
 						}
 					}
+				}
 
-					if (let t = found as IEntityNamespaceParent)
+				if (let namespc = resolved as IEntityNamespaceParent)
+				{
+					bool write = !isExternType;
+
+					if (write)
 					{
-						bool write = !isExternType;
-
-						if (write)
-						{
-							code.Append(buildNamespaceString(t, .. scope .()));
-							code.Append("_");
-						}
+						code.Append(buildNamespaceString(namespc, .. scope .()));
+						code.Append("_");
 					}
 				}
 			}
@@ -513,7 +530,7 @@ class Generator
 			{
 				// @FIX
 				// I don't think the codegen should have to do this
-				let entity = _scope.Lookup(call.Callee.Name.Lexeme);
+				let entity = _scope.LookupName(call.Callee.Name.Lexeme);
 				if (entity case .Ok(let found))
 				{
 					if (let t = found as IEntityNamespaceParent)
@@ -587,13 +604,13 @@ class Generator
 			// The checker should resolve all this, I'm tired of looking back up scopes to find this data...
 			if (let call = qn.Right as AstNode.Expression.Call)
 			{
-				let lookForScopeResult = _scope.Lookup(qn.Left.Lexeme);
+				let lookForScopeResult = _scope.LookupName(qn.Left.Lexeme);
 
 				if (lookForScopeResult case .Ok(let leftFound))
 				{
 					if (let foundScope = leftFound as Entity.Namespace)
 					{
-						let callRes = foundScope.Decl.Scope.Lookup(call.Callee.Name.Lexeme);
+						let callRes = foundScope.Decl.Scope.LookupName(call.Callee.Name.Lexeme);
 						if (callRes case .Ok(let found))
 						{
 							if (let fun = found as Entity.Function)
@@ -621,7 +638,7 @@ class Generator
 
 				// @FIX
 				// I don't think the codegen should have to do this
-				let entity = _scope.Lookup(qn.Left.Lexeme);
+				let entity = _scope.LookupName(qn.Left.Lexeme);
 				if (entity case .Ok(let found))
 				{
 					if (let typename = found as Entity.TypeName)

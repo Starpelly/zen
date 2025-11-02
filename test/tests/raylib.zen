@@ -22,11 +22,14 @@ extern fun void BeginDrawing();
 extern fun void EndDrawing();
 
 extern fun void ClearBackground(Color color);
-
 extern fun void DrawRectangle(int x, int y, int w, int h, Color color);
+
+extern fun void SetTargetFPS(int fps);
 
 extern fun int GetMouseX();
 extern fun int GetMouseY();
+
+extern fun bool IsKeyDown(int key);
 
 extern fun void DrawFPS(int x, int y);
 
