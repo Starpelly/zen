@@ -379,14 +379,14 @@ class Generator
 			break;
 
 		case .If(let _if):
-			let condition = emitExpr(_if.Condition, .. scope .(), _scope);
+			let condition = emitExpr(_if.Condition, .. scope .(), _if.ThenBranch.Scope);
 			code.AppendLine(scope $"if ({condition.Code})");
-			emitFunctionStmt(_if.ThenBranch, code, _scope);
+			emitFunctionStmt(_if.ThenBranch, code, _if.ThenBranch.Scope);
 
 			if (_if.ElseBranch case .Ok(let _else))
 			{
 				code.AppendLine("else");
-				emitFunctionStmt(_else, code, _scope);
+				emitFunctionStmt(_else, code, _else.Scope);
 			}
 
 			break;
@@ -395,24 +395,24 @@ class Generator
 			let body = scope StringCodeBuilder();
 			// Init
 			// body.Append(emitExpr(_for.Initialization, .. scope .()));
-			emitFunctionStmt(_for.Initialization, body, _scope, false);
+			emitFunctionStmt(_for.Initialization, body, _for.Scope, false);
 			body.Append(';');
 			// Condition
 			if (_for.Condition != null) body.Append(' ');
-			emitExpr(_for.Condition, body, _scope);
+			emitExpr(_for.Condition, body, _for.Scope);
 			body.Append(';');
 			// Update
 			if (_for.Updation != null) body.Append(' ');
-			emitExpr(_for.Updation, body, _scope);
+			emitExpr(_for.Updation, body, _for.Scope);
 
 			code.AppendLine(scope $"for ({body.Code})");
-			emitFunctionStmt(_for.Body, code, _scope);
+			emitFunctionStmt(_for.Body, code, _for.Scope);
 			break;
 
 		case .While(let _while):
-			let condition = emitExpr(_while.Condition, .. scope .(), _scope);
+			let condition = emitExpr(_while.Condition, .. scope .(), _while.Scope);
 			code.AppendLine(scope $"while ({condition.Code})");
-			emitFunctionStmt(_while.Body, code, _scope);
+			emitFunctionStmt(_while.Body, code, _while.Scope);
 			break;
 
 		case .Expression(let expr):

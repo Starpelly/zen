@@ -14,6 +14,10 @@ struct zen_Player {
 zen_Player player = {};
 void zen_main()
 {
+	for (int i = 0; i < 10; i = i + 1)
+	{
+		printf("%i\n", i);
+	}
 	InitWindow(1280, 720, "Zen");
 	SetTargetFPS(60);
 	while (WindowShouldClose() == false)
@@ -42,7 +46,7 @@ void zen_draw_game()
 	if (IsKeyDown(32))
 	{
 		color.r = 0;
-		player.pos.y = player.pos.y + 1;
+		player.pos.y += 1;
 		printf("%s\n", "space key!");
 	}
 	DrawRectangle(player.pos.x, player.pos.y, 32, 32, color);

@@ -46,7 +46,7 @@ fun void draw_game()
 	if (raylib::IsKeyDown(32))
 	{
 		color.r = 0;
-		player.pos.y = player.pos.y + 1;
+		player.pos.y += 1;
 		println("space key!");
 	}
 
