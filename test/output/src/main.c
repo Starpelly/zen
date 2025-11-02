@@ -114,7 +114,7 @@ typedef enum {
 	zen_raylib_KeyboardKey_VOLUME_DOWN = 25
 } zen_raylib_KeyboardKey;
 void zen_main();
-#define PLAYER_SPEED 500.0
+#define PLAYER_SPEED 500.0f
 void zen_game_start_game();
 void zen_game_draw_game();
 struct zen_game_Player {
@@ -125,7 +125,7 @@ void zen_main()
 {
 	zen_game_start_game();
 }
-zen_game_Player player = {};
+zen_game_Player player;
 void zen_game_start_game()
 {
 	Color black;
@@ -133,7 +133,7 @@ void zen_game_start_game()
 	black.g = 0;
 	black.b = 0;
 	black.a = 255;
-	InitWindow(640, 360, "Zen");
+	InitWindow(1280, 720, "Zen");
 	SetTargetFPS(60);
 	player.color.r = 255;
 	player.color.g = 255;
@@ -167,9 +167,9 @@ void zen_game_draw_game()
 	{
 		player.pos.y += PLAYER_SPEED * GetFrameTime();
 	}
-	DrawRectangle(player.pos.x, player.pos.y, 32, 32.0, player.color);
-	DrawText("pelly", player.pos.x - 8.0, player.pos.y - 24.0, 20, player.color);
-	if (player.pos.x >= 80)
+	DrawRectangle((int)player.pos.x, (int)player.pos.y, 32, 32, player.color);
+	DrawText("pelly", (int)(player.pos.x - 8.0f), (int)(player.pos.y - 24.0f), 20, player.color);
+	if (player.pos.x >= 400)
 	{
 		player.color.r = 0;
 	}

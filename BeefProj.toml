@@ -8,3 +8,6 @@ DefaultNamespace = "Zen"
 
 [Configs.Debug.Win64]
 DebugCommandArguments = "$(WorkspaceDir)/test/main.zen -wait"
+
+[Configs.Release.Win64]
+DebugCommandArguments = "$(WorkspaceDir)/test/main.zen -wait"

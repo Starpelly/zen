@@ -1,6 +1,26 @@
 #load "game/game.zen";
 
+/*
+struct Vector2
+{
+	int x;
+	float y;
+}
+*/
+
+/*
+#load "tests/raylib.zen";
+
+struct Player
+{
+	raylib::Vector2 pos;
+	float x;
+}
+
+let Player player;
+*/
 fun void main()
 {
+	// player.pos.x = cast(float)0;
 	game::start_game();
 }

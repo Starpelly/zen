@@ -61,6 +61,14 @@ class Builder
 
 		Scoper.PrintScopeTree(globalScope);
 
+		StopwatchChecker.Start();
+
+		// Type resolver
+		let resolver = scope Resolver(finalAst, globalScope, errors);
+		resolver.Run();
+
+		StopwatchChecker.Stop();
+
 		// Checker
 
 		StopwatchChecker.Start();

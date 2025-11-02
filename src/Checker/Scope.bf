@@ -7,6 +7,7 @@ namespace Zen;
 class Scope
 {
 	public readonly Result<Scope> Parent = .Err;
+	public readonly Result<Entity.Namespace> NamespaceParent = .Err;
 
 	public readonly List<Scope> Children = new .() ~ DeleteContainerAndItems!(_);
 
@@ -17,7 +18,8 @@ class Scope
 
 	public readonly String Name = new .() ~ delete _;
 
-	public this(String name, Scope parent)
+
+	public this(String name, Scope parent, Entity.Namespace namespaceParent)
 	{
 		Name.Set(name);
 
@@ -25,6 +27,10 @@ class Scope
 		{
 			this.Parent = .Ok(parent);
 			parent.Children.Add(this);
+		}
+		if (namespaceParent != null)
+		{
+			this.NamespaceParent = .Ok(namespaceParent);
 		}
 	}
 
@@ -56,7 +62,7 @@ class Scope
 	{
 		if (NodeEntityMap.TryGetValue(stmt, let entity))
 		{
-			Debug.Assert(entity.GetType() == typeof(T));
+			Runtime.Assert(entity.GetType() == typeof(T));
 			return entity as T;
 		}
 

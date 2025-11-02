@@ -73,7 +73,9 @@ abstract class Entity
 	public class Variable : Entity, IEntityDeclaration
 	{
 		public readonly AstNode.Stmt.VariableDeclaration Decl;
-		public Entity ResolvedTypeEntity;
+
+		/// The type the variable is holding, not to be confused with Variable.Type
+		public ZenType ResolvedType;
 
 		public this(AstNode.Stmt.VariableDeclaration decl, Token token, ZenType type) : base(token, type)
 		{

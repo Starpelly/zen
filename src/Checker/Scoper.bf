@@ -47,7 +47,7 @@ class Scoper
 		this.m_ast = ast;
 		this.m_errors = errs;
 
-		m_globalScope = new Scope("Global Scope", null);
+		m_globalScope = new Scope("Global Scope", null, null);
 		m_currentScope = m_globalScope;
 
 		addGlobalConstant("null", .Basic(BasicType.FromKind(.UntypedNull)), default);
@@ -86,12 +86,19 @@ class Scoper
 
 	private void addStatement(AstNode.Stmt node, bool createScope = true)
 	{
+		Entity.Namespace getNamespaceParent()
+		{
+			if (!m_namespaceStackFileScope.IsEmpty)
+				return m_namespaceStackFileScope.Back.Entity;
+			return null;
+		}
+
 		Scope openNewScope(String name, AstNode.Stmt.IScope statement)
 		{
 			if (!createScope)
 				return m_currentScope;
 
-			let newScope = new Scope(name, m_currentScope);
+			let newScope = new Scope(name, m_currentScope, getNamespaceParent());
 			statement.Scope = newScope;
 			m_currentScope = newScope;
 			return newScope;
@@ -104,13 +111,6 @@ class Scoper
 
 			m_currentScope = m_currentScope.Parent.Value;
 			return m_currentScope;
-		}
-
-		Entity.Namespace getNamespaceParent()
-		{
-			if (!m_namespaceStackFileScope.IsEmpty)
-				return m_namespaceStackFileScope.Back.Entity;
-			return null;
 		}
 
 		if (let namespc = node as AstNode.Stmt.NamespaceDeclaration)

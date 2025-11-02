@@ -330,8 +330,6 @@ abstract class AstNode
 	/// Expression nodes.
 	public abstract class Expression : AstNode
 	{
-		public ZenType Type;
-
 		public abstract ExpressionKind GetKind();
 
 		public class Binary : Expression
@@ -409,11 +407,30 @@ abstract class AstNode
 			public readonly Variant Value => Variant.Value;
 			public readonly bool HasValue => Variant.HasValue;
 
-			public this(/*DataType type, */Token token, Variant? value)
+			public this(Token token, Variant? value)
 			{
-				//this.Type = type;
 				this.Token = token;
 				this.Variant = value;
+			}
+
+			public ZenType GetLiteralType()
+			{
+				BasicKind kind = .Invalid;
+				Token basic_lit = Token;
+
+				switch (basic_lit.Kind)
+				{
+				case .Number_Int:
+					kind = .UntypedInteger; break;
+				case .Number_Float:
+					kind = .UntypedFloat; break;
+				case .String:
+					kind = .UntypedString; break;
+				default:
+					Runtime.FatalError("Unknown literal!");
+				}
+
+				return .Basic(BasicType.FromKind(kind));
 			}
 
 			public override ExpressionKind GetKind() => .Literal(this);

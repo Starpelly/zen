@@ -118,11 +118,16 @@ class Generator
 
 	private void buildNamespaceString(IEntityNamespaceParent entity, String outStr)
 	{
+		buildNamespaceString(entity.NamespaceParent, outStr);
+	}
+
+	private void buildNamespaceString(Entity.Namespace _namespace, String outStr)
+	{
 		outStr.Append("zen");
-		if (entity.NamespaceParent != null)
+		if (_namespace != null)
 		{
 			outStr.Append("_");
-			outStr.Append(entity.NamespaceParent.Token.Lexeme);
+			outStr.Append(_namespace.Token.Lexeme);
 		}
 	}
 
@@ -197,7 +202,7 @@ class Generator
 					if (constant.Node case .Builtin)
 						continue;
 
-					Debug.Assert(constant.Node case .Basic(let basic));
+					Runtime.Assert(constant.Node case .Basic(let basic));
 
 					// @TODO
 					// Macros are a bit wack, does c have constant expressions or something?
@@ -233,15 +238,37 @@ class Generator
 								let lookup = _struct.Scope.LookupStmtAs<Entity.Variable>(field);
 								if (lookup case .Ok(let val))
 								{
-									if (let ns = val.ResolvedTypeEntity as IEntityNamespaceParent)
+									bool writeNamespace = true;
+									if (val.ResolvedType case .Structure(let _struct))
+									{
+										if (_struct.Kind == .Extern)
+										{
+											writeNamespace = false;
+										}
+
+									}
+
+									/*
+									if (writeNamespace)
+									if (let ns = val.ResolvedType as IEntityNamespaceParent)
 									{
 										code.Append(buildNamespaceString(ns, .. scope .()));
 										code.Append("_");
 									}
+									*/
+
+									// emitExpr( )
+									// code.Append(val.ResolvedType);
+									code.Append(writeResolvedType(val.ResolvedType, .. scope .()));
+									code.Append(scope $" {field.Name.Lexeme};");
+								}
+								else
+								{
+									Runtime.FatalError("This should've been declared. SOMEONE didn't do their job correctly!");
 								}
 
-								emitExpr(field.Type, code, _struct.Scope);
-								code.Append(scope $" {field.Name.Lexeme};");
+								// emitExpr(field.Type, code, _struct.Scope);
+								// code.Append(scope $" {field.Name.Lexeme};");
 							}
 						}
 						code.DecreaseTab();
@@ -340,6 +367,7 @@ class Generator
 			bool isExternType = false;
 			bool isStructType = false;
 
+			/*
 			// @FIX
 			// I don't think the codegen should have to do this
 			if (v.Type.Kind case .Simple(let typename))
@@ -347,7 +375,7 @@ class Generator
 				// This is better because we're no longer searching through scopes, but I'm still not entirely sure.
 
 				let entity = _scope.LookupStmtAs<Entity.Variable>(v).Value;
-				let resolved = entity.ResolvedTypeEntity;
+				let resolved = entity.ResolvedType;
 				if (let resolvedTypename = resolved as Entity.TypeName)
 				{
 					if (let s = resolvedTypename.Decl as AstNode.Stmt.StructDeclaration)
@@ -371,8 +399,13 @@ class Generator
 					}
 				}
 			}
+			*/
 
-			emitExpr(v.Type, code, _scope);
+			let entity = _scope.LookupStmtAs<Entity.Variable>(v).Value;
+			// entity.ResolvedType
+			code.Append(writeResolvedType(entity.ResolvedType, .. scope .()));
+
+			// emitExpr(v.Type, code, _scope);
 			code.Append(scope $" {v.Name.Lexeme}");
 			if (v.Initializer != null)
 			{
@@ -445,6 +478,32 @@ class Generator
 		}
 	}
 
+	private void writeResolvedType(ZenType type, String outStr)
+	{
+		switch (type)
+		{
+		case .Basic(let basic):
+			outStr.Append(basic.Name);
+			break;
+		case .Structure(let _struct):
+			bool writeNamespace = true;
+			if (_struct.Kind == .Extern)
+			{
+				writeNamespace = false;
+			}
+			if (writeNamespace && _struct.Scope.NamespaceParent case .Ok(let ns))
+			{
+				buildNamespaceString(ns, outStr);
+				outStr.Append('_');
+			}
+
+			outStr.Append(_struct.Name.Lexeme);
+			break;
+		default:
+			Runtime.Assert(false);
+		}
+	}
+
 	private void emitExpr(AstNode.Expression expr, StringCodeBuilder code, Scope _scope, bool zenNamespacePrefix = true)
 	{
 		switch (expr.GetKind())
@@ -503,24 +562,33 @@ class Generator
 					String format = scope .();
 					String extra = scope .();
 
-					let argType = call.Arguments[0].Type;
-					if (argType.IsTypeInteger())
+					// @TODO
+					// Support non-primitive types.
+					if (call.Arguments[0].GetKind() case .Literal(let lit))
 					{
-						format.Set("%i");
-					}
-					else if (argType.IsTypeFloat())
-					{
-						format.Set("%f");
-					}
-					else if (argType.IsTypeBoolean())
-					{
-						format.Set("%s");
-						extra.Set(" ? \"true\" : \"false\"");
-					}
-					else if (argType.IsTypeString())
-					{
-						// No format
-						format.Set("%s");
+						let argType = lit.GetLiteralType();
+						if (argType.IsTypeInteger())
+						{
+							format.Set("%i");
+						}
+						else if (argType.IsTypeFloat())
+						{
+							format.Set("%f");
+						}
+						else if (argType.IsTypeBoolean())
+						{
+							format.Set("%s");
+							extra.Set(" ? \"true\" : \"false\"");
+						}
+						else if (argType.IsTypeString())
+						{
+							// No format
+							format.Set("%s");
+						}
+						else
+						{
+							Runtime.FatalError("Can't convert this type! :(");
+						}
 					}
 					else
 					{
@@ -580,7 +648,7 @@ class Generator
 
 		case .Literal(let literal):
 			code.Append(literal.Token.Lexeme);
-			if (literal.Type.IsTypeFloat())
+			if (literal.GetLiteralType().IsTypeFloat())
 			{
 				// C appends the "f" at the end of floats...
 				// Not technically required, I don't think?
@@ -606,6 +674,9 @@ class Generator
 			break;
 
 		case .Grouping(let grouping):
+			code.Append('(');
+			emitExpr(grouping.Expression, code, _scope);
+			code.Append(')');
 			break;
 
 		case .Assign(let assign):
@@ -615,7 +686,6 @@ class Generator
 			break;
 
 		case .QualifiedName(let qn):
-
 			bool writeNamespace = true;
 
 			// @FIX @FIX @FIX
@@ -641,13 +711,6 @@ class Generator
 							}
 						}
 					}
-				}
-			}
-			if (qn.Right.Type case .Structure(let str))
-			{
-				if (str.Kind == .Extern)
-				{
-					writeNamespace = false;
 				}
 			}
 

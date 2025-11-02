@@ -31,20 +31,20 @@ class Checker
 			checkStatement(node, _scope);
 	}
 
-	private void checkStatement(AstNode.Stmt node, Scope _scope)
+	private void checkStatement(AstNode.Stmt stmt, Scope _scope)
 	{
-		if (let block = node as AstNode.Stmt.Block)
+		if (let block = stmt as AstNode.Stmt.Block)
 		{
 			checkStatementList(block.List, block.Scope ?? _scope);
 		}
 
-		if (let ns = node as AstNode.Stmt.NamespaceDeclaration)
+		if (let ns = stmt as AstNode.Stmt.NamespaceDeclaration)
 		{
 			checkStatementList(ns.Ast, ns.Scope);
 			// _scope = ns.Scope;
 		}
 
-		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
+		if (let fun = stmt as AstNode.Stmt.FunctionDeclaration)
 		{
 			let entity = fun.Scope.LookupName(fun.Name.Lexeme).Value as Entity.Function;
 
@@ -70,21 +70,9 @@ class Checker
 			m_functionStack.PopBack();
 		}
 
-		if (let _var = node as AstNode.Stmt.VariableDeclaration)
+		if (let _var = stmt as AstNode.Stmt.VariableDeclaration)
 		{
 			let entity = _scope.LookupName(_var.Name.Lexeme).Value as Entity.Variable;
-			if (entity.Type case .SimpleNamed(let simpleName))
-			{
-				let lookup = lookupScopeForIdentifier(_scope, simpleName);
-				if (lookup case .Ok(let res))
-				{
-					entity.ResolvedTypeEntity = res;
-				}
-			}
-			if (entity.Type case .QualifiedNamed(let qualifiedName))
-			{
-				checkExpr(qualifiedName, _scope);
-			}
 
 			if (_var.Initializer != null)
 			{
@@ -93,7 +81,7 @@ class Checker
 			}
 		}
 
-		if (let ret = node as AstNode.Stmt.Return)
+		if (let ret = stmt as AstNode.Stmt.Return)
 		{
 			let retType = checkExpr(ret.Value, _scope);
 			if (!ZenType.AreTypesIdenticalUntyped(m_functionStack.Back.Type, retType))
@@ -102,7 +90,7 @@ class Checker
 			}
 		}
 
-		if (let _if = node as AstNode.Stmt.If)
+		if (let _if = stmt as AstNode.Stmt.If)
 		{
 			checkExpressionIsTruthy(_if.Condition, _scope);
 			checkStatement(_if.ThenBranch, _if.ThenBranch.Scope);
@@ -110,7 +98,7 @@ class Checker
 				checkStatement(_else, _else.Scope);
 		}
 
-		if (let _for = node as AstNode.Stmt.For)
+		if (let _for = stmt as AstNode.Stmt.For)
 		{
 			if (_for.Initialization != null)
 				checkStatement(_for.Initialization, _for.Scope);
@@ -124,13 +112,13 @@ class Checker
 			checkStatement(_for.Body, _for.Scope);
 		}
 
-		if (let _while = node as AstNode.Stmt.While)
+		if (let _while = stmt as AstNode.Stmt.While)
 		{
 			checkExpressionIsTruthy(_while.Condition, _while.Scope);
 			checkStatement(_while.Body, _while.Scope);
 		}
 
-		if (let _struct = node as AstNode.Stmt.StructDeclaration)
+		if (let _struct = stmt as AstNode.Stmt.StructDeclaration)
 		{
 			for (let field in _struct.Fields)
 			{
@@ -138,7 +126,7 @@ class Checker
 			}
 		}
 
-		if (let expr = node as AstNode.Stmt.ExpressionStmt)
+		if (let expr = stmt as AstNode.Stmt.ExpressionStmt)
 		{
 			checkExpr(expr.InnerExpr, _scope);
 		}
@@ -157,29 +145,14 @@ class Checker
 	{
 		mixin returnVal(ZenType type)
 		{
-			expr.Type = type;
+			// expr.Type = type;
 			return type;
 		}
 
 		switch (expr.GetKind())
 		{
 		case .Literal(let lit):
-			BasicKind kind = .Invalid;
-			Token basic_lit = lit.Token;
-
-			switch (basic_lit.Kind)
-			{
-			case .Number_Int:
-				kind = .UntypedInteger; break;
-			case .Number_Float:
-				kind = .UntypedFloat; break;
-			case .String:
-				kind = .UntypedString; break;
-			default:
-				Runtime.FatalError("Unknown literal!");
-			}
-
-			returnVal!(ZenType.Basic(BasicType.FromKind(kind)));
+			returnVal!(lit.GetLiteralType());
 
 		case .Binary(let bin):
 			// Check if it's a conditional boolean value.
@@ -207,6 +180,36 @@ class Checker
 			if (entity case .Err)
 			{
 				return .Invalid;
+			}
+
+			let type = entity.Value.Type;
+			switch (type)
+			{
+			case .SimpleNamed(let name):
+				let a = lookupScopeForIdentifier(_scope, name);
+				returnVal!(a.Value.Type);
+
+			case .QualifiedNamed(let qualifiedName):
+				let sourceNamespace = lookupScopeForIdentifier(_scope, qualifiedName.Left);
+				if (sourceNamespace case .Ok(let left))
+				{
+					if (let ns = left as Entity.Namespace)
+					{
+						let a = checkExpr(qualifiedName.Right, ns.Decl.Scope);
+						returnVal!(a);
+					}
+					if (let typename = left as Entity.TypeName)
+					{
+						if (let declScope = typename.Decl as AstNode.Stmt.IScope)
+						{
+							let a = checkExpr(qualifiedName.Right, declScope.Scope);
+							returnVal!(a);
+							// let source = lookupScopeForIdentifier(declScope.Scope, qualifiedName.)
+						}
+					}
+				}
+				break;
+			default:
 			}
 
 			// @FIX
@@ -250,10 +253,12 @@ class Checker
 				}
 
 				// for (let arg in call.Arguments)
-				if (false)
+				// Runtime.FatalError("please finish this");
 				for (let i < call.Arguments.Count)
 				{
 					let arg = call.Arguments[i];
+					if (arg is AstNode.Expression.Variable)
+						let a  =0;
 					let argType = checkExpr(arg, (callScope == null) ? _scope : callScope);
 					let calleeParamType = checkExpr(calleeFun.Decl.Parameters[i].Type, _scope);
 
@@ -277,54 +282,24 @@ class Checker
 		case .Get(let get):
 			let objType = checkExpr(get.Object, _scope);
 
-			mixin lookupScope(Scope _scope, Token name)
+			Runtime.Assert(objType case .Structure, "You can only get on structs");
+
+			if (objType case .Structure(let _struct))
 			{
-				let tres = lookupScopeForIdentifier(_scope, name);
-				if (tres case .Ok(let found))
+				let entity = lookupScopeForIdentifier(_struct.Scope, get.Name);
+				if (entity case .Ok(let val))
 				{
-					if (let typename = found as Entity.TypeName)
+					if (let _var = val as Entity.Variable)
 					{
-						if (let declScope = typename.Decl as AstNode.Stmt.IScope)
-						{
-							if (typename.Decl is AstNode.Stmt.StructDeclaration)
-							{
-								let entity = lookupScopeForIdentifier(declScope.Scope, get.Name);
-								if (entity case .Ok(let val))
-								{
-									returnVal!(val.Type);
-								}
-							}
-							else
-							{
-								reportError(get.Name, "Expression must have a struct type.");
-							}
-						}
+						// if (_var.ResolvedType != null)
+						returnVal!(_var.ResolvedType);
 					}
+					returnVal!(val.Type);
 				}
 			}
-
-			if (objType case .SimpleNamed(let simpleName))
+			else
 			{
-				// @FIX
-				// I don't know if this is guaranteed or not...
-				lookupScope!(_scope, simpleName);
-			}
-			if (objType case .QualifiedNamed(let qualifiedName))
-			{
-				let leftNamespaceScope = lookupScopeForIdentifier(_scope, qualifiedName.Left);
-
-				if (leftNamespaceScope case .Ok(let leftNamespaceEntity))
-				{
-					if (let decl = leftNamespaceEntity as IEntityDeclaration)
-					{
-						if (let iScope = decl.Decl as AstNode.Stmt.IScope)
-						{
-							Debug.Assert(qualifiedName.Right is AstNode.Expression.Variable);
-							let _var = qualifiedName.Right as AstNode.Expression.Variable;
-							lookupScope!(iScope.Scope, _var.Name);
-						}
-					}
-				}
+				reportError(get.Name, "You can only get on structs.");
 			}
 
 			returnVal!(ZenType.Invalid);
@@ -372,24 +347,8 @@ class Checker
 					{
 						if (let typename = found as Entity.TypeName)
 						{
+							Runtime.Assert(typename.Decl is AstNode.Stmt.StructDeclaration);
 							returnVal!(typename.Type);
-							/*
-							if (let declScope = typename.Decl as AstNode.Stmt.IScope)
-							{
-								if (typename.Decl is AstNode.Stmt.StructDeclaration)
-								{
-									let entity = lookupScopeForIdentifier(declScope.Scope, get.Name);
-									if (entity case .Ok(let val))
-									{
-										returnVal!(val.Type);
-									}
-								}
-								else
-								{
-									reportError(get.Name, "Expression must have a struct type.");
-								}
-							}
-							*/
 						}
 					}
 				}
@@ -403,8 +362,9 @@ class Checker
 			}
 
 		case .Cast(let cast):
-			// These should really be separated into separate functions just for sanity purposes
-			// It just goes to the named type procedure, whatever.
+			// @TODO
+			// This switch statement should really be separated into separate functions just for sanity purposes
+			// It just goes to the named type procedure.... whatever.
 			let castType = checkExpr(cast.TargetType, _scope);
 
 			// @TODO

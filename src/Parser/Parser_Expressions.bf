@@ -173,11 +173,6 @@ extension Parser
 			{
 				// @HACK
 				// This feels kinda hacky...
-
-				if (expr is Expression.Cast)
-				{
-					var a = 0;
-				}
 				delete expr;
 				retreat();
 				retreat();
