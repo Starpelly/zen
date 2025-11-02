@@ -446,12 +446,6 @@ class Generator
 			break;
 
 		case .Call(let call):
-
-			if (call.Callee.Name.Lexeme == "IsKeyDown")
-			{
-				var a = 0;
-			}
-
 			let arguments = scope StringCodeBuilder();
 			for (let arg in call.Arguments)
 			{

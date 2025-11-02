@@ -191,7 +191,13 @@ extension Parser
 
 		consume(.Semicolon, "Semicolon expected.");
 
-		return new .(name, token);
+		List<AstNode.Stmt> list = new .();
+		while (!check(.EOF) && !isAtEnd())
+		{
+			list.Add(scanNextStmt());
+		}
+
+		return new .(name, token, list);
 	}
 
 	private AstNode.Stmt.If getIfStmt()

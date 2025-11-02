@@ -120,20 +120,27 @@ class Scoper
 
 			openNewScope(scope $"Namespace ({namespc.Name.Lexeme})", namespc);
 			m_namespaceStackFileScope.Add(.()
-			{
-				Node = namespc,
-				Entity = entity
-			});
+				{
+					Node = namespc,
+					Entity = entity
+				});
+
+			addStatementList(namespc.Ast);
+
+			m_namespaceStackFileScope.Clear();
+			closeScope();
+
 		}
 
+		/*
 		if (node is AstNode.Stmt.EOF)
 		{
 			for (let ns in m_namespaceStackFileScope)
 			{
 				closeScope();
 			}
-			m_namespaceStackFileScope.Clear();
 		}
+		*/
 
 		if (let b = node as AstNode.Stmt.Block)
 		{

@@ -230,14 +230,16 @@ abstract class AstNode
 		{
 			public readonly Token Name;
 			public readonly Token Token;
+			public readonly List<AstNode.Stmt> Ast ~ DeleteContainerAndItems!(_);
 
 			public Scope Scope { get => m_scope; set => m_scope = value; }
 			private Scope m_scope;
 
-			public this(Token name, Token token)
+			public this(Token name, Token token, List<AstNode.Stmt> ast)
 			{
 				this.Name = name;
 				this.Token = token;
+				this.Ast = ast;
 			}
 
 			public override StmtKind GetKind() => .NamespaceDecl(this);

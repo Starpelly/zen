@@ -45,7 +45,7 @@ static
 
 	public static void c_raylib_add(libtcc.TCCCompiler compiler)
 	{
-		let includePath = @"D:\zen\test\output\include";
+		let includePath = @"D:\zen\vendor\include";
 		compiler.AddIncludePath(includePath);
 
 #if BF_PLATFORM_WINDOWS

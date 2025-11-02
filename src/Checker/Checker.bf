@@ -38,6 +38,12 @@ class Checker
 			checkStatementList(block.List, block.Scope ?? _scope);
 		}
 
+		if (let ns = node as AstNode.Stmt.NamespaceDeclaration)
+		{
+			checkStatementList(ns.Ast, ns.Scope);
+			// _scope = ns.Scope;
+		}
+
 		if (let fun = node as AstNode.Stmt.FunctionDeclaration)
 		{
 			let entity = fun.Scope.LookupName(fun.Name.Lexeme).Value as Entity.Function;

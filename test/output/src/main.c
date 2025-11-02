@@ -1,6 +1,6 @@
 #include <zen.h>
 
-typedef struct zen_Player zen_Player;
+typedef struct zen_game_Player zen_game_Player;
 typedef enum {
 	zen_raylib_KeyboardKey_NULL = 0,
 	zen_raylib_KeyboardKey_APOSTROPHE = 39,
@@ -114,17 +114,17 @@ typedef enum {
 	zen_raylib_KeyboardKey_VOLUME_DOWN = 25
 } zen_raylib_KeyboardKey;
 void zen_main();
-void zen_start_game();
-void zen_draw_game();
-struct zen_Player {
+void zen_game_start_game();
+void zen_game_draw_game();
+struct zen_game_Player {
 	Vector2 pos;
 };
 void zen_main()
 {
-	zen_start_game();
+	zen_game_start_game();
 }
-zen_Player player = {};
-void zen_start_game()
+zen_game_Player player = {};
+void zen_game_start_game()
 {
 	Color black;
 	black.r = 0;
@@ -136,13 +136,13 @@ void zen_start_game()
 	{
 		BeginDrawing();
 		ClearBackground(black);
-		zen_draw_game();
+		zen_game_draw_game();
 		DrawFPS(20, 20);
 		EndDrawing();
 	}
 	CloseWindow();
 }
-void zen_draw_game()
+void zen_game_draw_game()
 {
 	Color color;
 	color.r = 255;
