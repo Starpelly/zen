@@ -1,5 +1,4 @@
 #load "game/game.zen";
-#load "tests/raylib.zen";
 
 fun void main()
 {

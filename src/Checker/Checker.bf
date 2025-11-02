@@ -236,11 +236,35 @@ class Checker
 				return .Invalid;
 			}
 
-			for (let arg in call.Arguments)
+			if (let calleeFun = entity.Value as Entity.Function)
 			{
-				checkExpr(arg, (callScope == null) ? _scope : callScope);
-			}
+				if (call.Arguments.Count > calleeFun.Decl.Parameters.Count)
+				{
+					reportError(call.Close, scope $"Too many arguments, expected {call.Arguments.Count - calleeFun.Decl.Parameters.Count} fewer.");
+					returnVal!(entity.Value.Type);
+				}
+				else if (call.Arguments.Count < calleeFun.Decl.Parameters.Count)
+				{
+					reportError(call.Close, scope $"Not enough arguments, expected {calleeFun.Decl.Parameters.Count - call.Arguments.Count} more.");
+					returnVal!(entity.Value.Type);
+				}
 
+				// for (let arg in call.Arguments)
+				if (false)
+				for (let i < call.Arguments.Count)
+				{
+					let arg = call.Arguments[i];
+					let argType = checkExpr(arg, (callScope == null) ? _scope : callScope);
+					let calleeParamType = checkExpr(calleeFun.Decl.Parameters[i].Type, _scope);
+
+					// Check if the two types are compatible
+					checkTypesComparable(call.Close, argType, calleeParamType);
+				}
+			}
+			else
+			{
+
+			}
 			returnVal!(entity.Value.Type);
 
 		case .Assign(let ass):
@@ -340,7 +364,38 @@ class Checker
 				let res = BasicType.FromName(name.Lexeme);
 				if (res case .Ok(let val))
 					return .Basic(val);
-				Runtime.FatalError("not implemented! :(");
+
+				mixin lookupScope(Scope _scope, Token name)
+				{
+					let tres = lookupScopeForIdentifier(_scope, name);
+					if (tres case .Ok(let found))
+					{
+						if (let typename = found as Entity.TypeName)
+						{
+							returnVal!(typename.Type);
+							/*
+							if (let declScope = typename.Decl as AstNode.Stmt.IScope)
+							{
+								if (typename.Decl is AstNode.Stmt.StructDeclaration)
+								{
+									let entity = lookupScopeForIdentifier(declScope.Scope, get.Name);
+									if (entity case .Ok(let val))
+									{
+										returnVal!(val.Type);
+									}
+								}
+								else
+								{
+									reportError(get.Name, "Expression must have a struct type.");
+								}
+							}
+							*/
+						}
+					}
+				}
+
+				lookupScope!(_scope, name);
+
 				break;
 
 			case .Qualified(let qualified):

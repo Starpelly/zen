@@ -1,3 +1,5 @@
+#load "../tests/raylib.zen";
+
 namespace game;
 
 struct Player
@@ -6,7 +8,7 @@ struct Player
 	raylib::Color color;
 }
 
-var Player player;
+let Player player;
 const float PLAYER_SPEED = 500.0;
 
 fun void start_game()
@@ -14,8 +16,8 @@ fun void start_game()
     let raylib::Color black;
 	black.r = 0; black.g = 0; black.b = 0; black.a = 255;
 
-    raylib::InitWindow(1280, 720, "Zen");
-	// raylib::SetTargetFPS(60);
+    raylib::InitWindow(640, 360, "Zen");
+	raylib::SetTargetFPS(60);
 
 	player.color.r = 255; player.color.g = 255; player.color.b = 0; player.color.a = 255;
 
@@ -52,5 +54,15 @@ fun void draw_game()
 		player.pos.y += PLAYER_SPEED * raylib::GetFrameTime();
 	}
 
-	raylib::DrawRectangle(player.pos.x, player.pos.y, 32, 32, player.color);
+	raylib::DrawRectangle(player.pos.x, player.pos.y, 32, 32.0, player.color);
+	raylib::DrawText("pelly", player.pos.x - 8.0, player.pos.y - 24.0, 20, player.color);
+
+	if (player.pos.x >= 80)
+	{
+		player.color.r = 0;
+	}
+	else
+	{
+		player.color.r = 255;
+	}
 }

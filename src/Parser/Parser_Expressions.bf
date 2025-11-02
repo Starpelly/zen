@@ -209,6 +209,7 @@ extension Parser
 
 	private Expression finishCallExpr(Expression.Variable callee)
 	{
+		let open = previous();
 		let arguments = new List<Expression>();
 		if (!check(.RightParen))
 		{
@@ -219,9 +220,9 @@ extension Parser
 			while (match(.Comma));
 		}
 
-		consume(.RightParen, "Expected ')' after arguments.");
+		let close = consume(.RightParen, "Expected ')' after arguments.");
 
-		return new Expression.Call(callee, arguments);
+		return new Expression.Call(callee, arguments, open, close);
 	}
 
 	private Expression getExprPrimary()

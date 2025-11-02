@@ -369,10 +369,17 @@ abstract class AstNode
 			public readonly Expression.Variable Callee ~ delete _;
 			public readonly List<Expression> Arguments ~ DeleteContainerAndItems!(_);
 
-			public this(Expression.Variable callee, List<Expression> arguments)
+			/// Open '(' token
+			public readonly Token Open;
+			/// Close ')' token
+			public readonly Token Close;
+
+			public this(Expression.Variable callee, List<Expression> arguments, Token open, Token close)
 			{
 				this.Callee = callee;
 				this.Arguments = arguments;
+				this.Open = open;
+				this.Close = close;
 			}
 
 			public override ExpressionKind GetKind() => .Call(this);

@@ -66,7 +66,7 @@ class Scoper
 	private void addGlobalConstant(String name, ZenType type, Variant value)
 	{
 		let token = Token(.Identifier, name, 0, 0, .Empty);
-		let entity = new Entity.Constant(.Untyped, value, token, type);
+		let entity = new Entity.Constant(.Builtin, value, token, type);
 		m_globalScope.DeclareWithName(entity, name);
 	}
 

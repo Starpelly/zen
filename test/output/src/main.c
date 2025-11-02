@@ -133,7 +133,8 @@ void zen_game_start_game()
 	black.g = 0;
 	black.b = 0;
 	black.a = 255;
-	InitWindow(1280, 720, "Zen");
+	InitWindow(640, 360, "Zen");
+	SetTargetFPS(60);
 	player.color.r = 255;
 	player.color.g = 255;
 	player.color.b = 0;
@@ -166,7 +167,16 @@ void zen_game_draw_game()
 	{
 		player.pos.y += PLAYER_SPEED * GetFrameTime();
 	}
-	DrawRectangle(player.pos.x, player.pos.y, 32, 32, player.color);
+	DrawRectangle(player.pos.x, player.pos.y, 32, 32.0, player.color);
+	DrawText("pelly", player.pos.x - 8.0, player.pos.y - 24.0, 20, player.color);
+	if (player.pos.x >= 80)
+	{
+		player.color.r = 0;
+	}
+	else
+	{
+		player.color.r = 255;
+	}
 }
 
 void main()

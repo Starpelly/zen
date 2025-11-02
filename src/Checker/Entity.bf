@@ -41,7 +41,7 @@ abstract class Entity
 	{
 		public enum ConstantDecl
 		{
-			case Untyped;
+			case Builtin;
 			case Basic(AstNode.Stmt.ConstantDeclaration decl);
 			case EnumField(AstNode.Stmt.EnumFieldValue field);
 		}
@@ -61,7 +61,7 @@ abstract class Entity
 			{
 				switch (Node)
 				{
-				case .Untyped: return null;
+				case .Builtin: return null;
 				case .Basic(let decl): return decl;
 				case .EnumField(let decl): return decl;
 				}
