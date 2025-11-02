@@ -54,12 +54,12 @@ class Builder
 
 		StopwatchChecker.Start();
 
-		let scoper = scope Scoper(finalAst, errors);
+		let scoper = scope Binder(finalAst, errors);
 		let globalScope = scoper.Run();
 
 		StopwatchChecker.Stop();
 
-		Scoper.PrintScopeTree(globalScope);
+		Binder.PrintScopeTree(globalScope);
 
 		StopwatchChecker.Start();
 

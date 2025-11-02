@@ -25,14 +25,15 @@ static
 	);
 }
 
-class Scoper
+/// This pass is responsible for binding identifiers (Functions, Structs, Enums, etc.) to
+/// entities in scopes.
+class Binder
 {
 	private readonly Ast m_ast;
+	private readonly List<CompilerError> m_errors;
 
 	private readonly Scope m_globalScope ~ delete _;
 	private Scope m_currentScope;
-
-	private readonly List<CompilerError> m_errors;
 
 	private List<Namespace> m_namespaceStackFileScope = new .() ~ delete _;
 
@@ -285,7 +286,7 @@ class Scoper
 
 	// @NOTE
 	// I'm thinking this should be a separate pass, like "Typer" or something that types all the entities...
-	// Maybe this is fine and should change from "Scoper" to "Entity creator" or something? Hmmmm....
+	// Maybe this is fine and should change from "Binder" to "Entity creator" or something? Hmmmm....
 	private ZenType getTypeFromToken(Token token)
 	{
 		let res = BasicType.FromName(token.Lexeme);
