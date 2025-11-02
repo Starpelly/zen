@@ -58,7 +58,7 @@ class Scoper
 		for (let fun in BuiltinFunctions)
 		{
 			let token = Token(.Identifier, "", 0, 0, .Empty);
-			let entity = new Entity.Builtin(fun.Name, token, .Function);
+			let entity = new Entity.Builtin(fun.Name, token, .Invalid);
 			m_globalScope.Entities.Add(fun.Name, entity);
 		}
 	}
@@ -115,7 +115,7 @@ class Scoper
 
 		if (let namespc = node as AstNode.Stmt.NamespaceDeclaration)
 		{
-			let entity = new Entity.Namespace(namespc, namespc.Name, .Namespace);
+			let entity = new Entity.Namespace(namespc, namespc.Name, .Namespace(namespc));
 			scope_tryDeclare(m_currentScope, namespc.Name, entity);
 
 			openNewScope(scope $"Namespace ({namespc.Name.Lexeme})", namespc);
@@ -186,7 +186,7 @@ class Scoper
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, getNamespaceParent(), _enum.Name, .Enum));
+			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, getNamespaceParent(), _enum.Name, .Enum(_enum)));
 		}
 
 		if (let enumVal = node as AstNode.Stmt.EnumFieldValue)

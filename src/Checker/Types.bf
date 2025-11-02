@@ -150,9 +150,8 @@ public enum ZenType
 	case SimpleNamed(Token token);
 	case QualifiedNamed(AstNode.Expression.QualifiedName name);
 	case Structure(AstNode.Stmt.StructDeclaration _struct);
-	case Enum;
-	case Function;
-	case Namespace;
+	case Enum(AstNode.Stmt.EnumDeclaration _enum);
+	case Namespace(AstNode.Stmt.NamespaceDeclaration _ns);
 
 	public bool IsTypeVoid()
 	{
@@ -247,8 +246,6 @@ public enum ZenType
 			return "Struct";
 		case .Enum:
 			return "Enum";
-		case .Function:
-			return "Function";
 		case .Namespace:
 			return "Namespace";
 		}

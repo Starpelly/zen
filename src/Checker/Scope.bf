@@ -5,7 +5,7 @@ namespace Zen;
 
 class Scope
 {
-	public Result<Scope> Parent = .Err;
+	public readonly Result<Scope> Parent = .Err;
 	public readonly List<Scope> Children = new .() ~ DeleteContainerAndItems!(_);
 	public readonly Dictionary<StringView, Entity> Entities = new .() ~ DeleteDictionaryAndValues!(_);
 
@@ -32,44 +32,5 @@ class Scope
 			return parent.Lookup(name);
 
 		return .Err;
-	}
-
-	public Result<Entity> QualifiedLookup(params StringView[] path)
-	{
-		Entity current = this.Lookup(path[0]);
-		if (current == null) return .Err;
-
-		for (int i = 1; i < path.Count; i++)
-		{
-			if (current.Type != .Enum)
-				return .Err;
-			let typename = current as Entity.TypeName;
-			if (let newScope = typename.Decl as AstNode.Stmt.IScope)
-			{
-				current = newScope.Scope.Lookup(path[i]);
-			}
-			if (current == null)
-				return .Err;
-		}
-
-		return current;
-	}
-
-	public void BuildScopeNamespaces(List<Entity.Namespace> outList)
-	{
-		if (Parent case .Ok(let parent))
-		{
-			if (parent.Parent case .Ok(let parentparent))
-			{
-				for (let entity in parentparent.Entities)
-				{
-					if (let ns = entity.value as Entity.Namespace)
-					{
-						if (ns.Decl.Scope == parent)
-						outList.Add(ns);
-					}
-				}
-			}
-		}
 	}
 }

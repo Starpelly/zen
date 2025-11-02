@@ -161,14 +161,16 @@ extension Parser
 			}
 
 			let valueName = consume(.Identifier, "Member name expected.");
-			/*
-			var literal = default(Expr);
 
+			// @FIX
+			// To prevent infinite parsing loops, but eventually we'll want to store this.
+			var literal = default(AstNode.Expression);
 			if (match(.Equal))
 			{
-				literal = Primary();
+				literal = getExprPrimary();
 			}
-			*/
+			if (literal != null)
+				delete literal;
 
 			AstNode.Expression value = null;
 			value = new AstNode.Expression.Literal(valueName, Variant.Create<int>(valueIndex));
