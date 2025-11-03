@@ -14,7 +14,7 @@ fun void start_game()
 
 	init_player();
 
-	while (raylib::WindowShouldClose() == false)
+	while (!raylib::WindowShouldClose())
 	{
 		update_game();
 

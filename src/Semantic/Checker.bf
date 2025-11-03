@@ -349,6 +349,14 @@ class Checker
 				if (!rightType.IsTypePointer())
 					reportError(op, "Cannot dereference non-pointer type");
 				returnVal!(rightType);
+			case .Bang:
+				if (!rightType.IsTypeBoolean())
+				{
+					reportError(op, "Conditional expression isn't a boolean");
+				}
+				// Actually reversing it is the compiler and/or interpreter's job.
+				returnVal!(rightType);
+
 			default:
 				Runtime.Assert(true);
 			}

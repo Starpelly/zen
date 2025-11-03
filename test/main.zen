@@ -1,5 +1,6 @@
-// #load "game/game.zen";
+#load "game/game.zen";
 
+/*
 struct PointerStruct
 {
 	float x;
@@ -12,22 +13,27 @@ struct Vector3
 	float y;
 	float z;
 }
+*/
 
 fun void main()
 {
+	/*
 	let PointerStruct a;
 	a.x = 32.0;
 	a.y = 64.0;
 
 	print_x(&a);
+*/
 
 	// player.pos.x = cast(float)0;
-	// game::start_game();
+	game::start_game();
 }
 
+/*
 fun void print_x(PointerStruct* vec2)
 {
 	let float x = vec2.x;
 	x = 40.0;
 	println(x);
 }
+*/
