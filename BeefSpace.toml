@@ -3,3 +3,6 @@ Projects = {zen = {Path = "."}, libtcc = {Path = "vendor/libtcc"}, raylib-beef =
 
 [Workspace]
 StartupProject = "zen"
+
+[Configs.Release.Win64]
+LTOType = "None"

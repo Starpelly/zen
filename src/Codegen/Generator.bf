@@ -393,6 +393,9 @@ class Generator
 					// @TODO - pelly, 11/2/25
 					// Actually, we want initializers in the future, and we want to throw errors when we try to use uninitialized variables.
 					// So this needs to be removed or changed in the future!
+					Console.ForegroundColor = .Yellow;
+					Console.WriteLine("please fix this implicit initializer");
+					Console.ResetColor();
 					code.Append(scope $" = \{\}");
 				}
 			}

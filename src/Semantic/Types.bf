@@ -254,6 +254,7 @@ public enum ZenType
 		}
 	}
 
+	/*
 	public static bool AreTypesIdentical(ZenType x, ZenType y)
 	{
 		if (x == y)
@@ -267,11 +268,20 @@ public enum ZenType
 
 		return false;
 	}
+	*/
 
 	// @HACK
 	// I don't know how I feel about this...
 	public static bool AreTypesIdenticalUntyped(ZenType x, ZenType y)
 	{
+#if RELEASE && LTO
+		// @HACK @TODO
+		// Caused by LTO optimizing x and y out for some reason? or maybe optimizing out the whole function? Idk
+		// I should write a GitHub issue for this.
+		Console.WriteLine(x.ToString(.. scope .()));
+		Console.WriteLine(y.ToString(.. scope .()));
+#endif
+
 		if (x == y)
 			return true;
 
@@ -287,12 +297,12 @@ public enum ZenType
 		{
 			if (y case .Pointer(let py))
 			{
-				// In Zen, pointers are typically type safe, so while pointers are still technically just ints,
+				// In Zen, pointers are type safe, so while pointers are still technically just ints,
 				// we'll still need to actually compare the pointer types
 				return AreTypesIdenticalUntyped(*px, *py);
 			}
 		}
 
 		return false;
-	}
+	 }
 }
