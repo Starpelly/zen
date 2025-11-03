@@ -12,14 +12,12 @@ struct Player
 
 const float PLAYER_SPEED = 500.0;
 
-let Player player;
-
-fun void init_player()
+fun void init_player(Player* player)
 {
 	player.color.r = 255; player.color.g = 255; player.color.b = 0; player.color.a = 255;
 }
 
-fun void update_player()
+fun void update_player(Player* player)
 {
 	player.frame += 1;
 	player.time += raylib::GetFrameTime();
@@ -40,7 +38,7 @@ fun void update_player()
 	{
 		player.pos.y += PLAYER_SPEED * raylib::GetFrameTime();
 	}
-
+    
     if (player.pos.x >= 400)
 	{
 		player.color.r = 0;
@@ -51,7 +49,7 @@ fun void update_player()
 	}
 }
 
-fun void draw_player()
+fun void draw_player(Player* player)
 {
 	raylib::DrawRectangle(cast(int)player.pos.x, cast(int)player.pos.y, 32, 32, player.color);
 	raylib::DrawText("pelly", cast(int)(player.pos.x - 8.0), cast(int)(player.pos.y - 24.0), 20, player.color);

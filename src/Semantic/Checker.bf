@@ -86,7 +86,7 @@ class Checker
 			let retType = checkExpr(ret.Value, _scope);
 			if (!ZenType.AreTypesIdenticalUntyped(m_functionStack.Back.Type, retType))
 			{
-				reportError(ret.Token, scope $"Return type mismatch: expected '{m_functionStack.Back.Type.GetName()}', got '{retType.GetName()}'");
+				reportError(ret.Token, scope $"Return type mismatch: expected '{m_functionStack.Back.Type.GetName(.. scope .())}', got '{retType.GetName(.. scope .())}'");
 			}
 		}
 
@@ -155,6 +155,11 @@ class Checker
 			returnVal!(lit.GetLiteralType());
 
 		case .Binary(let bin):
+			// First we'll check the x and y expressions, we MIGHT return a boolean depending on the operator type.
+			// But this is just so we can resolve these expressions for checking purposes (and also the generator).
+			let x = checkExpr(bin.Left, _scope);
+			let y = checkExpr(bin.Right, _scope);
+
 			// Check if it's a conditional boolean value.
 			switch (bin.Op.Kind)
 			{
@@ -168,8 +173,6 @@ class Checker
 			default:
 			}
 
-			let x = checkExpr(bin.Left, _scope);
-			let y = checkExpr(bin.Right, _scope);
 			checkTypesComparable(bin.Op, x, y);
 
 			// If X and Y matches, we can just return X because they're the same type.
@@ -385,7 +388,6 @@ class Checker
 			returnVal!(ZenType.Invalid);
 
 		case .NamedType(let type):
-
 			mixin returnValWithPtr(ZenType zenType)
 			{
 				if (type.IsPointer)
@@ -446,7 +448,7 @@ class Checker
 		{
 			// @FIX
 			// Bad error message
-			reportError(token, scope $"Types mismatch ({x.GetName()}) to ({y.GetName()})");
+			reportError(token, scope $"Types mismatch ({x.GetName(.. scope .())}) to ({y.GetName(.. scope .())})");
 		}
 	}
 

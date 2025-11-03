@@ -369,42 +369,11 @@ class Generator
 
 			bool isStructType = false;
 
-			/*
-			// @FIX
-			// I don't think the codegen should have to do this
-			if (v.Type.Kind case .Simple(let typename))
-			{
-				// This is better because we're no longer searching through scopes, but I'm still not entirely sure.
-
-				let entity = _scope.LookupStmtAs<Entity.Variable>(v).Value;
-				let resolved = entity.ResolvedType;
-				if (let resolvedTypename = resolved as Entity.TypeName)
-				{
-					if (let s = resolvedTypename.Decl as AstNode.Stmt.StructDeclaration)
-					{
-						isStructType = true;
-						if (s.Kind == .Extern)
-						{
-							isExternType = true;
-						}
-					}
-				}
-
-				if (let namespc = resolved as IEntityNamespaceParent)
-				{
-					bool write = !isExternType;
-
-					if (write)
-					{
-						code.Append(buildNamespaceString(namespc, .. scope .()));
-						code.Append("_");
-					}
-				}
-			}
-			*/
-
 			let entity = _scope.LookupStmtAs<Entity.Variable>(v).Value;
-			// entity.ResolvedType
+			if (entity.ResolvedType case .Structure)
+			{
+				isStructType = true;
+			}
 			code.Append(writeResolvedType(entity.ResolvedType, .. scope .()));
 
 			// emitExpr(v.Type, code, _scope);
@@ -420,6 +389,10 @@ class Generator
 				{
 					// Because C doesn't initialize structs automatically without an initializer (but we want to),
 					// we'll have to tell it to do so manually.
+
+					// @TODO - pelly, 11/2/25
+					// Actually, we want initializers in the future, and we want to throw errors when we try to use uninitialized variables.
+					// So this needs to be removed or changed in the future!
 					code.Append(scope $" = \{\}");
 				}
 			}

@@ -231,28 +231,26 @@ public enum ZenType
 		return false;
 	}
 
-	public StringView GetName()
+	public void GetName(String outName)
 	{
-		// @TODO
-		// This should be dynamic (for pointers), so maybe this should take a string as a parameter.
 		switch (this)
 		{
 		case .Invalid:
-			return "Invalid type";
+			outName.Append("Invalid type");
 		case .Basic(let basic):
-			return basic.Name;
+			outName.Append(basic.Name);
 		case .SimpleNamed:
-			return "Simple named type";
+			outName.Append("Simple named type");
 		case .QualifiedNamed:
-			return "Qualified named type";
+			outName.Append("Qualified named type");
 		case .Structure:
-			return "Struct";
+			outName.Append("Struct");
 		case .Enum:
-			return "Enum";
+			outName.Append("Enum");
 		case .Namespace:
-			return "Namespace";
-		case .Pointer:
-			return "Pointer";
+			outName.Append("Namespace");
+		case .Pointer(let element):
+			outName.Append(scope $"Pointer[{element.GetName(.. scope .())}]");
 		}
 	}
 

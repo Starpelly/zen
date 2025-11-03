@@ -12,16 +12,17 @@ fun void start_game()
     raylib::InitWindow(1280, 720, "Zen");
 	raylib::SetTargetFPS(60);
 
-	init_player();
+	let Player player;
+	init_player(&player);
 
 	while (!raylib::WindowShouldClose())
 	{
-		update_game();
+		update_game(&player);
 
 		raylib::BeginDrawing();
 		raylib::ClearBackground(black);
 		
-		draw_game();
+		draw_game(&player);
 
 		raylib::DrawFPS(20, 20);
 
@@ -30,14 +31,14 @@ fun void start_game()
 	raylib::CloseWindow();
 }
 
-fun void update_game()
+fun void update_game(Player* player)
 {
-	update_player();
+	update_player(player);
 }
 
-fun void draw_game()
+fun void draw_game(Player* player)
 {
-	draw_player();
+	draw_player(player);
 
 	let float sinx = math::sinf(player.time * 8.0) * 44.0;
 	let float siny = math::cosf(player.time * 8.0) * 44.0;
