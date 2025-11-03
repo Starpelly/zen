@@ -1,26 +1,25 @@
-#load "game/game.zen";
+// #load "game/game.zen";
 
-/*
-struct Vector2
+struct PointerStruct
 {
-	int x;
+	float x;
 	float y;
 }
-*/
 
-/*
-#load "tests/raylib.zen";
-
-struct Player
-{
-	raylib::Vector2 pos;
-	float x;
-}
-
-let Player player;
-*/
 fun void main()
 {
+	let PointerStruct a;
+	a.x = 32.0;
+	a.y = 64.0;
+
+	print_x(a);
+
 	// player.pos.x = cast(float)0;
-	game::start_game();
+	// game::start_game();
+}
+
+fun void print_x(PointerStruct vec2)
+{
+	let float x = vec2.x;
+	println(x);
 }

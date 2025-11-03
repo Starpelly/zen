@@ -326,7 +326,9 @@ class Generator
 		let parameters = scope StringCodeBuilder();
 		for (let param in func.Parameters)
 		{
-			emitExpr(param.Type, code, func.Scope);
+			let entity = func.Scope.LookupStmtAs<Entity.Variable>(param);
+			parameters.Append(writeResolvedType(entity.Value.ResolvedType, .. scope .()));
+			// emitExpr(param.Type, parameters, func.Scope);
 			parameters.Append(scope $" {param.Name.Lexeme}");
 			if (param != func.Parameters.Back)
 				parameters.Append(", ");

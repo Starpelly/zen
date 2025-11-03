@@ -67,6 +67,10 @@ class Resolver
 			if (fun.Kind == .Extern)
 				return;
 
+			for (let param in fun.Parameters)
+			{
+				resolveStatement(param, fun.Scope);
+			}
 			resolveStatementList(fun.Body.List, fun.Scope);
 		}
 
