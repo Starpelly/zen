@@ -31,6 +31,7 @@ public class TCCCompiler
 
 		// @TODO
 		// I don't think we should rely on this?
+		// This is the math library for libc
 		tcc_add_library(m_state, "msvcrt");
 #else
 		tcc_add_library(m_state, "m");

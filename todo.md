@@ -1,0 +1,5 @@
+- [ ] `#load` should only make symbols available for that individual file
+- [ ] do some housekeeping around the compiler, I'm a little iffy about how types are handled
+- [ ] support pointers
+- [ ] add struct methods
+- [ ] better error messages and add warning and error codes
