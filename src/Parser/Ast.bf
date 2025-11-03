@@ -455,6 +455,10 @@ abstract class AstNode
 			public readonly Expression Object ~ delete _;
 			public readonly Token Name;
 
+			// @TEMP @HACK
+			// Just to get pointers working for now
+			public bool IsPointer;
+
 			public this(Expression object, Token name)
 			{
 				this.Object = object;
@@ -545,10 +549,12 @@ abstract class AstNode
 			}
 
 			public readonly Kind Kind;
+			public readonly bool IsPointer;
 
-			public this(Token name, Kind kind)
+			public this(Token name, Kind kind, bool isPointer)
 			{
 				this.Kind = kind;
+				this.IsPointer = isPointer;
 			}
 
 			public ~this()

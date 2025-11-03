@@ -38,6 +38,7 @@ public enum TokenKind
 	case Modulus;			// %
 	case Question;			// ?
 	case Hash;				// #
+	case Ampersand;			// &
 
 	case PlusEqual;			// +=
 	case MinusEqual;		// -=

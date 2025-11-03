@@ -240,9 +240,9 @@ class Generator
 								if (lookup case .Ok(let val))
 								{
 									bool writeNamespace = true;
-									if (val.ResolvedType case .Structure(let _struct))
+									if (val.ResolvedType case .Structure(let foundStruct))
 									{
-										if (_struct.Kind == .Extern)
+										if (foundStruct.Kind == .Extern)
 										{
 											writeNamespace = false;
 										}
@@ -367,7 +367,6 @@ class Generator
 			code.AppendNewLine();
 			code.AppendTabs();
 
-			bool isExternType = false;
 			bool isStructType = false;
 
 			/*
@@ -505,6 +504,15 @@ class Generator
 			}
 
 			outStr.Append(_struct.Name.Lexeme);
+			break;
+		case .Pointer(let elem):
+			writeResolvedType(*elem, outStr);
+
+			// @TODO
+			// Pointers in C are next to the name and not the type...
+			// In Zen they're on the type....
+			// I'll have to look into this
+			outStr.Append('*');
 			break;
 		default:
 			Runtime.Assert(false);
@@ -673,11 +681,19 @@ class Generator
 			break;
 
 		case .Unary(let unary):
+			code.Append(unary.Operator.Lexeme);
+			emitExpr(unary.Right, code, _scope);
 			break;
 
 		case .Get(let get):
 			emitExpr(get.Object, code, _scope);
-			code.Append(scope $".{get.Name.Lexeme}");
+
+			bool isPointer = get.IsPointer;
+			if (isPointer)
+				code.Append("->");
+			else
+				code.Append('.');
+			code.Append(get.Name.Lexeme);
 			break;
 
 		case .Set(let set):

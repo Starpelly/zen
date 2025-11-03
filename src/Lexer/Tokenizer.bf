@@ -82,6 +82,7 @@ class Tokenizer
 		case ';' : addToken(.Semicolon); break;
 		case '?' : addToken(.Question); break;
 		case '#' : addToken(.Hash); break;
+		case '&' : addToken(.Ampersand); break;
 		case '+' : addToken(match('=', true) ? .PlusEqual : .Plus); break;
 		case '-' : addToken(match('=', true) ? .MinusEqual : .Minus); break;
 		case '*' : addToken(match('=', true) ? .StarEqual : .Star); break;

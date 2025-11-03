@@ -152,6 +152,7 @@ public enum ZenType
 	case Structure(AstNode.Stmt.StructDeclaration _struct);
 	case Enum(AstNode.Stmt.EnumDeclaration _enum);
 	case Namespace(AstNode.Stmt.NamespaceDeclaration _ns);
+	case Pointer(ZenType* element);
 
 	public bool IsTypeVoid()
 	{
@@ -206,7 +207,7 @@ public enum ZenType
 	{
 		if (this case .Basic(let basic))
 			return basic.Flags.HasFlagInclusive(.Pointer);
-		return false;
+		return this case .Pointer;
 	}
 
 	public bool IsTypeIntOrUInt()
@@ -232,6 +233,8 @@ public enum ZenType
 
 	public StringView GetName()
 	{
+		// @TODO
+		// This should be dynamic (for pointers), so maybe this should take a string as a parameter.
 		switch (this)
 		{
 		case .Invalid:
@@ -248,6 +251,8 @@ public enum ZenType
 			return "Enum";
 		case .Namespace:
 			return "Namespace";
+		case .Pointer:
+			return "Pointer";
 		}
 	}
 
@@ -277,6 +282,16 @@ public enum ZenType
 			if (y case .Basic(let by))
 			{
 				return bx.Flags.HasFlagInclusive(by.Flags);
+			}
+		}
+
+		if (x case .Pointer(let px))
+		{
+			if (y case .Pointer(let py))
+			{
+				// In Zen, pointers are typically type safe, so while pointers are still technically just ints,
+				// we'll still need to actually compare the pointer types
+				return AreTypesIdenticalUntyped(*px, *py);
 			}
 		}
 

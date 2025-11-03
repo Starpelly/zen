@@ -27,12 +27,15 @@ enum EntityKind
 abstract class Entity
 {
 	public readonly Token Token;
-	public readonly ZenType Type;
+	public readonly ZenType Type => m_type;
+	public ZenType* TypePtr => &m_type;
+
+	private ZenType m_type;
 
 	public this(Token token, ZenType type)
 	{
 		this.Token = token;
-		Type = type;
+		this.m_type = type;
 	}
 
 	public abstract EntityKind GetKind();

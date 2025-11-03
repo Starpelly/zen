@@ -27,10 +27,12 @@ extension Parser
 		{
 			let name = consume(.Identifier, "Expected identifier.");
 			let qualified = new AstNode.Expression.QualifiedName(token, past(2), new AstNode.Expression.Variable(name));
-			return new .(name, .Qualified(qualified));
+			let isPointer = match(.Star);
+			return new .(name, .Qualified(qualified), isPointer);
 		}
 
-		return new .(token, .Simple(token));
+		let isPointer = match(.Star);
+		return new .(token, .Simple(token), isPointer);
 	}
 
 	private AstNode.Stmt.Return getReturnStmt()

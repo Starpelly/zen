@@ -182,6 +182,12 @@ class Checker
 				return .Invalid;
 			}
 
+			if (entity.Value.GetKind() case .Variable(let _var))
+			{
+				return _var.ResolvedType;
+			}
+
+			/*
 			let type = entity.Value.Type;
 			switch (type)
 			{
@@ -211,6 +217,7 @@ class Checker
 				break;
 			default:
 			}
+			*/
 
 			// @FIX
 			// Idk how I feel about this, but basically we look at the variable's declaration to check what type it is.
@@ -257,9 +264,7 @@ class Checker
 				for (let i < call.Arguments.Count)
 				{
 					let arg = call.Arguments[i];
-					if (arg is AstNode.Expression.Variable)
-						let a  =0;
-					let argType = checkExpr(arg, (callScope == null) ? _scope : callScope);
+					let argType = checkExpr(arg, callScope ?? _scope);
 					let calleeParamType = checkExpr(calleeFun.Decl.Parameters[i].Type, _scope);
 
 					// Check if the two types are compatible
@@ -284,8 +289,18 @@ class Checker
 
 			// Runtime.Assert(objType case .Structure, "You can only get on structs");
 
-			if (objType case .Structure(let _struct))
+			mixin doStruct(ZenType type)
 			{
+				// I couldn't figure out how to pass this by type in parameters...
+				Runtime.Assert(type case ZenType.Structure(let _struct));
+
+				// @TEMP @HACK
+				if (objType.IsTypePointer())
+				{
+					get.IsPointer = true;
+				}
+
+				// Look inside this struct for the member variable we're getting.
 				let entity = lookupScopeForIdentifier(_struct.Scope, get.Name);
 				if (entity case .Ok(let val))
 				{
@@ -295,6 +310,19 @@ class Checker
 						returnVal!(_var.ResolvedType);
 					}
 					returnVal!(val.Type);
+				}
+			}
+
+			if (objType case .Structure)
+			{
+				doStruct!(objType);
+			}
+			else if (objType case .Pointer(let element))
+			{
+				let value = *element;
+				if (value case .Structure)
+				{
+					doStruct!(value);
 				}
 			}
 			else
@@ -308,8 +336,23 @@ class Checker
 			break;
 		case .Logical(let log):
 			break;
+
 		case .Unary(let un):
-			break;
+			let op = un.Operator;
+			var rightType = checkExpr(un.Right, _scope);
+
+			switch (op.Kind)
+			{
+			case .Ampersand:
+				returnVal!(ZenType.Pointer(&rightType));
+			case .Star:
+				if (!rightType.IsTypePointer())
+					reportError(op, "Cannot dereference non-pointer type");
+				returnVal!(rightType);
+			default:
+				Runtime.Assert(true);
+			}
+
 		case .Grouping(let group):
 			returnVal!(checkExpr(group.Expression, _scope));
 
@@ -334,6 +377,14 @@ class Checker
 			returnVal!(ZenType.Invalid);
 
 		case .NamedType(let type):
+
+			mixin returnValWithPtr(ZenType zenType)
+			{
+				if (type.IsPointer)
+					return .Pointer(&zenType);
+				returnVal!(zenType);
+			}
+
 			switch (type.Kind)
 			{
 			case .Simple(let name):
@@ -349,7 +400,7 @@ class Checker
 						if (let typename = found as Entity.TypeName)
 						{
 							Runtime.Assert(typename.Decl is AstNode.Stmt.StructDeclaration);
-							returnVal!(typename.Type);
+							returnValWithPtr!(typename.Type);
 						}
 					}
 				}
@@ -359,7 +410,7 @@ class Checker
 				break;
 
 			case .Qualified(let qualified):
-				returnVal!(checkExpr(qualified, _scope));
+				returnValWithPtr!(checkExpr(qualified, _scope));
 			}
 
 		case .Cast(let cast):

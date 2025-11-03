@@ -122,7 +122,7 @@ extension Parser
 
 	private Expression getExprUnary()
 	{
-		if (match(.Bang, .Minus))
+		if (match(.Bang, .Minus, .Ampersand))
 		{
 			let op = previous();
 			let right = getExprUnary();
@@ -190,11 +190,7 @@ extension Parser
 			}
 			else
 			{
-				// if (let variable = expr as Expression.Variable)
-				{
-					// variable.Namespaces = namespaces;
-					// variable.SetNamespaces(namespaces);
-				}
+				// Do nothing & break out
 				break;
 			}
 		}
@@ -224,44 +220,12 @@ extension Parser
 	{
 		mixin returnValue(Expression returnExpr)
 		{
-			/*
-			if (isCasting)
-			{
-				return new AstNode.Expression.Cast(returnExpr, castType, castToken.Value);
-			}
-			*/
 			return returnExpr;
 		}
 
 		mixin returnLiteral(Token prevToken, Variant? value)
 		{
-			/*
-			var typeName = "";
-			switch (prevToken.Kind)
-			{
-			case .Void:
-				typeName = "void";
-				break;
-			case .Char:
-				typeName = "char8";
-				break;
-			case .String:
-				typeName = "string";
-				break;
-			case .Number_Int:
-				typeName = "int";
-				break;
-			case .Number_Float:
-				typeName = "float32";
-				break;
-			case .True:
-			case .False:
-				typeName = "bool";
-				break;
-			default:
-			}
-			*/
-			returnValue!(new Expression.Literal(/*new PrimitiveDataType(PrimitiveType.GetFromLiteralToken(prevToken), typeName, prevToken),*/ prevToken, value));
+			returnValue!(new Expression.Literal(prevToken, value));
 		}
 
 		if (match(.Number_Int, .Number_Float, .String))
@@ -292,43 +256,6 @@ extension Parser
 
 		if (match(.Identifier))
 		{
-			/*
-			NamespaceList namespaces = null;
-			mixin createNamespaces()
-			{
-				if (namespaces == null)
-				{
-					namespaces = new .();
-				}
-			}
-			*/
-
-			/*
-			let typeToken = previous();
-
-			// @TEMP - Struct temp thing
-			if (match(.LeftBrace))
-			{
-				let type = new NonPrimitiveDataType(typeToken);
-
-				if (var inferredType = type)
-				{
-					let elements = new List<Expression>();
-					if (!check(.RightBrace))
-					{
-						repeat
-						{
-							elements.Add(getExpression());
-						}
-						while (match(.Comma));
-					}
-					consume(.RightBrace, "Expected '}'.");
-
-					return new Expression.StructLiteral(/*new .(inferredType.Token)*/inferredType, elements);
-				}
-			}
-			*/
-
 			returnValue!(new Expression.Variable(previous()));
 		}
 

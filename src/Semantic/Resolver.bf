@@ -76,11 +76,6 @@ class Resolver
 
 		if (let _var = stmt as AstNode.Stmt.VariableDeclaration)
 		{
-			if (_var.Name.Lexeme == "sin")
-			{
-				var a = 0;
-			}
-
 			resolveVariable(_var, _scope);
 		}
 	}
@@ -110,12 +105,19 @@ class Resolver
 			let lookup = lookupScopeForIdentifier(_scope, simpleName);
 			if (lookup case .Ok(let res))
 			{
-				entity.ResolvedType = res.Type;
+				if (varDecl.Type.IsPointer)
+				{
+					entity.ResolvedType = .Pointer(res.TypePtr);
+				}
+				else
+				{
+					entity.ResolvedType = res.Type;
+				}
 			}
 		}
 		else if (entity.Type case .QualifiedNamed(let qualifiedName))
 		{
-			let leftScope = _scope.LookupName(qualifiedName.Left.Lexeme);
+			let leftScope = lookupScopeForIdentifier(_scope, qualifiedName.Left);
 
 			if (leftScope case .Ok(let leftEntity))
 			{
@@ -126,9 +128,16 @@ class Resolver
 						Runtime.Assert(qualifiedName.Right is AstNode.Expression.Variable);
 						let _var = qualifiedName.Right as AstNode.Expression.Variable;
 						let lookup = lookupScopeForIdentifier(iScope.Scope, _var.Name);
-						if (lookup case .Ok(let res))
+						if (lookup case .Ok(var res))
 						{
-							entity.ResolvedType = res.Type;
+							if (varDecl.Type.IsPointer)
+							{
+								entity.ResolvedType = .Pointer(res.TypePtr);
+							}
+							else
+							{
+								entity.ResolvedType = res.Type;
+							}
 						}
 
 						// let lookup = lookupScopeForIdentifier(iScope.Scope, qualifiedName.r)
