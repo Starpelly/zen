@@ -3,3 +3,5 @@
 - [ ] support pointers
 - [ ] add struct methods
 - [ ] better error messages and add warning and error codes
+- [ ] support the `using` keyword
+- [ ] support adding the same namespace twice in different files.

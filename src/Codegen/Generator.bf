@@ -492,10 +492,14 @@ class Generator
 			{
 				writeNamespace = false;
 			}
-			if (writeNamespace && _struct.Scope.NamespaceParent case .Ok(let ns))
+			if (writeNamespace )
 			{
-				buildNamespaceString(ns, outStr);
-				outStr.Append('_');
+				outStr.Append("zen_");
+				if (_struct.Scope.NamespaceParent case .Ok(let ns))
+				{
+					buildNamespaceString(ns, outStr);
+					outStr.Append('_');
+				}
 			}
 
 			outStr.Append(_struct.Name.Lexeme);

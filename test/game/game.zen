@@ -1,18 +1,8 @@
 #load "../tests/raylib.zen";
 #load "../std/math.zen";
+#load "player.zen";
 
 namespace game;
-
-struct Player
-{
-	raylib::Vector2 pos;
-	raylib::Color color;
-	int frame;
-	float time;
-}
-
-let Player player;
-const float PLAYER_SPEED = 500.0;
 
 fun void start_game()
 {
@@ -22,10 +12,12 @@ fun void start_game()
     raylib::InitWindow(1280, 720, "Zen");
 	raylib::SetTargetFPS(60);
 
-	player.color.r = 255; player.color.g = 255; player.color.b = 0; player.color.a = 255;
+	init_player();
 
 	while (raylib::WindowShouldClose() == false)
 	{
+		update_game();
+
 		raylib::BeginDrawing();
 		raylib::ClearBackground(black);
 		
@@ -38,41 +30,18 @@ fun void start_game()
 	raylib::CloseWindow();
 }
 
+fun void update_game()
+{
+	update_player();
+}
+
 fun void draw_game()
 {
-	player.frame += 1;
-	player.time += raylib::GetFrameTime();
-
-	if (raylib::IsKeyDown(raylib::KeyboardKey::LEFT))
-	{
-		player.pos.x -= PLAYER_SPEED * raylib::GetFrameTime();
-	}
-	if (raylib::IsKeyDown(raylib::KeyboardKey::RIGHT))
-	{
-		player.pos.x += PLAYER_SPEED * raylib::GetFrameTime();
-	}
-	if (raylib::IsKeyDown(raylib::KeyboardKey::UP))
-	{
-		player.pos.y -= PLAYER_SPEED * raylib::GetFrameTime();
-	}
-	if (raylib::IsKeyDown(raylib::KeyboardKey::DOWN))
-	{
-		player.pos.y += PLAYER_SPEED * raylib::GetFrameTime();
-	}
-
-	raylib::DrawRectangle(cast(int)player.pos.x, cast(int)player.pos.y, 32, 32, player.color);
-	raylib::DrawText("pelly", cast(int)(player.pos.x - 8.0), cast(int)(player.pos.y - 24.0), 20, player.color);
+	draw_player();
 
 	let float sinx = math::sinf(player.time * 8.0) * 44.0;
 	let float siny = math::cosf(player.time * 8.0) * 44.0;
 	raylib::DrawCircle(cast(int)sinx + 400, cast(int)siny + 400, 32, player.color);
 
-	if (player.pos.x >= 400)
-	{
-		player.color.r = 0;
-	}
-	else
-	{
-		player.color.r = 255;
-	}
+	println(sinx);
 }

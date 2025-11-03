@@ -48,9 +48,20 @@ class Builder
 			finalAst.AddRange(file.value.Ast);
 		}
 
+		let errors = scope List<CompilerError>();
+		mixin checkAddErrorsAndReturn()
+		{
+			for (let err in errors)
+			{
+				addError(m_compFiles[err.FirstToken.File], err);
+			}
+
+			if (m_hadErrors)
+				return .Err;
+		}
+
 		// Checker
 
-		let errors = scope List<CompilerError>();
 
 		StopwatchChecker.Start();
 
@@ -61,6 +72,8 @@ class Builder
 
 		Binder.PrintScopeTree(globalScope);
 
+		checkAddErrorsAndReturn!();
+
 		StopwatchChecker.Start();
 
 		// Type resolver
@@ -68,6 +81,8 @@ class Builder
 		resolver.Run();
 
 		StopwatchChecker.Stop();
+
+		checkAddErrorsAndReturn!();
 
 		// Checker
 
@@ -78,13 +93,7 @@ class Builder
 
 		StopwatchChecker.Stop();
 
-		for (let err in errors)
-		{
-			addError(m_compFiles[err.FirstToken.File], err);
-		}
-
-		if (m_hadErrors)
-			return .Err;
+		checkAddErrorsAndReturn!();
 
 		// Code gen
 

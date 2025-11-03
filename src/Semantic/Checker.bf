@@ -282,7 +282,7 @@ class Checker
 		case .Get(let get):
 			let objType = checkExpr(get.Object, _scope);
 
-			Runtime.Assert(objType case .Structure, "You can only get on structs");
+			// Runtime.Assert(objType case .Structure, "You can only get on structs");
 
 			if (objType case .Structure(let _struct))
 			{

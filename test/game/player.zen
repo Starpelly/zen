@@ -1,0 +1,58 @@
+// @TODO
+// Identifier name conflict, please fix!
+// namespace game;
+
+struct Player
+{
+	raylib::Vector2 pos;
+	raylib::Color color;
+	int frame;
+	float time;
+}
+
+const float PLAYER_SPEED = 500.0;
+
+let Player player;
+
+fun void init_player()
+{
+	player.color.r = 255; player.color.g = 255; player.color.b = 0; player.color.a = 255;
+}
+
+fun void update_player()
+{
+	player.frame += 1;
+	player.time += raylib::GetFrameTime();
+
+	if (raylib::IsKeyDown(raylib::KeyboardKey::LEFT))
+	{
+		player.pos.x -= PLAYER_SPEED * raylib::GetFrameTime();
+	}
+	if (raylib::IsKeyDown(raylib::KeyboardKey::RIGHT))
+	{
+		player.pos.x += PLAYER_SPEED * raylib::GetFrameTime();
+	}
+	if (raylib::IsKeyDown(raylib::KeyboardKey::UP))
+	{
+		player.pos.y -= PLAYER_SPEED * raylib::GetFrameTime();
+	}
+	if (raylib::IsKeyDown(raylib::KeyboardKey::DOWN))
+	{
+		player.pos.y += PLAYER_SPEED * raylib::GetFrameTime();
+	}
+
+    if (player.pos.x >= 400)
+	{
+		player.color.r = 0;
+	}
+	else
+	{
+		player.color.r = 255;
+	}
+}
+
+fun void draw_player()
+{
+	raylib::DrawRectangle(cast(int)player.pos.x, cast(int)player.pos.y, 32, 32, player.color);
+	raylib::DrawText("pelly", cast(int)(player.pos.x - 8.0), cast(int)(player.pos.y - 24.0), 20, player.color);
+}
