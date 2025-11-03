@@ -83,6 +83,12 @@ class Binder
 			return newScope;
 		}
 
+		Scope enterExistingScope(Scope _scope)
+		{
+			m_currentScope = _scope;
+			return _scope;
+		}
+
 		Scope closeScope()
 		{
 			if (!createScope)
@@ -94,21 +100,38 @@ class Binder
 
 		if (let namespc = node as AstNode.Stmt.NamespaceDeclaration)
 		{
-			let entity = new Entity.Namespace(namespc, namespc.Name, .Namespace(namespc));
-			scope_tryDeclare(m_currentScope, namespc.Name, entity, namespc);
+			// Look if this namespace entity already exists, and if it does, we can just "piggyback" on this one.
+			if (m_currentScope.LookupName<Entity.Namespace>(namespc.Name.Lexeme) case .Ok(let res))
+			{
+				enterExistingScope(res.Decl.Scope);
+				m_namespaceStackFileScope.Add(.()
+					{
+						Node = namespc,
+						Entity = res
+					});
 
-			openNewScope(scope $"Namespace ({namespc.Name.Lexeme})", namespc);
-			m_namespaceStackFileScope.Add(.()
-				{
-					Node = namespc,
-					Entity = entity
-				});
+				addStatementList(namespc.Ast);
 
-			addStatementList(namespc.Ast);
+				m_namespaceStackFileScope.Clear();
+				closeScope();
+			}
+			else
+			{
+				let entity = new Entity.Namespace(namespc, namespc.Name, .Namespace(namespc));
+				scope_tryDeclare(m_currentScope, namespc.Name, entity, namespc);
 
-			m_namespaceStackFileScope.Clear();
-			closeScope();
+				openNewScope(scope $"Namespace ({namespc.Name.Lexeme})", namespc);
+				m_namespaceStackFileScope.Add(.()
+					{
+						Node = namespc,
+						Entity = entity
+					});
 
+				addStatementList(namespc.Ast);
+
+				m_namespaceStackFileScope.Clear();
+				closeScope();
+			}
 		}
 
 		/*
@@ -225,7 +248,7 @@ class Binder
 		if (_scope.EntityMap.ContainsKey(name.Lexeme))
 		{
 			delete entity;
-			reportError(name, "Identifier has already declared");
+			reportError(name, "Identifier has already been declared");
 			return false;
 		}
 

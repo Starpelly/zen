@@ -471,7 +471,7 @@ class Generator
 			}
 			if (writeNamespace )
 			{
-				outStr.Append("zen_");
+				// outStr.Append("zen_");
 				if (_struct.Scope.NamespaceParent case .Ok(let ns))
 				{
 					buildNamespaceString(ns, outStr);

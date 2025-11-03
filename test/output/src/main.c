@@ -1,6 +1,7 @@
 #include <zen.h>
 
-typedef struct zen_Player zen_Player;
+typedef struct zen_game_GameManager zen_game_GameManager;
+typedef struct zen_game_Player zen_game_Player;
 typedef enum {
 	zen_raylib_KeyboardKey_NULL = 0,
 	zen_raylib_KeyboardKey_APOSTROPHE = 39,
@@ -114,37 +115,76 @@ typedef enum {
 	zen_raylib_KeyboardKey_VOLUME_DOWN = 25
 } zen_raylib_KeyboardKey;
 void zen_main();
-#define PLAYER_SPEED 500.0f
-void zen_init_player(zen_Player* player);
-void zen_update_player(zen_Player* player);
-void zen_draw_player(zen_Player* player);
 void zen_game_start_game();
-void zen_game_update_game(zen_Player* player);
-void zen_game_draw_game(zen_Player* player);
+void zen_game_update_game(zen_game_GameManager* gameManager);
+void zen_game_draw_game(zen_game_GameManager* gameManager);
+#define PLAYER_SPEED 500.0f
+void zen_game_init_player(zen_game_Player* player);
+void zen_game_update_player(zen_game_Player* player);
+void zen_game_draw_player(zen_game_Player* player);
 #define PI 3.14159265358979323846f
 #define HALF_PI 1.57079632679489661923f
 #define EPSILON 0.00001f
-struct zen_Player {
-	Vector2 pos;
-	Color color;
+struct zen_game_GameManager {
+	zen_game_Player* player;
 	int frame;
 	float time;
+};
+struct zen_game_Player {
+	Vector2 pos;
+	Color color;
 };
 void zen_main()
 {
 	zen_game_start_game();
 }
-void zen_init_player(zen_Player* player)
+void zen_game_start_game()
+{
+	Color black = {};
+	black.r = 0;
+	black.g = 0;
+	black.b = 0;
+	black.a = 255;
+	InitWindow(1280, 720, "Zen");
+	SetTargetFPS(60);
+	zen_game_GameManager gameManager = {};
+	zen_game_Player player = {};
+	gameManager.player = &player;
+	zen_game_init_player(gameManager.player);
+	while (!WindowShouldClose())
+	{
+		zen_game_update_game(&gameManager);
+		BeginDrawing();
+		ClearBackground(black);
+		zen_game_draw_game(&gameManager);
+		DrawFPS(20, 20);
+		EndDrawing();
+	}
+	CloseWindow();
+}
+void zen_game_update_game(zen_game_GameManager* gameManager)
+{
+	gameManager->frame += 1;
+	gameManager->time += GetFrameTime();
+	zen_game_update_player(gameManager->player);
+}
+void zen_game_draw_game(zen_game_GameManager* gameManager)
+{
+	zen_game_draw_player(gameManager->player);
+	float sinx = sinf(gameManager->time * 8.0f) * 44.0f;
+	float siny = cosf(gameManager->time * 8.0f) * 44.0f;
+	DrawCircle((int)sinx + 400, (int)siny + 400, 32, gameManager->player->color);
+	printf("%f\n", sinx);
+}
+void zen_game_init_player(zen_game_Player* player)
 {
 	player->color.r = 255;
 	player->color.g = 255;
 	player->color.b = 0;
 	player->color.a = 255;
 }
-void zen_update_player(zen_Player* player)
+void zen_game_update_player(zen_game_Player* player)
 {
-	player->frame += 1;
-	player->time += GetFrameTime();
 	if (IsKeyDown(zen_raylib_KeyboardKey_LEFT))
 	{
 		player->pos.x -= PLAYER_SPEED * GetFrameTime();
@@ -170,44 +210,11 @@ void zen_update_player(zen_Player* player)
 		player->color.r = 255;
 	}
 }
-void zen_draw_player(zen_Player* player)
+void zen_game_draw_player(zen_game_Player* player)
 {
 	DrawRectangle((int)player->pos.x, (int)player->pos.y, 32, 32, player->color);
 	DrawText("pelly", (int)(player->pos.x - 8.0f), (int)(player->pos.y - 24.0f), 20, player->color);
-}
-void zen_game_start_game()
-{
-	Color black = {};
-	black.r = 0;
-	black.g = 0;
-	black.b = 0;
-	black.a = 255;
-	InitWindow(1280, 720, "Zen");
-	SetTargetFPS(60);
-	zen_Player player = {};
-	zen_init_player(&player);
-	while (!WindowShouldClose())
-	{
-		zen_game_update_game(&player);
-		BeginDrawing();
-		ClearBackground(black);
-		zen_game_draw_game(&player);
-		DrawFPS(20, 20);
-		EndDrawing();
-	}
-	CloseWindow();
-}
-void zen_game_update_game(zen_Player* player)
-{
-	zen_update_player(player);
-}
-void zen_game_draw_game(zen_Player* player)
-{
-	zen_draw_player(player);
-	float sinx = sinf(player->time * 8.0f) * 44.0f;
-	float siny = cosf(player->time * 8.0f) * 44.0f;
-	DrawCircle((int)sinx + 400, (int)siny + 400, 32, player->color);
-	printf("%f\n", sinx);
+	DrawCircle(GetMouseX(), GetMouseY(), 16, player->color);
 }
 
 void main()

@@ -1,13 +1,9 @@
-// @TODO
-// Identifier name conflict, please fix!
-// namespace game;
+namespace game;
 
 struct Player
 {
 	raylib::Vector2 pos;
 	raylib::Color color;
-	int frame;
-	float time;
 }
 
 const float PLAYER_SPEED = 500.0;
@@ -19,9 +15,6 @@ fun void init_player(Player* player)
 
 fun void update_player(Player* player)
 {
-	player.frame += 1;
-	player.time += raylib::GetFrameTime();
-
 	if (raylib::IsKeyDown(raylib::KeyboardKey::LEFT))
 	{
 		player.pos.x -= PLAYER_SPEED * raylib::GetFrameTime();
@@ -53,4 +46,6 @@ fun void draw_player(Player* player)
 {
 	raylib::DrawRectangle(cast(int)player.pos.x, cast(int)player.pos.y, 32, 32, player.color);
 	raylib::DrawText("pelly", cast(int)(player.pos.x - 8.0), cast(int)(player.pos.y - 24.0), 20, player.color);
+
+	raylib::DrawCircle(raylib::GetMouseX(), raylib::GetMouseY(), 16, player.color);
 }

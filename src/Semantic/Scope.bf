@@ -46,6 +46,21 @@ class Scope
 		return .Err;
 	}
 
+	public Result<T> LookupName<T>(StringView name) where T : Entity
+	{
+		if (EntityMap.TryGetValue(name, let entity))
+		{
+			if (entity is T)
+				return entity as T;
+		}
+
+		// Look upward the scope chain
+		if (Parent case .Ok(let parent))
+			return parent.LookupName<T>(name);
+
+		return .Err;
+	}
+
 	public Result<Entity> LookupStmt(AstNode.Stmt stmt)
 	{
 		if (NodeEntityMap.TryGetValue(stmt, let entity))

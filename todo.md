@@ -9,4 +9,4 @@
 - [ ] `assert` function
 
 ## Todo
-LTO (link time optimization) in release mode is currently disabled due to pointer stuff being wack. I need to make a bug report or just get rid of pointers because I really want to keep LTO.
+LTO (link time optimization) in release mode is currently disabled due to pointer stuff being wack. I need to make a bug report or something...

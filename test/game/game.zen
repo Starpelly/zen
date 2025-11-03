@@ -4,6 +4,13 @@
 
 namespace game;
 
+struct GameManager
+{
+	Player* player;
+	int frame;
+	float time;
+}
+
 fun void start_game()
 {
     let raylib::Color black;
@@ -12,17 +19,20 @@ fun void start_game()
     raylib::InitWindow(1280, 720, "Zen");
 	raylib::SetTargetFPS(60);
 
+	let GameManager gameManager;
 	let Player player;
-	init_player(&player);
+
+	gameManager.player = &player;
+	init_player(gameManager.player);
 
 	while (!raylib::WindowShouldClose())
 	{
-		update_game(&player);
+		update_game(&gameManager);
 
 		raylib::BeginDrawing();
 		raylib::ClearBackground(black);
 		
-		draw_game(&player);
+		draw_game(&gameManager);
 
 		raylib::DrawFPS(20, 20);
 
@@ -31,18 +41,21 @@ fun void start_game()
 	raylib::CloseWindow();
 }
 
-fun void update_game(Player* player)
+fun void update_game(GameManager* gameManager)
 {
-	update_player(player);
+	gameManager.frame += 1;
+	gameManager.time += raylib::GetFrameTime();
+
+	update_player(gameManager.player);
 }
 
-fun void draw_game(Player* player)
+fun void draw_game(GameManager* gameManager)
 {
-	draw_player(player);
+	draw_player(gameManager.player);
 
-	let float sinx = math::sinf(player.time * 8.0) * 44.0;
-	let float siny = math::cosf(player.time * 8.0) * 44.0;
-	raylib::DrawCircle(cast(int)sinx + 400, cast(int)siny + 400, 32, player.color);
+	let float sinx = math::sinf(gameManager.time * 8.0) * 44.0;
+	let float siny = math::cosf(gameManager.time * 8.0) * 44.0;
+	raylib::DrawCircle(cast(int)sinx + 400, cast(int)siny + 400, 32, gameManager.player.color);
 
 	println(sinx);
 }
