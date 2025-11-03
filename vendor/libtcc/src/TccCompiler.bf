@@ -28,6 +28,12 @@ public class TCCCompiler
 		let DEFAULT_INCLUDE_WINDOWS = Path.Combine(.. scope .(), DEFAULT_INCLUDE_PATH, "winapi");
 		tcc_add_include_path(m_state, DEFAULT_INCLUDE_WINDOWS);
 		tcc_add_library(m_state, "user32");
+
+		// @TODO
+		// I don't think we should rely on this?
+		tcc_add_library(m_state, "msvcrt");
+#else
+		tcc_add_library(m_state, "m");
 #endif
 		tcc_add_library_path(m_state, DEFAULT_LIB_PATH);
 	}

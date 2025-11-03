@@ -311,7 +311,8 @@ class Checker
 		case .Unary(let un):
 			break;
 		case .Grouping(let group):
-			break;
+			returnVal!(checkExpr(group.Expression, _scope));
+
 		case .This(let _this):
 			break;
 
@@ -366,6 +367,9 @@ class Checker
 			// This switch statement should really be separated into separate functions just for sanity purposes
 			// It just goes to the named type procedure.... whatever.
 			let castType = checkExpr(cast.TargetType, _scope);
+
+			// Remember to check the actual cast value
+			checkExpr(cast.Value, _scope);
 
 			// @TODO
 			// We should actually validate that this cast is valid, but I'm lazy

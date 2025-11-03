@@ -117,9 +117,15 @@ void zen_main();
 #define PLAYER_SPEED 500.0f
 void zen_game_start_game();
 void zen_game_draw_game();
+#define PI 3.141592653589793f
+#define TWO_PI 6.283185307179587f
+#define HALF_PI 1.570796326794897f
+#define EPSILON 0.00001f
 struct zen_game_Player {
 	Vector2 pos;
 	Color color;
+	int frame;
+	float time;
 };
 void zen_main()
 {
@@ -151,6 +157,8 @@ void zen_game_start_game()
 }
 void zen_game_draw_game()
 {
+	player.frame += 1;
+	player.time += GetFrameTime();
 	if (IsKeyDown(zen_raylib_KeyboardKey_LEFT))
 	{
 		player.pos.x -= PLAYER_SPEED * GetFrameTime();
@@ -169,6 +177,9 @@ void zen_game_draw_game()
 	}
 	DrawRectangle((int)player.pos.x, (int)player.pos.y, 32, 32, player.color);
 	DrawText("pelly", (int)(player.pos.x - 8.0f), (int)(player.pos.y - 24.0f), 20, player.color);
+	float sinx = sinf(player.time * 8.0f) * 44.0f;
+	float siny = cosf(player.time * 8.0f) * 44.0f;
+	DrawCircle((int)sinx + 400, (int)siny + 400, 32, player.color);
 	if (player.pos.x >= 400)
 	{
 		player.color.r = 0;

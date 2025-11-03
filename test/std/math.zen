@@ -1,5 +1,10 @@
+namespace math;
+
 const float64 PI 	  = 3.141592653589793;
 const float64 TWO_PI  = 6.283185307179587;
 const float64 HALF_PI = 1.570796326794897;
 
 const float64 EPSILON = 0.00001;
+
+extern fun float sinf(float arg);
+extern fun float cosf(float arg);

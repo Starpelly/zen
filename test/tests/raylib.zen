@@ -25,6 +25,7 @@ extern fun void EndDrawing();
 
 extern fun void ClearBackground(Color color);
 extern fun void DrawRectangle(int x, int y, int w, int h, Color color);
+extern fun void DrawCircle(int x, int y, int r, Color color);
 
 extern fun void SetTargetFPS(int fps);
 

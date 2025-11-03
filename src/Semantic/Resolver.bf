@@ -53,6 +53,15 @@ class Resolver
 			}
 		}
 
+		if (let _if = stmt as AstNode.Stmt.If)
+		{
+			resolveStatementList(_if.ThenBranch.List, _if.ThenBranch.Scope);
+			if (_if.ElseBranch case .Ok(let _else))
+			{
+				resolveStatementList(_else.List, _else.Scope);
+			}
+		}
+
 		if (let fun = stmt as AstNode.Stmt.FunctionDeclaration)
 		{
 			if (fun.Kind == .Extern)
@@ -63,6 +72,11 @@ class Resolver
 
 		if (let _var = stmt as AstNode.Stmt.VariableDeclaration)
 		{
+			if (_var.Name.Lexeme == "sin")
+			{
+				var a = 0;
+			}
+
 			resolveVariable(_var, _scope);
 		}
 	}

@@ -21,6 +21,7 @@ class Generator
 		#include <stdio.h>
 		#include <stdlib.h>
 		#include <stdbool.h>
+		#include <math.h>
 
 		typedef char* string;
 
@@ -564,31 +565,39 @@ class Generator
 
 					// @TODO
 					// Support non-primitive types.
-					if (call.Arguments[0].GetKind() case .Literal(let lit))
+					let printArg = call.Arguments[0];
+					ZenType argType = ?;
+					if (printArg.GetKind() case .Literal(let lit))
 					{
-						let argType = lit.GetLiteralType();
-						if (argType.IsTypeInteger())
-						{
-							format.Set("%i");
-						}
-						else if (argType.IsTypeFloat())
-						{
-							format.Set("%f");
-						}
-						else if (argType.IsTypeBoolean())
-						{
-							format.Set("%s");
-							extra.Set(" ? \"true\" : \"false\"");
-						}
-						else if (argType.IsTypeString())
-						{
-							// No format
-							format.Set("%s");
-						}
-						else
-						{
-							Runtime.FatalError("Can't convert this type! :(");
-						}
+						argType = lit.GetLiteralType();
+					}
+					else if (printArg.GetKind() case .Variable(let _var))
+					{
+						let entity = _scope.LookupName(_var.Name.Lexeme).Value as Entity.Variable;
+						argType = entity.ResolvedType;
+					}
+					else
+					{
+						Runtime.FatalError("Can't convert this type! :(");
+					}
+
+					if (argType.IsTypeInteger())
+					{
+						format.Set("%i");
+					}
+					else if (argType.IsTypeFloat())
+					{
+						format.Set("%f");
+					}
+					else if (argType.IsTypeBoolean())
+					{
+						format.Set("%s");
+						extra.Set(" ? \"true\" : \"false\"");
+					}
+					else if (argType.IsTypeString())
+					{
+						// No format
+						format.Set("%s");
 					}
 					else
 					{
