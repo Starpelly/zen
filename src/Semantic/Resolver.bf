@@ -141,6 +141,10 @@ class Resolver
 					*/
 					return (res.Type, res.TypePtr);
 				}
+				else
+				{
+					return (.Invalid, null);
+				}
 			}
 			else if (type case .QualifiedNamed(let qualifiedName))
 			{
@@ -173,6 +177,8 @@ class Resolver
 					}
 				}
 				// checkExpr(qualifiedName, _scope);
+
+				return (.Invalid, null);
 			}
 			else if (type case .Basic)
 			{

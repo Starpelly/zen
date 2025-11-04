@@ -1,3 +1,5 @@
+#load "draw.zen";
+
 namespace game;
 
 struct Tile
@@ -9,7 +11,7 @@ const int MAP_WIDTH  = 12;
 const int MAP_HEIGHT = 6;
 
 // 12 * 6
-let Tile[MAP_WIDTH * MAP_HEIGHT] map_tiles;
+let Tile[72] map_tiles;
 
 fun void map_load()
 {
@@ -45,4 +47,7 @@ fun void map_draw()
 			}
 		}
 	}
+
+	let raylib::Color white; white.r = 255; white.g = 255; white.b = 255; white.a = 255;
+	draw_rect_lines(0.0, 0.0, cast(float)(MAP_WIDTH * CELL_WIDTH), cast(float)(MAP_HEIGHT * CELL_HEIGHT), white);
 }

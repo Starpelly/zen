@@ -346,6 +346,16 @@ class Tokenizer
 			while (isDigit(peek())) advance();
 		}
 
+		/*
+		bool isNegative = false;
+
+		if (m_tokens.Back.Kind == .Minus)
+		{
+			m_tokens.PopBack();
+			// m_tokens.Remove(m_tokens.Back);
+		}
+		*/
+
 		peekWhileIsDigit!();
 
 		var type = TokenKind.Number_Int;

@@ -41,9 +41,13 @@ extension Parser
 		while (match(.LeftBracket))
 		{
 			// let lbrack = previous();
-			AstNode.Expression.Literal count = null;
-			if (!check(.RightBracket))
-				count = getExprPrimary() as AstNode.Expression.Literal;
+
+			// @TODO
+			// For now, we'll expect an expression, until we have dynamic arrays at least.
+			AstNode.Expression count = null;
+			// if (!check(.RightBracket))
+				count = getExprAddition();
+
 			consume(.RightBracket, "Expected ']'");
 
 			baseType = new .(.Array(baseType, count));

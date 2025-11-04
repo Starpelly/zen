@@ -301,7 +301,27 @@ class Binder
 
 			// @HACK, we're assuming it can only be a literal
 			// This might always be true for static arrays, but dynamic arrays will need to support variables and stuff.
-			return .Array(&type.StoredType, countExpr.Value.Get<int>());
+
+			int getCount()
+			{
+				switch (countExpr.GetKind())
+				{
+				case .Literal(let lit):
+					return lit.Value.Get<int>();
+				case .Binary(let bin):
+					switch (bin.Op.Kind)
+					{
+					default:
+						reportError(bin.Op, "Unhandled binary operator.");
+						return -1;
+					}
+				default:
+					// reportError()
+					return -1;
+				}
+			}
+
+			return .Array(&type.StoredType, getCount());
 		}
 	}
 

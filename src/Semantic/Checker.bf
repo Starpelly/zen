@@ -350,7 +350,9 @@ class Checker
 				returnVal!(ZenType.Pointer(&rightType));
 			case .Star:
 				if (!rightType.IsTypePointer())
+				{
 					reportError(op, "Cannot de-reference a non-pointer type");
+				}
 				returnVal!(rightType);
 			case .Bang:
 				if (!rightType.IsTypeBoolean())
@@ -359,9 +361,15 @@ class Checker
 				}
 				// Actually reversing it is the compiler and/or interpreter's job.
 				returnVal!(rightType);
+			case .Minus:
+				if (!rightType.IsTypeNumeric())
+				{
+					reportError(op, "Expression doesn't evaluate to a numeric value");
+				}
+				returnVal!(rightType);
 
 			default:
-				Runtime.Assert(true);
+				Runtime.Assert(false);
 			}
 
 		case .Grouping(let group):

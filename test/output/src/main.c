@@ -125,6 +125,7 @@ typedef enum {
 void zen_main();
 #define GAME_WIDTH 320
 #define GAME_HEIGHT 180
+#define GAME_ZOOM 4
 #define CELL_WIDTH 16
 #define CELL_HEIGHT 16
 void zen_game_start_game();
@@ -141,6 +142,9 @@ void zen_game_crate_draw(zen_game_Crate* crate);
 #define MAP_HEIGHT 6
 void zen_game_map_load();
 void zen_game_map_draw();
+void zen_game_draw_line(float x1, float y1, float x2, float y2, Color color);
+void zen_game_draw_rect(float x, float y, float w, float h, Color color);
+void zen_game_draw_rect_lines(float x, float y, float w, float h, Color color);
 #define PI 3.14159265358979323846f
 #define HALF_PI 1.57079632679489661923f
 #define EPSILON 0.00001f
@@ -178,10 +182,14 @@ void zen_game_start_game()
 	black.g = 0;
 	black.b = 0;
 	black.a = 255;
-	InitWindow(GAME_WIDTH * 4, GAME_HEIGHT * 4, "Zen");
+	InitWindow(GAME_WIDTH * GAME_ZOOM, GAME_HEIGHT * GAME_ZOOM, "Zen");
 	SetTargetFPS(185);
 	zen_game_GameManager gameManager = {};
 	zen_game_Player player = {};
+	Camera2D cam = {};
+	cam.target.x = -(float)(58);
+	cam.target.y = -(float)(32);
+	cam.zoom = (float)GAME_ZOOM;
 	gameManager.player = &player;
 	zen_game_player_init(gameManager.player);
 	zen_game_map_load();
@@ -190,8 +198,9 @@ void zen_game_start_game()
 		zen_game_game_update(&gameManager);
 		BeginDrawing();
 		ClearBackground(black);
-		zen_game_map_draw();
+		BeginMode2D(cam);
 		zen_game_game_draw(&gameManager);
+		EndMode2D();
 		DrawFPS(20, 20);
 		EndDrawing();
 	}
@@ -206,11 +215,8 @@ void zen_game_game_update(zen_game_GameManager* gameManager)
 }
 void zen_game_game_draw(zen_game_GameManager* gameManager)
 {
+	zen_game_map_draw();
 	zen_game_player_draw(gameManager->player);
-	float sinx = sinf(game_time * 8.0f) * 44.0f;
-	float siny = cosf(game_time * 8.0f) * 44.0f;
-	DrawCircle((int)sinx + 400, (int)siny + 400, 32, gameManager->player->color);
-	printf("%f\n", sinx);
 }
 void zen_game_entity_update(zen_game_Entity* e)
 {
@@ -301,6 +307,27 @@ void zen_game_map_draw()
 			}
 		}
 	}
+	Color white = {};
+	white.r = 255;
+	white.g = 255;
+	white.b = 255;
+	white.a = 255;
+	zen_game_draw_rect_lines(0.0f, 0.0f, (float)(MAP_WIDTH * CELL_WIDTH), (float)(MAP_HEIGHT * CELL_HEIGHT), white);
+}
+void zen_game_draw_line(float x1, float y1, float x2, float y2, Color color)
+{
+	DrawLine((int)x1, (int)y1, (int)x2, (int)y2, color);
+}
+void zen_game_draw_rect(float x, float y, float w, float h, Color color)
+{
+	DrawRectangle((int)x, (int)y, (int)w, (int)h, color);
+}
+void zen_game_draw_rect_lines(float x, float y, float w, float h, Color color)
+{
+	DrawLine((int)x, (int)y, (int)w, (int)y, color);
+	DrawLine((int)x, (int)h, (int)w, (int)h, color);
+	DrawLine((int)x, (int)y, (int)x, (int)h, color);
+	DrawLine((int)w, (int)y, (int)w, (int)h, color);
 }
 
 void main()

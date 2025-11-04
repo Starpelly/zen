@@ -14,6 +14,14 @@ extern struct Color
 	uint8 a;
 }
 
+extern struct Camera2D
+{
+	Vector2 offset;
+	Vector2 target;
+	float rotation;
+	float zoom;
+}
+
 extern fun void InitWindow(int width, int height, string title);
 extern fun void CloseWindow();
 extern fun bool WindowShouldClose();
@@ -22,6 +30,9 @@ extern fun float GetFrameTime();
 
 extern fun void BeginDrawing();
 extern fun void EndDrawing();
+
+extern fun void BeginMode2D(Camera2D cam);
+extern fun void EndMode2D();
 
 extern fun void ClearBackground(Color color);
 extern fun void DrawRectangle(int x, int y, int w, int h, Color color);

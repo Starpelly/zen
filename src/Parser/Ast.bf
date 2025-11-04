@@ -421,7 +421,6 @@ abstract class AstNode
 			public ZenType GetLiteralType()
 			{
 				BasicKind kind = .Invalid;
-				Token basic_lit = Token;
 
 				Runtime.Assert(HasValue);
 
@@ -434,7 +433,7 @@ abstract class AstNode
 				case typeof(String), typeof(StringView):
 					kind = .UntypedString; break;
 				default:
-					let a  = 0;
+					Runtime.Assert(true, "Unhandled type!");
 				}
 
 				/*
@@ -568,7 +567,7 @@ abstract class AstNode
 				case Simple(Token name);
 				case Qualified(QualifiedName name);
 				case Pointer(NamedType innerType);
-				case Array(NamedType innerType, Literal countExpr);
+				case Array(NamedType innerType, Expression countExpr);
 			}
 
 			public readonly Kind Kind;

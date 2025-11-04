@@ -1,8 +1,21 @@
-#load "../tests/raylib.zen";
+#load "../extern/raylib.zen";
 
 namespace game;
+
+fun void draw_line(float x1, float y1, float x2, float y2, raylib::Color color)
+{
+    raylib::DrawLine(cast(int)x1, cast(int)y1, cast(int)x2, cast(int)y2, color);
+}
 
 fun void draw_rect(float x, float y, float w, float h, raylib::Color color)
 {
     raylib::DrawRectangle(cast(int)x, cast(int)y, cast(int)w, cast(int)h, color);
+}
+
+fun void draw_rect_lines(float x, float y, float w, float h, raylib::Color color)
+{
+    raylib::DrawLine(cast(int)x, cast(int)y, cast(int)w, cast(int)y, color); // top
+    raylib::DrawLine(cast(int)x, cast(int)h, cast(int)w, cast(int)h, color); // bottom
+    raylib::DrawLine(cast(int)x, cast(int)y, cast(int)x, cast(int)h, color); // left
+    raylib::DrawLine(cast(int)w, cast(int)y, cast(int)w, cast(int)h, color); // right
 }

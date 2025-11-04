@@ -3,7 +3,7 @@
 #load "crate.zen";
 #load "map.zen";
 
-#load "../tests/raylib.zen";
+#load "../extern/raylib.zen";
 #load "../std/math.zen";
 #load "../std/memory.zen";
 
@@ -16,6 +16,8 @@ namespace game;
 
 const int32 GAME_WIDTH  = 320;
 const int32 GAME_HEIGHT = 180;
+
+const int32 GAME_ZOOM = 4;
 
 const int32 CELL_WIDTH = 16;
 const int32 CELL_HEIGHT = 16;
@@ -34,11 +36,16 @@ fun void start_game()
     let raylib::Color black;
 	black.r = 0; black.g = 0; black.b = 0; black.a = 255;
 
-    raylib::InitWindow(GAME_WIDTH * 4, GAME_HEIGHT * 4, "Zen");
+    raylib::InitWindow(GAME_WIDTH * GAME_ZOOM, GAME_HEIGHT * GAME_ZOOM, "Zen");
 	raylib::SetTargetFPS(185);
 
 	let GameManager gameManager;
 	let Player player;
+
+	let raylib::Camera2D cam;
+	cam.target.x = -cast(float)(58);
+	cam.target.y = -cast(float)(32);
+	cam.zoom = cast(float)GAME_ZOOM;
 
 	gameManager.player = &player;
 	player_init(gameManager.player);
@@ -52,8 +59,9 @@ fun void start_game()
 		raylib::BeginDrawing();
 		raylib::ClearBackground(black);
 
-		map_draw();
+		raylib::BeginMode2D(cam);
 		game_draw(&gameManager);
+		raylib::EndMode2D();
 
 		raylib::DrawFPS(20, 20);
 
@@ -73,11 +81,6 @@ fun void game_update(GameManager* gameManager)
 
 fun void game_draw(GameManager* gameManager)
 {
+	map_draw();
 	player_draw(gameManager.player);
-
-	let float sinx = math::sinf(game_time * 8.0) * 44.0;
-	let float siny = math::cosf(game_time * 8.0) * 44.0;
-	raylib::DrawCircle(cast(int)sinx + 400, cast(int)siny + 400, 32, gameManager.player.color);
-
-	println(sinx);
 }
