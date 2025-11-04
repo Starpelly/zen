@@ -1,0 +1,7 @@
+FileVersion = 1
+Dependencies = {corlib = "*", zen = "*"}
+
+[Project]
+Name = "zen.tests"
+TargetType = "BeefTest"
+StartupObject = "zen.tests.Program"

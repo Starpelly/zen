@@ -9,6 +9,7 @@ typedef enum {
 typedef struct zen_game_Entity zen_game_Entity;
 typedef struct zen_game_Player zen_game_Player;
 typedef struct zen_game_Crate zen_game_Crate;
+typedef struct zen_game_Tile zen_game_Tile;
 typedef enum {
 	zen_raylib_KeyboardKey_NULL = 0,
 	zen_raylib_KeyboardKey_APOSTROPHE = 39,
@@ -124,8 +125,8 @@ typedef enum {
 void zen_main();
 #define GAME_WIDTH 320
 #define GAME_HEIGHT 180
-#define CELL_WIDTH 32
-#define CELL_HEIGHT 32
+#define CELL_WIDTH 16
+#define CELL_HEIGHT 16
 void zen_game_start_game();
 void zen_game_game_update(zen_game_GameManager* gameManager);
 void zen_game_game_draw(zen_game_GameManager* gameManager);
@@ -136,6 +137,10 @@ void zen_game_player_update(zen_game_Player* player);
 void zen_game_player_draw(zen_game_Player* player);
 void zen_game_crate_init(zen_game_Crate* crate);
 void zen_game_crate_draw(zen_game_Crate* crate);
+#define MAP_WIDTH 12
+#define MAP_HEIGHT 6
+void zen_game_map_load();
+void zen_game_map_draw();
 #define PI 3.14159265358979323846f
 #define HALF_PI 1.57079632679489661923f
 #define EPSILON 0.00001f
@@ -155,6 +160,9 @@ struct zen_game_Player {
 };
 struct zen_game_Crate {
 	zen_game_Entity entity;
+};
+struct zen_game_Tile {
+	bool active;
 };
 void zen_main()
 {
@@ -176,14 +184,13 @@ void zen_game_start_game()
 	zen_game_Player player = {};
 	gameManager.player = &player;
 	zen_game_player_init(gameManager.player);
-	int width = 32;
-	int height = 32;
-	bool tiles[128];
+	zen_game_map_load();
 	while (!WindowShouldClose())
 	{
 		zen_game_game_update(&gameManager);
 		BeginDrawing();
 		ClearBackground(black);
+		zen_game_map_draw();
 		zen_game_game_draw(&gameManager);
 		DrawFPS(20, 20);
 		EndDrawing();
@@ -249,7 +256,7 @@ void zen_game_player_update(zen_game_Player* player)
 }
 void zen_game_player_draw(zen_game_Player* player)
 {
-	DrawRectangle((int)(player->entity.visualX * (float)CELL_WIDTH), (int)(player->entity.visualY * (float)CELL_HEIGHT), 32, 32, player->color);
+	DrawRectangle((int)(player->entity.visualX * (float)CELL_WIDTH), (int)(player->entity.visualY * (float)CELL_HEIGHT), CELL_WIDTH, CELL_WIDTH, player->color);
 }
 void zen_game_crate_init(zen_game_Crate* crate)
 {
@@ -262,6 +269,38 @@ void zen_game_crate_draw(zen_game_Crate* crate)
 	color.b = 255;
 	color.a = 255;
 	DrawRectangle((int)(crate->entity.visualX * (float)CELL_WIDTH), (int)(crate->entity.visualY * (float)CELL_HEIGHT), 32, 32, color);
+}
+zen_game_Tile map_tiles[72];
+void zen_game_map_load()
+{
+	for (int i = 0; i < MAP_WIDTH * MAP_HEIGHT; i += 1)
+	{
+		map_tiles[i].active = false;
+	}
+	for (int i = 0; i < 2; i += 1)
+	{
+		map_tiles[i].active = true;
+	}
+}
+void zen_game_map_draw()
+{
+	for (int y = 0; y < MAP_WIDTH; y += 1)
+	{
+		for (int x = 0; x < MAP_HEIGHT; x += 1)
+		{
+			zen_game_Tile tile = map_tiles[y * MAP_HEIGHT + x];
+			Color tileColor = {};
+			tileColor.a = 255;
+			if (tile.active == true)
+			{
+				tileColor.r = 255;
+			}
+			if (tile.active == true)
+			{
+				DrawRectangle(x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT, tileColor);
+			}
+		}
+	}
 }
 
 void main()

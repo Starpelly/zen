@@ -50,7 +50,7 @@ fun void player_update(Player* player)
 
 fun void player_draw(Player* player)
 {
-	raylib::DrawRectangle(cast(int)(player.entity.visualX * cast(float)CELL_WIDTH), cast(int)(player.entity.visualY * cast(float)CELL_HEIGHT), 32, 32, player.color);
+	raylib::DrawRectangle(cast(int)(player.entity.visualX * cast(float)CELL_WIDTH), cast(int)(player.entity.visualY * cast(float)CELL_HEIGHT), CELL_WIDTH, CELL_WIDTH, player.color);
 
 	// raylib::DrawText("pelly", player.entity.x - 8, player.entity.y - 24, 20, player.color);
 	// raylib::DrawLine(cast(int)player.pos.x, cast(int)player.pos.y, raylib::GetMouseX(), raylib::GetMouseY(), player.color);

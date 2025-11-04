@@ -35,35 +35,47 @@ class Resolver
 
 	private void resolveStatement(AstNode.Stmt stmt, Scope _scope)
 	{
-		if (let block = stmt as AstNode.Stmt.Block)
+		switch (stmt.GetKind())
 		{
+		case .Block(let block):
 			resolveStatementList(block.List, block.Scope ?? _scope);
-		}
-
-		if (let ns = stmt as AstNode.Stmt.NamespaceDeclaration)
-		{
+			return;
+		case .NamespaceDecl(let ns):
 			resolveStatementList(ns.Ast, ns.Scope);
-		}
-
-		if (let _struct = stmt as AstNode.Stmt.StructDeclaration)
-		{
+			return;
+		case .StructDecl(let _struct):
 			for (let field in _struct.Fields)
 			{
 				resolveStatement(field, _struct.Scope);
 			}
-		}
-
-		if (let _if = stmt as AstNode.Stmt.If)
-		{
+			return;
+		case .EnumDecl(let _enum):
+			for (let value in _enum.Values)
+			{
+				resolveStatement(value, _enum.Scope);
+			}
+			return;
+		case .EnumField(let field):
+			Console.ForegroundColor = .Yellow;
+			Console.WriteLine("please type check me!");
+			Console.ResetColor();
+			return;
+			
+		case .If(let _if):
 			resolveStatementList(_if.ThenBranch.List, _if.ThenBranch.Scope);
 			if (_if.ElseBranch case .Ok(let _else))
 			{
 				resolveStatementList(_else.List, _else.Scope);
 			}
-		}
-
-		if (let fun = stmt as AstNode.Stmt.FunctionDeclaration)
-		{
+			return;
+		case .While(let _while):
+			resolveStatement(_while.Body, _while.Scope);
+			return;
+		case .For(let _for):
+			resolveStatement(_for.Initialization, _for.Scope);
+			resolveStatement(_for.Body, _for.Scope);
+			return;
+		case .FunctionDecl(let fun):
 			if (fun.Kind == .Extern)
 				return;
 
@@ -72,11 +84,24 @@ class Resolver
 				resolveStatement(param, fun.Scope);
 			}
 			resolveStatementList(fun.Body.List, fun.Scope);
-		}
-
-		if (let _var = stmt as AstNode.Stmt.VariableDeclaration)
-		{
+			return;
+		case .VarDecl(let _var):
 			resolveVariable(_var, _scope);
+			return;
+		case .ConstDecl(let _const):
+			Console.ForegroundColor = .Yellow;
+			Console.WriteLine("please type check me!");
+			Console.ResetColor();
+			return;
+
+		case .BasicDirective,
+			 .Expression,
+			 .EOF
+			 :
+			return;
+
+		default:
+			Runtime.FatalError("You didn't handle a statement case!");
 		}
 	}
 

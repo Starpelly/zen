@@ -77,7 +77,7 @@ class Checker
 			if (_var.Initializer != null)
 			{
 				let initType = checkExpr(_var.Initializer, _scope);
-				checkTypesComparable(_var.Operator.Value, entity.Type, initType);
+				checkTypesComparable(_var.Operator.Value, entity.ResolvedType, initType);
 			}
 		}
 

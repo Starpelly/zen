@@ -104,6 +104,10 @@ class Binder
 			if (m_currentScope.LookupName<Entity.Namespace>(namespc.Name.Lexeme) case .Ok(let res))
 			{
 				enterExistingScope(res.Decl.Scope);
+
+				// Remember to set the namespace's scope so we don't crash later lol
+				namespc.Scope = res.Decl.Scope;
+
 				m_namespaceStackFileScope.Add(.()
 					{
 						Node = namespc,

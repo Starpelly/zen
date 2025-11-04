@@ -1,5 +1,5 @@
 FileVersion = 1
-Projects = {zen = {Path = "."}, libtcc = {Path = "vendor/libtcc"}, raylib-beef = {Path = "vendor/raylib-beef/raylib-beef"}}
+Projects = {zen = {Path = "."}, libtcc = {Path = "vendor/libtcc"}, raylib-beef = {Path = "vendor/raylib-beef/raylib-beef"}, "zen.tests" = {Path = "zen.tests"}}
 
 [Workspace]
 StartupProject = "zen"

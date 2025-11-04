@@ -1,6 +1,7 @@
 #load "entity.zen";
 #load "player.zen";
 #load "crate.zen";
+#load "map.zen";
 
 #load "../tests/raylib.zen";
 #load "../std/math.zen";
@@ -16,8 +17,8 @@ namespace game;
 const int32 GAME_WIDTH  = 320;
 const int32 GAME_HEIGHT = 180;
 
-const int32 CELL_WIDTH = 32;
-const int32 CELL_HEIGHT = 32;
+const int32 CELL_WIDTH = 16;
+const int32 CELL_HEIGHT = 16;
 
 let float delta_time = 0.0;
 let float game_time = 0.0;
@@ -42,10 +43,7 @@ fun void start_game()
 	gameManager.player = &player;
 	player_init(gameManager.player);
 
-	let int width = 32;
-	let int height = 32;
-
-	let bool[128] tiles;
+	map_load();
 
 	while (!raylib::WindowShouldClose())
 	{
@@ -53,7 +51,8 @@ fun void start_game()
 
 		raylib::BeginDrawing();
 		raylib::ClearBackground(black);
-		
+
+		map_draw();
 		game_draw(&gameManager);
 
 		raylib::DrawFPS(20, 20);

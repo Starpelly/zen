@@ -5,10 +5,44 @@ struct Tile
 	bool active;
 }
 
-const int MAP_WIDTH  = 32;
-const int MAP_HEIGHT = 32;
+const int MAP_WIDTH  = 12;
+const int MAP_HEIGHT = 6;
 
-fun void load_map()
+// 12 * 6
+let Tile[72] map_tiles;
+
+fun void map_load()
 {
-    
+    // @TODO arrays should be initialized to their default values by default.
+	for (let int i = 0; i < MAP_WIDTH * MAP_HEIGHT; i += 1)
+	{
+		map_tiles[i].active = false;
+	}
+
+	for (let int i = 0; i < 2; i += 1)
+	{
+		map_tiles[i].active = true;
+	}
+}
+
+fun void map_draw()
+{
+	for (let int y = 0; y < MAP_WIDTH; y += 1)
+	{
+		for (let int x = 0; x < MAP_HEIGHT; x += 1)
+		{
+			let Tile tile = map_tiles[y * MAP_HEIGHT + x];
+
+			var raylib::Color tileColor; tileColor.a = 255;
+			if (tile.active == true)
+			{
+				tileColor.r = 255;
+			}
+
+			if (tile.active == true)
+			{
+				raylib::DrawRectangle(x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT, tileColor);
+			}
+		}
+	}
 }

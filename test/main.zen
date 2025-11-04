@@ -1,3 +1,4 @@
 #load "game/game.zen";
 // #load "tests/arrays.zen";
 // #load "tests/pointers.zen";
+// #load "tests/checker/loop_basic.zen";
