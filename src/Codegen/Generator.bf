@@ -481,6 +481,20 @@ class Generator
 
 			outStr.Append(_struct.Name.Lexeme);
 			break;
+		case .Enum(let _enum):
+			bool writeNamespace = true;
+			if (writeNamespace )
+			{
+				// outStr.Append("zen_");
+				if (_enum.Scope.NamespaceParent case .Ok(let ns))
+				{
+					buildNamespaceString(ns, outStr);
+					outStr.Append('_');
+				}
+			}
+
+			outStr.Append(_enum.Name.Lexeme);
+			break;
 		case .Pointer(let elem):
 			writeResolvedType(*elem, outStr);
 
@@ -510,6 +524,18 @@ class Generator
 			break;
 
 		case .Call(let call):
+			// @TODO
+			// I don't like that this is here...
+			// But it might be okay... for now...
+			Result<BuiltinFunction> builtinFunc = .Err;
+			for (let builtin in BuiltinFunctions)
+			{
+				if (builtin.Name == call.Callee.Name.Lexeme)
+				{
+					builtinFunc = .Ok(builtin);
+				}
+			}
+
 			let arguments = scope StringCodeBuilder();
 			for (let arg in call.Arguments)
 			{
@@ -526,21 +552,17 @@ class Generator
 					}
 				}
 				*/
+				if (builtinFunc case .Ok(let name))
+				{
+					if (name.Name == "sizeof")
+					{
+						let a = 0;
+					}
+				}
+
 				emitExpr(arg, arguments, _scope);
 				if (arg != call.Arguments.Back)
 					arguments.Append(", ");
-			}
-
-			// @TODO
-			// I don't like that this is here...
-			// But it might be okay... for now...
-			Result<BuiltinFunction> builtinFunc = .Err;
-			for (let builtin in BuiltinFunctions)
-			{
-				if (builtin.Name == call.Callee.Name.Lexeme)
-				{
-					builtinFunc = .Ok(builtin);
-				}
 			}
 
 			if (builtinFunc != .Err)
@@ -610,6 +632,13 @@ class Generator
 					}
 					code.Append(")");
 					break;
+				case "sizeof":
+					code.Append("sizeof(");
+					code.Append(arguments.Code);
+					code.Append(")");
+					break;
+				default:
+					Runtime.FatalError(scope $"Unhandled builtin: {builtinName}");
 				}
 			}
 			else
@@ -646,7 +675,7 @@ class Generator
 			break;
 
 		case .Literal(let literal):
-			code.Append(literal.Token.Lexeme);
+			code.Append(literal.ValueString);
 			if (literal.GetLiteralType().IsTypeFloat())
 			{
 				// C appends the "f" at the end of floats...

@@ -91,9 +91,6 @@ public enum TokenKind
 	[RegisterKeyword("defer")]
 	case Defer;
 
-	[RegisterKeyword("type")]
-	case Type;
-
 	[RegisterKeyword("cast")]
 	case Cast;
 

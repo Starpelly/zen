@@ -1,0 +1,20 @@
+#load "entity.zen";
+
+namespace game;
+
+struct Crate
+{
+    Entity entity;
+}
+
+fun void crate_init(Crate* crate)
+{
+    // crate.entity.type = EntityType::Crate;
+}
+
+fun void crate_draw(Crate* crate)
+{
+    let raylib::Color color;
+    color.r = 0; color.g = 0; color.b = 255; color.a = 255;
+    raylib::DrawRectangle(cast(int)(crate.entity.visualX * cast(float)CELL_WIDTH), cast(int)(crate.entity.visualY * cast(float)CELL_HEIGHT), 32, 32, color);
+}

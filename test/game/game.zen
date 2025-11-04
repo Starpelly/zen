@@ -1,14 +1,26 @@
+#load "entity.zen";
+#load "player.zen";
+#load "crate.zen";
+
 #load "../tests/raylib.zen";
 #load "../std/math.zen";
-#load "player.zen";
+#load "../std/memory.zen";
 
 namespace game;
+
+const int32 GAME_WIDTH  = 320;
+const int32 GAME_HEIGHT = 180;
+
+const int32 CELL_WIDTH = 32;
+const int32 CELL_HEIGHT = 32;
+
+let float delta_time = 0.0;
+let float game_time = 0.0;
+let uint64 game_frame = 0;
 
 struct GameManager
 {
 	Player* player;
-	int frame;
-	float time;
 }
 
 fun void start_game()
@@ -16,23 +28,26 @@ fun void start_game()
     let raylib::Color black;
 	black.r = 0; black.g = 0; black.b = 0; black.a = 255;
 
-    raylib::InitWindow(1280, 720, "Zen");
-	raylib::SetTargetFPS(60);
+    raylib::InitWindow(GAME_WIDTH * 4, GAME_HEIGHT * 4, "Zen");
+	raylib::SetTargetFPS(185);
 
 	let GameManager gameManager;
 	let Player player;
 
 	gameManager.player = &player;
-	init_player(gameManager.player);
+	player_init(gameManager.player);
+
+	let int width = 32;
+	let int height = 32;
 
 	while (!raylib::WindowShouldClose())
 	{
-		update_game(&gameManager);
+		game_update(&gameManager);
 
 		raylib::BeginDrawing();
 		raylib::ClearBackground(black);
 		
-		draw_game(&gameManager);
+		game_draw(&gameManager);
 
 		raylib::DrawFPS(20, 20);
 
@@ -41,20 +56,21 @@ fun void start_game()
 	raylib::CloseWindow();
 }
 
-fun void update_game(GameManager* gameManager)
+fun void game_update(GameManager* gameManager)
 {
-	gameManager.frame += 1;
-	gameManager.time += raylib::GetFrameTime();
+	delta_time = raylib::GetFrameTime();
+	game_time += delta_time;
+	game_frame += 1;
 
-	update_player(gameManager.player);
+	player_update(gameManager.player);
 }
 
-fun void draw_game(GameManager* gameManager)
+fun void game_draw(GameManager* gameManager)
 {
-	draw_player(gameManager.player);
+	player_draw(gameManager.player);
 
-	let float sinx = math::sinf(gameManager.time * 8.0) * 44.0;
-	let float siny = math::cosf(gameManager.time * 8.0) * 44.0;
+	let float sinx = math::sinf(game_time * 8.0) * 44.0;
+	let float siny = math::cosf(game_time * 8.0) * 44.0;
 	raylib::DrawCircle(cast(int)sinx + 400, cast(int)siny + 400, 32, gameManager.player.color);
 
 	println(sinx);

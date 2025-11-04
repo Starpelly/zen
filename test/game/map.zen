@@ -1,0 +1,14 @@
+namespace game;
+
+struct Tile
+{
+	bool active;
+}
+
+const int MAP_WIDTH  = 32;
+const int MAP_HEIGHT = 32;
+
+fun void load_map()
+{
+    
+}

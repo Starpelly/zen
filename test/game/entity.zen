@@ -1,0 +1,29 @@
+namespace game;
+
+enum EntityType
+{
+    None,
+    Player,
+    Crate
+}
+
+struct Entity
+{
+    EntityType type;
+    int x;
+    int y;
+    float visualX;
+    float visualY;
+}
+
+fun void entity_update(Entity* e)
+{
+    let float targetX = cast(float)e.x;
+    let float targetY = cast(float)e.y;
+
+    let float dx = targetX - e.visualX;
+    let float dy = targetY - e.visualY;
+
+    e.visualX += dx * 30.0 * delta_time;
+    e.visualY += dy * 30.0 * delta_time;
+}

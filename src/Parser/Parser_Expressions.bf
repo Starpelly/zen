@@ -223,9 +223,9 @@ extension Parser
 			return returnExpr;
 		}
 
-		mixin returnLiteral(Token prevToken, Variant? value)
+		mixin returnLiteral(Token prevToken, Variant? value, StringView valueStr)
 		{
-			returnValue!(new Expression.Literal(prevToken, value));
+			returnValue!(new Expression.Literal(prevToken, value, valueStr));
 		}
 
 		if (match(.Number_Int, .Number_Float, .String))
@@ -246,7 +246,7 @@ extension Parser
 				Runtime.FatalError("Variant token case not handled.");
 			}
 
-			returnLiteral!(previous(), value);
+			returnLiteral!(previous(), value, previous().Lexeme);
 		}
 
 		if (match(.This))

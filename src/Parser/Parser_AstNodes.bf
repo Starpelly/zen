@@ -173,7 +173,7 @@ extension Parser
 			}
 			else
 			{
-				value = new AstNode.Expression.Literal(valueName, Variant.Create<int>(valueIndex));
+				value = new AstNode.Expression.Literal(valueName, Variant.Create<int>(valueIndex), valueIndex.ToString(.. scope .()));
 			}
 
 			values.Add(new .(valueName, value));

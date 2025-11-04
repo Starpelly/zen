@@ -26,6 +26,7 @@ extern fun void EndDrawing();
 extern fun void ClearBackground(Color color);
 extern fun void DrawRectangle(int x, int y, int w, int h, Color color);
 extern fun void DrawCircle(int x, int y, int r, Color color);
+extern fun void DrawLine(int ax, int ay, int bx, int by, Color color);
 
 extern fun void SetTargetFPS(int fps);
 
@@ -33,6 +34,7 @@ extern fun int GetMouseX();
 extern fun int GetMouseY();
 
 extern fun bool IsKeyDown(int key);
+extern fun bool IsKeyPressed(int key);
 
 extern fun void DrawFPS(int x, int y);
 extern fun void DrawText(string text, int x, int y, int fontSize, Color color);

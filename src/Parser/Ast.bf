@@ -407,10 +407,14 @@ abstract class AstNode
 			public readonly Variant Value => Variant.Value;
 			public readonly bool HasValue => Variant.HasValue;
 
-			public this(Token token, Variant? value)
+			/// Used in the code generator, so it's on the creator to say what this is, so we don't need a big switch statement or whatever.
+			public readonly String ValueString = new .() ~ delete _;
+
+			public this(Token token, Variant? value, StringView valueStr)
 			{
 				this.Token = token;
 				this.Variant = value;
+				this.ValueString.Append(valueStr);
 			}
 
 			public ZenType GetLiteralType()
@@ -418,6 +422,21 @@ abstract class AstNode
 				BasicKind kind = .Invalid;
 				Token basic_lit = Token;
 
+				Runtime.Assert(HasValue);
+
+				switch (Value.VariantType)
+				{
+				case typeof(int):
+					kind = .UntypedInteger; break;
+				case typeof(float):
+					kind = .UntypedFloat; break;
+				case typeof(String), typeof(StringView):
+					kind = .UntypedString; break;
+				default:
+					let a  = 0;
+				}
+
+				/*
 				switch (basic_lit.Kind)
 				{
 				case .Number_Int:
@@ -429,6 +448,7 @@ abstract class AstNode
 				default:
 					Runtime.FatalError("Unknown literal!");
 				}
+				*/
 
 				return .Basic(BasicType.FromKind(kind));
 			}

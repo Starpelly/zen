@@ -37,7 +37,7 @@ class Binder
 		for (let fun in BuiltinFunctions)
 		{
 			let token = Token(.Identifier, "", 0, 0, .Empty);
-			let entity = new Entity.Builtin(fun.Name, token, .Invalid);
+			let entity = new Entity.Builtin(fun.Name, token, fun.TempType);
 			m_globalScope.DeclareWithName(entity, fun.Name);
 		}
 	}

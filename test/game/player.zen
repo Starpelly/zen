@@ -1,51 +1,57 @@
+#load "entity.zen";
+
 namespace game;
 
 struct Player
 {
-	raylib::Vector2 pos;
+	Entity entity;
 	raylib::Color color;
 }
 
 const float PLAYER_SPEED = 500.0;
 
-fun void init_player(Player* player)
+fun void player_init(Player* player)
 {
+	// player.entity.type = EntityType::Player;
 	player.color.r = 255; player.color.g = 255; player.color.b = 0; player.color.a = 255;
 }
 
-fun void update_player(Player* player)
+fun void player_update(Player* player)
 {
-	if (raylib::IsKeyDown(raylib::KeyboardKey::LEFT))
+	entity_update(&player.entity);
+
+	var int dx = 0;
+	var int dy = 0;
+
+	if (raylib::IsKeyPressed(raylib::KeyboardKey::LEFT))
 	{
-		player.pos.x -= PLAYER_SPEED * raylib::GetFrameTime();
+		dx -= 1;
 	}
-	if (raylib::IsKeyDown(raylib::KeyboardKey::RIGHT))
+	if (raylib::IsKeyPressed(raylib::KeyboardKey::RIGHT))
 	{
-		player.pos.x += PLAYER_SPEED * raylib::GetFrameTime();
+		dx += 1;
 	}
-	if (raylib::IsKeyDown(raylib::KeyboardKey::UP))
+	if (raylib::IsKeyPressed(raylib::KeyboardKey::UP))
 	{
-		player.pos.y -= PLAYER_SPEED * raylib::GetFrameTime();
+		dy -= 1;
 	}
-	if (raylib::IsKeyDown(raylib::KeyboardKey::DOWN))
+	if (raylib::IsKeyPressed(raylib::KeyboardKey::DOWN))
 	{
-		player.pos.y += PLAYER_SPEED * raylib::GetFrameTime();
+		dy += 1;
 	}
-    
-    if (player.pos.x >= 400)
-	{
-		player.color.r = 0;
-	}
-	else
-	{
-		player.color.r = 255;
-	}
+
+	var int nx = player.entity.x + dx;
+	var int ny = player.entity.y + dy;
+
+	player.entity.x = nx;
+	player.entity.y = ny;
 }
 
-fun void draw_player(Player* player)
+fun void player_draw(Player* player)
 {
-	raylib::DrawRectangle(cast(int)player.pos.x, cast(int)player.pos.y, 32, 32, player.color);
-	raylib::DrawText("pelly", cast(int)(player.pos.x - 8.0), cast(int)(player.pos.y - 24.0), 20, player.color);
+	raylib::DrawRectangle(cast(int)(player.entity.visualX * cast(float)CELL_WIDTH), cast(int)(player.entity.visualY * cast(float)CELL_HEIGHT), 32, 32, player.color);
 
-	raylib::DrawCircle(raylib::GetMouseX(), raylib::GetMouseY(), 16, player.color);
+	// raylib::DrawText("pelly", player.entity.x - 8, player.entity.y - 24, 20, player.color);
+	// raylib::DrawLine(cast(int)player.pos.x, cast(int)player.pos.y, raylib::GetMouseX(), raylib::GetMouseY(), player.color);
+	//raylib::DrawCircle(raylib::GetMouseX(), raylib::GetMouseY(), 16, player.color);
 }
