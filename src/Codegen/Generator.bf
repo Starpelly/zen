@@ -378,6 +378,12 @@ class Generator
 
 			// emitExpr(v.Type, code, _scope);
 			code.Append(scope $" {v.Name.Lexeme}");
+
+			if (entity.ResolvedType case .Array(let element, let count))
+			{
+				code.Append(scope $"[{count}]");
+			}
+
 			if (v.Initializer != null)
 			{
 				code.Append(scope $" = ");
@@ -503,6 +509,11 @@ class Generator
 			// In Zen they're on the type....
 			// I'll have to look into this
 			outStr.Append('*');
+			break;
+		case .Array(let element, let count):
+			// Arrays are next to the name and not the type.
+			// So we can just ignore this.
+			writeResolvedType(*element, outStr);
 			break;
 		default:
 			Runtime.Assert(false);
@@ -782,14 +793,25 @@ class Generator
 			case .Qualified(let qualified):
 				emitExpr(qualified, code, _scope);
 				break;
+			case .Array(let inner, let countExpr):
+				break;
+			case .Pointer(let inner):
+				break;
 			}
 			break;
 
 		case .Cast(let cast):
-			code.Append("(");
+			code.Append('(');
 			emitExpr(cast.TargetType, code, _scope);
-			code.Append(")");
+			code.Append(')');
 			emitExpr(cast.Value, code, _scope);
+			break;
+
+		case .Index(let index):
+			emitExpr(index.Array, code, _scope);
+			code.Append('[');
+			emitExpr(index.Index, code, _scope);
+			code.Append(']');
 			break;
 		}
 	}

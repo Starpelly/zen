@@ -153,6 +153,7 @@ public enum ZenType
 	case Enum(AstNode.Stmt.EnumDeclaration _enum);
 	case Namespace(AstNode.Stmt.NamespaceDeclaration _ns);
 	case Pointer(ZenType* element);
+	case Array(ZenType* element, int count);
 
 	public bool IsTypeVoid()
 	{
@@ -250,7 +251,9 @@ public enum ZenType
 		case .Namespace:
 			outName.Append("Namespace");
 		case .Pointer(let element):
-			outName.Append(scope $"Pointer[{element.GetName(.. scope .())}]");
+			outName.Append(scope $"Pointer->{element.GetName(.. scope .())}");
+		case .Array(let element, let count):
+			outName.Append(scope $"Array({element.GetName(.. scope .())})[{count}]");
 		}
 	}
 

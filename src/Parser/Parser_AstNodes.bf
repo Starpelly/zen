@@ -22,17 +22,41 @@ extension Parser
 
 	private AstNode.Expression.NamedType consumeType()
 	{
-		let token = consume(.Identifier, "Expected identifier.");
-		if (match(.DoubleColon))
+		AstNode.Expression.NamedType parseNamedType()
 		{
-			let name = consume(.Identifier, "Expected identifier.");
-			let qualified = new AstNode.Expression.QualifiedName(token, past(2), new AstNode.Expression.Variable(name));
-			let isPointer = match(.Star);
-			return new .(name, .Qualified(qualified), isPointer);
+			let token = consume(.Identifier, "Expected identifier.");
+			if (match(.DoubleColon))
+			{
+				let name = consume(.Identifier, "Expected identifier.");
+				let qualified = new AstNode.Expression.QualifiedName(token, past(2), new AstNode.Expression.Variable(name));
+				return new .(.Qualified(qualified));
+			}
+
+			return new .(.Simple(token));
 		}
 
-		let isPointer = match(.Star);
-		return new .(token, .Simple(token), isPointer);
+		var baseType = parseNamedType();
+
+		// Parse array type
+		while (match(.LeftBracket))
+		{
+			// let lbrack = previous();
+			AstNode.Expression.Literal count = null;
+			if (!check(.RightBracket))
+				count = getExprPrimary() as AstNode.Expression.Literal;
+			consume(.RightBracket, "Expected ']'");
+
+			baseType = new .(.Array(baseType, count));
+		}
+
+		// @TODO @HACK
+		// This isn't chain-able
+		if (match(.Star))
+		{
+			baseType = new .(.Pointer(baseType));
+		}
+
+		return baseType;
 	}
 
 	private AstNode.Stmt.Return getReturnStmt()

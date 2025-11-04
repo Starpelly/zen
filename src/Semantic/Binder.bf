@@ -165,7 +165,7 @@ class Binder
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, getNamespaceParent(), fun.Name, getTypeFromTypeExpr(fun.Type)), fun);
+			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, getNamespaceParent(), fun.Name, getZenTypeFromNamedTypeExpr(fun.Type)), fun);
 		}
 
 		if (let str = node as AstNode.Stmt.StructDeclaration)
@@ -205,12 +205,12 @@ class Binder
 
 		if (let vari = node as AstNode.Stmt.VariableDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, vari.Name, new Entity.Variable(vari, vari.Name, getTypeFromTypeExpr(vari.Type)), vari);
+			scope_tryDeclare(m_currentScope, vari.Name, new Entity.Variable(vari, vari.Name, getZenTypeFromNamedTypeExpr(vari.Type)), vari);
 		}
 
 		if (let constant = node as AstNode.Stmt.ConstantDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Basic(constant), default, constant.Name, getTypeFromTypeExpr(constant.Type)), constant);
+			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Basic(constant), default, constant.Name, getZenTypeFromNamedTypeExpr(constant.Type)), constant);
 		}
 
 		if (let _if = node as AstNode.Stmt.If)
@@ -274,14 +274,30 @@ class Binder
 		}
 	}
 
-	private ZenType getTypeFromTypeExpr(AstNode.Expression.NamedType type)
+	private ZenType getZenTypeFromNamedTypeExpr(AstNode.Expression.NamedType type)
 	{
 		switch (type.Kind)
 		{
 		case .Simple(let name):
 			return getTypeFromToken(name);
+
 		case .Qualified(let qualified):
 			return .QualifiedNamed(qualified);
+
+		case .Pointer(let innerType):
+			// @FIX @REFACTOR
+			// I don't feel comfortable messing with the AST here.
+			type.StoredType = getZenTypeFromNamedTypeExpr(innerType);
+			return .Pointer(&type.StoredType);
+
+		case .Array(let innerExpr, let countExpr):
+			// @FIX @REFACTOR
+			// I don't feel comfortable messing with the AST here.
+			type.StoredType = getZenTypeFromNamedTypeExpr(innerExpr);
+
+			// @HACK, we're assuming it can only be a literal
+			// This might always be true for static arrays, but dynamic arrays will need to support variables and stuff.
+			return .Array(&type.StoredType, countExpr.Value.Get<int>());
 		}
 	}
 

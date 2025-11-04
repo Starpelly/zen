@@ -6,6 +6,11 @@
 #load "../std/math.zen";
 #load "../std/memory.zen";
 
+fun void main()
+{
+	game::start_game();
+}
+
 namespace game;
 
 const int32 GAME_WIDTH  = 320;

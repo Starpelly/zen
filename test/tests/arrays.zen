@@ -1,0 +1,15 @@
+namespace tests;
+
+fun void main()
+{
+    var float[32] a;
+    var int[16] b;
+
+    // @FIX not working yet
+    // a = b;
+
+    a[0] = 10;
+
+    let int c = a[0];
+    println(c);
+}

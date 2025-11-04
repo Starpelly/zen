@@ -46,6 +46,7 @@ enum ExpressionKind
 	case QualifiedName(AstNode.Expression.QualifiedName);
 	case NamedType(AstNode.Expression.NamedType);
 	case Cast(AstNode.Expression.Cast);
+	case Index(AstNode.Expression.Index);
 }
 
 abstract class AstNode
@@ -566,15 +567,20 @@ abstract class AstNode
 			{
 				case Simple(Token name);
 				case Qualified(QualifiedName name);
+				case Pointer(NamedType innerType);
+				case Array(NamedType innerType, Literal countExpr);
 			}
 
 			public readonly Kind Kind;
-			public readonly bool IsPointer;
 
-			public this(Token name, Kind kind, bool isPointer)
+			// @FIX @HACK
+			/// For pointer and array kinds, we'll store the actual type the binder assigns here so the memory isn't lost.
+			/// I want to think there's a better way of doing this, but I'm really tired right now.
+			public ZenType StoredType;
+
+			public this(Kind kind)
 			{
 				this.Kind = kind;
-				this.IsPointer = isPointer;
 			}
 
 			public ~this()
@@ -582,6 +588,15 @@ abstract class AstNode
 				if (this.Kind case .Qualified(let q))
 				{
 					delete q;
+				}
+				if (this.Kind case .Pointer(let innerP))
+				{
+					delete innerP;
+				}
+				if (this.Kind case .Array(let innerArr, let countExpr))
+				{
+					delete innerArr;
+					delete countExpr;
 				}
 			}
 
@@ -602,6 +617,24 @@ abstract class AstNode
 			}
 
 			public override ExpressionKind GetKind() => .Cast(this);
+		}
+
+		public class Index : Expression
+		{
+			public readonly Expression Array ~ delete _;
+			public readonly Expression Index ~ delete _;
+			public readonly Token LeftBracket;
+			public readonly Token RightBracket;
+
+			public this(Expression array, Expression index, Token left, Token right)
+			{
+				this.Array = array;
+				this.Index = index;
+				this.LeftBracket = left;
+				this.RightBracket = right;
+			}
+
+			public override ExpressionKind GetKind() => .Index(this);
 		}
 	}
 }

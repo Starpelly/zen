@@ -350,7 +350,7 @@ class Checker
 				returnVal!(ZenType.Pointer(&rightType));
 			case .Star:
 				if (!rightType.IsTypePointer())
-					reportError(op, "Cannot dereference non-pointer type");
+					reportError(op, "Cannot de-reference a non-pointer type");
 				returnVal!(rightType);
 			case .Bang:
 				if (!rightType.IsTypeBoolean())
@@ -388,13 +388,6 @@ class Checker
 			returnVal!(ZenType.Invalid);
 
 		case .NamedType(let type):
-			mixin returnValWithPtr(ZenType zenType)
-			{
-				if (type.IsPointer)
-					return .Pointer(&zenType);
-				returnVal!(zenType);
-			}
-
 			switch (type.Kind)
 			{
 			case .Simple(let name):
@@ -410,7 +403,7 @@ class Checker
 						if (let typename = found as Entity.TypeName)
 						{
 							Runtime.Assert(typename.Decl is AstNode.Stmt.StructDeclaration);
-							returnValWithPtr!(typename.Type);
+							returnVal!(typename.Type);
 						}
 					}
 				}
@@ -420,7 +413,14 @@ class Checker
 				break;
 
 			case .Qualified(let qualified):
-				returnValWithPtr!(checkExpr(qualified, _scope));
+				returnVal!(checkExpr(qualified, _scope));
+
+			case .Pointer(let innerType):
+				var a = checkExpr(innerType, _scope);
+				returnVal!(ZenType.Pointer(&a));
+
+			case .Array(let innerType, let countExpr):
+				returnVal!(checkExpr(innerType, _scope));
 			}
 
 		case .Cast(let cast):
@@ -436,6 +436,26 @@ class Checker
 			// We should actually validate that this cast is valid, but I'm lazy
 			// so for now, we'll assume you can cast anything into anything (even if it's nonsensical)
 			returnVal!(castType);
+
+		case .Index(let index):
+			let arrayType = checkExpr(index.Array, _scope);
+			let indexType = checkExpr(index.Index, _scope);
+
+			// @TODO - pelly, 11/3/25
+			// Check if we're trying to get a negative index, that obviously makes no sense...
+			// Also if we're indexing above the count, that's out of bounds
+
+			if (!indexType.IsTypeInteger())
+				reportError(index, "Array index must be an integer type");
+
+			if (arrayType case .Array(let arrayE, let count))
+				return *arrayE;
+
+			if (arrayType case .Pointer(let pointerE))
+				return *pointerE;
+
+			reportError(index.Array, "Cannot index into a non-array type");
+			returnVal!(ZenType.Invalid);
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");

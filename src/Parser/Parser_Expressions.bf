@@ -49,8 +49,8 @@ extension Parser
 			}
 			*/
 
-			// Only Variable or Get are valid targets
-			if (expr is Expression.Variable || expr is Expression.Get)
+			// Only Variable Get, and Index are valid targets
+			if (expr is Expression.Variable || expr is Expression.Get || expr is Expression.Index)
 			{
 				expr = new Expression.Assign(expr, value, equals);
 			}
@@ -150,7 +150,7 @@ extension Parser
 
 	private Expression getExprCall()
 	{
-		var expr = getExprPrimary();
+		var expr = getExprPostfix();
 
 		/*
 		NamespaceList namespaces = null;
@@ -214,6 +214,28 @@ extension Parser
 		let close = consume(.RightParen, "Expected ')' after arguments.");
 
 		return new Expression.Call(callee, arguments, open, close);
+	}
+
+	private Expression getExprPostfix()
+	{
+		var expr = getExprPrimary();
+
+		while (true)
+		{
+			if (match(.LeftBracket))
+			{
+				let lbrack = previous();
+				let index = getExpression();
+				let rbrack = consume(.RightBracket, "Expected ']' after index expression");
+				expr = new Expression.Index(expr, index, lbrack, rbrack);
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		return expr;
 	}
 
 	private Expression getExprPrimary()

@@ -18,7 +18,6 @@ class Scope
 
 	public readonly String Name = new .() ~ delete _;
 
-
 	public this(String name, Scope parent, Entity.Namespace namespaceParent)
 	{
 		Name.Set(name);
