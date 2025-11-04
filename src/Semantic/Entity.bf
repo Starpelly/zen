@@ -45,16 +45,19 @@ abstract class Entity
 		public enum ConstantDecl
 		{
 			case Builtin;
-			case Basic(AstNode.Stmt.ConstantDeclaration decl);
+			case Normal(AstNode.Stmt.ConstantDeclaration decl);
 			case EnumField(AstNode.Stmt.EnumFieldValue field);
 		}
 
-		public readonly ConstantDecl Node;
+		public readonly ConstantDecl Decl;
 		public readonly Variant Value ~ _.Dispose();
+
+		/// The type the variable is holding, not to be confused with Variable.Type
+		public ZenType ResolvedType;
 
 		public this(ConstantDecl node, Variant value, Token token, ZenType type) : base(token, type)
 		{
-			this.Node = node;
+			this.Decl = node;
 			this.Value = Value;
 		}
 
@@ -62,10 +65,10 @@ abstract class Entity
 		{
 			get
 			{
-				switch (Node)
+				switch (Decl)
 				{
 				case .Builtin: return null;
-				case .Basic(let decl): return decl;
+				case .Normal(let decl): return decl;
 				case .EnumField(let decl): return decl;
 				}
 			}

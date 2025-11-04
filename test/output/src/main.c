@@ -123,31 +123,28 @@ typedef enum {
 	zen_raylib_KeyboardKey_VOLUME_DOWN = 25
 } zen_raylib_KeyboardKey;
 void zen_main();
-#define GAME_WIDTH 320
-#define GAME_HEIGHT 180
-#define GAME_ZOOM 4
-#define CELL_WIDTH 16
-#define CELL_HEIGHT 16
+const int32 GAME_WIDTH = 320;
+const int32 GAME_HEIGHT = 180;
+const int32 GAME_ZOOM = 4;
+const int32 CELL_WIDTH = 16;
+const int32 CELL_HEIGHT = 16;
 void zen_game_start_game();
 void zen_game_game_update(zen_game_GameManager* gameManager);
 void zen_game_game_draw(zen_game_GameManager* gameManager);
 void zen_game_entity_update(zen_game_Entity* e);
-#define PLAYER_SPEED 500.0f
+const float PLAYER_SPEED = 500.0f;
 void zen_game_player_init(zen_game_Player* player);
 void zen_game_player_update(zen_game_Player* player);
 void zen_game_player_draw(zen_game_Player* player);
 void zen_game_crate_init(zen_game_Crate* crate);
 void zen_game_crate_draw(zen_game_Crate* crate);
-#define MAP_WIDTH 12
-#define MAP_HEIGHT 6
+const int MAP_WIDTH = 12;
+const int MAP_HEIGHT = 6;
 void zen_game_map_load();
 void zen_game_map_draw();
 void zen_game_draw_line(float x1, float y1, float x2, float y2, Color color);
 void zen_game_draw_rect(float x, float y, float w, float h, Color color);
 void zen_game_draw_rect_lines(float x, float y, float w, float h, Color color);
-#define PI 3.14159265358979323846f
-#define HALF_PI 1.57079632679489661923f
-#define EPSILON 0.00001f
 struct zen_game_GameManager {
 	zen_game_Player* player;
 };

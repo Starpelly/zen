@@ -214,7 +214,7 @@ class Binder
 
 		if (let constant = node as AstNode.Stmt.ConstantDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Basic(constant), default, constant.Name, getZenTypeFromNamedTypeExpr(constant.Type)), constant);
+			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Normal(constant), default, constant.Name, getZenTypeFromNamedTypeExpr(constant.Type)), constant);
 		}
 
 		if (let _if = node as AstNode.Stmt.If)

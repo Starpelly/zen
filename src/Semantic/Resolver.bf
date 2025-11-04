@@ -89,9 +89,7 @@ class Resolver
 			resolveVariable(_var, _scope);
 			return;
 		case .ConstDecl(let _const):
-			Console.ForegroundColor = .Yellow;
-			Console.WriteLine("please type check me!");
-			Console.ResetColor();
+			resolveConstant(_const, _scope);
 			return;
 
 		case .BasicDirective,
@@ -124,84 +122,103 @@ class Resolver
 
 	private void resolveVariable(AstNode.Stmt.VariableDeclaration varDecl, Scope _scope)
 	{
-		(ZenType, ZenType*) resolveInnerType(ZenType type)
-		{
-			Runtime.Assert(type != .Invalid);
-
-			if (type case .SimpleNamed(let simpleName))
-			{
-				let lookup = lookupScopeForIdentifier(_scope, simpleName);
-				if (lookup case .Ok(let res))
-				{
-					/*
-					if (isPointer)
-						return .Pointer(res.TypePtr);
-					if (isArray)
-						return .Array(res.TypePtr, arrayCount);
-					*/
-					return (res.Type, res.TypePtr);
-				}
-				else
-				{
-					return (.Invalid, null);
-				}
-			}
-			else if (type case .QualifiedNamed(let qualifiedName))
-			{
-				let leftScope = lookupScopeForIdentifier(_scope, qualifiedName.Left);
-
-				if (leftScope case .Ok(let leftEntity))
-				{
-					if (let decl = leftEntity as IEntityDeclaration)
-					{
-						if (let iScope = decl.Decl as AstNode.Stmt.IScope)
-						{
-							Runtime.Assert(qualifiedName.Right is AstNode.Expression.Variable);
-							let _var = qualifiedName.Right as AstNode.Expression.Variable;
-							let lookup = lookupScopeForIdentifier(iScope.Scope, _var.Name);
-							if (lookup case .Ok(var res))
-							{
-								/*
-								if (isPointer)
-									return .Pointer(res.TypePtr);
-								if (isArray)
-									return .Array(res.TypePtr, arrayCount);
-								*/
-								return (res.Type, res.TypePtr);
-							}
-
-							// let lookup = lookupScopeForIdentifier(iScope.Scope, qualifiedName.r)
-							// let val = checkExpr(qualifiedName.Right, iScope.Scope, _scope);
-							// returnVal!(val);
-						}
-					}
-				}
-				// checkExpr(qualifiedName, _scope);
-
-				return (.Invalid, null);
-			}
-			else if (type case .Basic)
-			{
-				return (type, &type);
-			}
-
-			Runtime.FatalError(scope $"What are you?");
-		}
-
 		let entity = _scope.LookupName(varDecl.Name.Lexeme).Value as Entity.Variable;
 
 		if (entity.Type case .Pointer(let inner))
 		{
-			entity.ResolvedType = .Pointer(resolveInnerType(*inner).1);
+			entity.ResolvedType = .Pointer(resolveInnerType(*inner, _scope).1);
 		}
 		else if (entity.Type case .Array(let element, let count))
 		{
-			entity.ResolvedType = .Array(resolveInnerType(*element).1, count);
+			entity.ResolvedType = .Array(resolveInnerType(*element, _scope).1, count);
 			// Debug.Assert(false);
 		}
 		else
 		{
-			entity.ResolvedType = resolveInnerType(entity.Type).0;
+			entity.ResolvedType = resolveInnerType(entity.Type, _scope).0;
 		}
+	}
+
+	private void resolveConstant(AstNode.Stmt.ConstantDeclaration constDecl, Scope _scope)
+	{
+		let entity = _scope.LookupName(constDecl.Name.Lexeme).Value as Entity.Constant;
+
+		if (entity.Type case .Pointer(let inner))
+		{
+			entity.ResolvedType = .Pointer(resolveInnerType(*inner, _scope).1);
+		}
+		else if (entity.Type case .Array(let element, let count))
+		{
+			entity.ResolvedType = .Array(resolveInnerType(*element, _scope).1, count);
+			// Debug.Assert(false);
+		}
+		else
+		{
+			entity.ResolvedType = resolveInnerType(entity.Type, _scope).0;
+		}
+	}
+
+	(ZenType, ZenType*) resolveInnerType(ZenType type, Scope _scope)
+	{
+		Runtime.Assert(type != .Invalid);
+
+		if (type case .SimpleNamed(let simpleName))
+		{
+			let lookup = lookupScopeForIdentifier(_scope, simpleName);
+			if (lookup case .Ok(let res))
+			{
+				/*
+				if (isPointer)
+					return .Pointer(res.TypePtr);
+				if (isArray)
+					return .Array(res.TypePtr, arrayCount);
+				*/
+				return (res.Type, res.TypePtr);
+			}
+			else
+			{
+				return (.Invalid, null);
+			}
+		}
+		else if (type case .QualifiedNamed(let qualifiedName))
+		{
+			let leftScope = lookupScopeForIdentifier(_scope, qualifiedName.Left);
+
+			if (leftScope case .Ok(let leftEntity))
+			{
+				if (let decl = leftEntity as IEntityDeclaration)
+				{
+					if (let iScope = decl.Decl as AstNode.Stmt.IScope)
+					{
+						Runtime.Assert(qualifiedName.Right is AstNode.Expression.Variable);
+						let _var = qualifiedName.Right as AstNode.Expression.Variable;
+						let lookup = lookupScopeForIdentifier(iScope.Scope, _var.Name);
+						if (lookup case .Ok(var res))
+						{
+							/*
+							if (isPointer)
+								return .Pointer(res.TypePtr);
+							if (isArray)
+								return .Array(res.TypePtr, arrayCount);
+							*/
+							return (res.Type, res.TypePtr);
+						}
+
+						// let lookup = lookupScopeForIdentifier(iScope.Scope, qualifiedName.r)
+						// let val = checkExpr(qualifiedName.Right, iScope.Scope, _scope);
+						// returnVal!(val);
+					}
+				}
+			}
+			// checkExpr(qualifiedName, _scope);
+
+			return (.Invalid, null);
+		}
+		else if (type case .Basic)
+		{
+			return (type, &type);
+		}
+
+		Runtime.FatalError(scope $"What are you?");
 	}
 }

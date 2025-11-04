@@ -203,15 +203,53 @@ class Generator
 				if (let constant = entity.value as Entity.Constant)
 				{
 					// This means it's a built in constant, so like int32s and stuff. We can safely ignore those as they're defined in the zen.h header.
-					if (constant.Node case .Builtin)
+					if (constant.Decl case .Builtin)
 						continue;
 
-					Runtime.Assert(constant.Node case .Basic(let basic));
+					Runtime.Assert(constant.Decl case .Normal(let basic));
 
 					// @TODO
 					// Macros are a bit wack, does c have constant expressions or something?
-					code.AppendLine(scope $"#define {basic.Name.Lexeme} ");
-					emitExpr(basic.Initializer, code, _scope);
+					// code.AppendLine(scope $"#define {basic.Name.Lexeme} ");
+					code.AppendLine("const ");
+					bool isStructType = false;
+
+					if (constant.ResolvedType case .Structure)
+					{
+						isStructType = true;
+					}
+					code.Append(writeResolvedType(constant.ResolvedType, .. scope .()));
+
+					// emitExpr(v.Type, code, _scope);
+					code.Append(scope $" {basic.Name.Lexeme}");
+
+					if (constant.ResolvedType case .Array(let element, let count))
+					{
+						code.Append(scope $"[{count}]");
+					}
+
+					if (basic.Initializer != null)
+					{
+						code.Append(scope $" = ");
+						emitExpr(basic.Initializer, code, _scope);
+					}
+					else
+					{
+						if (isStructType)
+						{
+							// Because C doesn't initialize structs automatically without an initializer (but we want to),
+							// we'll have to tell it to do so manually.
+
+							// @TODO - pelly, 11/2/25
+							// Actually, we want initializers in the future, and we want to throw errors when we try to use uninitialized variables.
+							// So this needs to be removed or changed in the future!
+							Console.ForegroundColor = .Yellow;
+							Console.WriteLine("please fix this implicit initializer");
+							Console.ResetColor();
+							code.Append(scope $" = \{\}");
+						}
+					}
+					code.Append(';');
 				}
 			}
 		}
