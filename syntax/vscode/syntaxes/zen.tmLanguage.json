@@ -101,7 +101,7 @@
 			"patterns": [
 				{
 				"name": "support.function.builtin.zen",
-				"match": "\\b(print|println)\\b(?=\\s*\\()"
+				"match": "\\b(sizeof|print|println)\\b(?=\\s*\\()"
 				}
 			]
 		},
