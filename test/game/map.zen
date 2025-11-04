@@ -9,7 +9,7 @@ const int MAP_WIDTH  = 12;
 const int MAP_HEIGHT = 6;
 
 // 12 * 6
-let Tile[72] map_tiles;
+let Tile[MAP_WIDTH * MAP_HEIGHT] map_tiles;
 
 fun void map_load()
 {
