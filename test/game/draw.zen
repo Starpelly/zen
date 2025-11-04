@@ -1,0 +1,8 @@
+#load "../tests/raylib.zen";
+
+namespace game;
+
+fun void draw_rect(float x, float y, float w, float h, raylib::Color color)
+{
+    raylib::DrawRectangle(cast(int)x, cast(int)y, cast(int)w, cast(int)h, color);
+}

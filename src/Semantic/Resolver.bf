@@ -99,7 +99,7 @@ class Resolver
 
 	private void resolveVariable(AstNode.Stmt.VariableDeclaration varDecl, Scope _scope)
 	{
-		ZenType resolveInnerType(ZenType type, bool isPointer)
+		(ZenType, ZenType*) resolveInnerType(ZenType type)
 		{
 			Runtime.Assert(type != .Invalid);
 
@@ -108,9 +108,13 @@ class Resolver
 				let lookup = lookupScopeForIdentifier(_scope, simpleName);
 				if (lookup case .Ok(let res))
 				{
+					/*
 					if (isPointer)
 						return .Pointer(res.TypePtr);
-					return res.Type;
+					if (isArray)
+						return .Array(res.TypePtr, arrayCount);
+					*/
+					return (res.Type, res.TypePtr);
 				}
 			}
 			else if (type case .QualifiedNamed(let qualifiedName))
@@ -128,9 +132,13 @@ class Resolver
 							let lookup = lookupScopeForIdentifier(iScope.Scope, _var.Name);
 							if (lookup case .Ok(var res))
 							{
+								/*
 								if (isPointer)
 									return .Pointer(res.TypePtr);
-								return res.Type;
+								if (isArray)
+									return .Array(res.TypePtr, arrayCount);
+								*/
+								return (res.Type, res.TypePtr);
 							}
 
 							// let lookup = lookupScopeForIdentifier(iScope.Scope, qualifiedName.r)
@@ -143,7 +151,7 @@ class Resolver
 			}
 			else if (type case .Basic)
 			{
-				return type;
+				return (type, &type);
 			}
 
 			Runtime.FatalError(scope $"What are you?");
@@ -153,15 +161,16 @@ class Resolver
 
 		if (entity.Type case .Pointer(let inner))
 		{
-			entity.ResolvedType = resolveInnerType(*inner, true);
+			entity.ResolvedType = .Pointer(resolveInnerType(*inner).1);
 		}
 		else if (entity.Type case .Array(let element, let count))
 		{
-			Debug.Assert(true);
+			entity.ResolvedType = .Array(resolveInnerType(*element).1, count);
+			// Debug.Assert(false);
 		}
 		else
 		{
-			entity.ResolvedType = resolveInnerType(entity.Type, false);
+			entity.ResolvedType = resolveInnerType(entity.Type).0;
 		}
 	}
 }

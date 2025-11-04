@@ -117,14 +117,17 @@ class Generator
 		FunctionImpls
 	}
 
-	private void buildNamespaceString(IEntityNamespaceParent entity, String outStr)
+	private void buildNamespaceString(IEntityNamespaceParent entity, String outStr, bool zenPrefix)
 	{
-		buildNamespaceString(entity.NamespaceParent, outStr);
+		buildNamespaceString(entity.NamespaceParent, outStr, zenPrefix);
 	}
 
-	private void buildNamespaceString(Entity.Namespace _namespace, String outStr)
+	private void buildNamespaceString(Entity.Namespace _namespace, String outStr, bool zenPrefix)
 	{
-		outStr.Append("zen");
+		if (zenPrefix)
+		{
+			outStr.Append("zen");
+		}
 		if (_namespace != null)
 		{
 			outStr.Append("_");
@@ -141,7 +144,7 @@ class Generator
 				switch (entity.value.GetKind())
 				{
 				case .TypeName(let typename):
-					let namespaceStr = buildNamespaceString(typename, .. scope .());
+					let namespaceStr = buildNamespaceString(typename, .. scope .(), true);
 					switch (typename.Decl.GetKind())
 					{
 					case .StructDecl(let _struct):
@@ -193,7 +196,7 @@ class Generator
 					if (fun.Kind == .Extern)
 						continue;
 
-					let namespaceStr = buildNamespaceString(funEnt, .. scope .());
+					let namespaceStr = buildNamespaceString(funEnt, .. scope .(), true);
 					appendFunctionHead(fun, namespaceStr, code);
 					code.Append(';');
 				}
@@ -220,7 +223,7 @@ class Generator
 				switch (entity.value.GetKind())
 				{
 				case .TypeName(let typename):
-					let namespaceStr = buildNamespaceString(typename, .. scope .());
+					let namespaceStr = buildNamespaceString(typename, .. scope .(), true);
 					switch (typename.Decl.GetKind())
 					{
 					case .StructDecl(let _struct):
@@ -297,7 +300,7 @@ class Generator
 					if (fun.Kind == .Extern)
 						break;
 
-					let namespaceStr = buildNamespaceString(entity, .. scope .());
+					let namespaceStr = buildNamespaceString(entity, .. scope .(), true);
 					appendFunctionHead(fun, namespaceStr, code);
 					code.AppendLine("{");
 					code.IncreaseTab();
@@ -477,10 +480,10 @@ class Generator
 			}
 			if (writeNamespace )
 			{
-				// outStr.Append("zen_");
+				outStr.Append("zen");
 				if (_struct.Scope.NamespaceParent case .Ok(let ns))
 				{
-					buildNamespaceString(ns, outStr);
+					buildNamespaceString(ns, outStr, false);
 					outStr.Append('_');
 				}
 			}
@@ -494,7 +497,7 @@ class Generator
 				// outStr.Append("zen_");
 				if (_enum.Scope.NamespaceParent case .Ok(let ns))
 				{
-					buildNamespaceString(ns, outStr);
+					buildNamespaceString(ns, outStr, true);
 					outStr.Append('_');
 				}
 			}
@@ -671,7 +674,7 @@ class Generator
 
 						if (writeNamespace)
 						{
-							code.Append(buildNamespaceString(t, .. scope .()));
+							code.Append(buildNamespaceString(t, .. scope .(), true));
 							code.Append("_");
 						}
 					}
@@ -794,8 +797,10 @@ class Generator
 				emitExpr(qualified, code, _scope);
 				break;
 			case .Array(let inner, let countExpr):
+				Debug.Assert(false);
 				break;
 			case .Pointer(let inner):
+				Debug.Assert(false);
 				break;
 			}
 			break;

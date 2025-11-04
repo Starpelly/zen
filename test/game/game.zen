@@ -45,6 +45,8 @@ fun void start_game()
 	let int width = 32;
 	let int height = 32;
 
+	let bool[128] tiles;
+
 	while (!raylib::WindowShouldClose())
 	{
 		game_update(&gameManager);
