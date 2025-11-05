@@ -40,7 +40,7 @@ abstract class Entity
 
 	public abstract EntityKind GetKind();
 
-	public class Constant : Entity, IEntityDeclaration
+	public class Constant : Entity, IEntityDeclaration, IEntityNamespaceParent
 	{
 		public enum ConstantDecl
 		{
@@ -51,14 +51,16 @@ abstract class Entity
 
 		public readonly ConstantDecl Decl;
 		public readonly Variant Value ~ _.Dispose();
+		public readonly Namespace NamespaceParent;
 
 		/// The type the variable is holding, not to be confused with Variable.Type
 		public ZenType ResolvedType;
 
-		public this(ConstantDecl node, Variant value, Token token, ZenType type) : base(token, type)
+		public this(ConstantDecl node, Namespace namespaceParent, Variant value, Token token, ZenType type) : base(token, type)
 		{
 			this.Decl = node;
 			this.Value = Value;
+			this.NamespaceParent = namespaceParent;
 		}
 
 		public AstNode.Stmt IEntityDeclaration.Decl
@@ -73,22 +75,27 @@ abstract class Entity
 				}
 			}
 		}
+
+		public Namespace IEntityNamespaceParent.NamespaceParent => NamespaceParent;
 		public override EntityKind GetKind() => .Constant(this);
 	}
 
-	public class Variable : Entity, IEntityDeclaration
+	public class Variable : Entity, IEntityDeclaration, IEntityNamespaceParent
 	{
 		public readonly AstNode.Stmt.VariableDeclaration Decl;
+		public readonly Namespace NamespaceParent;
 
 		/// The type the variable is holding, not to be confused with Variable.Type
 		public ZenType ResolvedType;
 
-		public this(AstNode.Stmt.VariableDeclaration decl, Token token, ZenType type) : base(token, type)
+		public this(AstNode.Stmt.VariableDeclaration decl, Namespace namespaceParent, Token token, ZenType type) : base(token, type)
 		{
 			this.Decl = decl;
+			this.NamespaceParent = namespaceParent;
 		}
 
 		public AstNode.Stmt IEntityDeclaration.Decl => Decl;
+		public Namespace IEntityNamespaceParent.NamespaceParent => NamespaceParent;
 		public override EntityKind GetKind() => .Variable(this);
 	}
 

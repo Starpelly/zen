@@ -45,7 +45,7 @@ class Binder
 	private void addGlobalConstant(String name, ZenType type, Variant value)
 	{
 		let token = Token(.Identifier, name, 0, 0, .Empty);
-		let entity = new Entity.Constant(.Builtin, value, token, type);
+		let entity = new Entity.Constant(.Builtin, null, value, token, type);
 		m_globalScope.DeclareWithName(entity, name);
 	}
 
@@ -204,17 +204,17 @@ class Binder
 
 		if (let enumVal = node as AstNode.Stmt.EnumFieldValue)
 		{
-			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(.EnumField(enumVal), default, enumVal.Name, .Basic(.FromKind(.UntypedInteger))), node);
+			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(.EnumField(enumVal), getNamespaceParent(), default, enumVal.Name, .Basic(.FromKind(.UntypedInteger))), node);
 		}
 
 		if (let vari = node as AstNode.Stmt.VariableDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, vari.Name, new Entity.Variable(vari, vari.Name, getZenTypeFromNamedTypeExpr(vari.Type)), vari);
+			scope_tryDeclare(m_currentScope, vari.Name, new Entity.Variable(vari, getNamespaceParent(), vari.Name, getZenTypeFromNamedTypeExpr(vari.Type)), vari);
 		}
 
 		if (let constant = node as AstNode.Stmt.ConstantDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Normal(constant), default, constant.Name, getZenTypeFromNamedTypeExpr(constant.Type)), constant);
+			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Normal(constant), getNamespaceParent(), default, constant.Name, getZenTypeFromNamedTypeExpr(constant.Type)), constant);
 		}
 
 		if (let _if = node as AstNode.Stmt.If)

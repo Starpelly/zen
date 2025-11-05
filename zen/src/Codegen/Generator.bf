@@ -208,6 +208,8 @@ class Generator
 
 					Runtime.Assert(constant.Decl case .Normal(let basic));
 
+					let namespaceStr = buildNamespaceString(constant, .. scope .(), true);
+
 					// @TODO
 					// Macros are a bit wack, does c have constant expressions or something?
 					// code.AppendLine(scope $"#define {basic.Name.Lexeme} ");
@@ -218,10 +220,19 @@ class Generator
 					{
 						isStructType = true;
 					}
+
+					// Write type
 					code.Append(writeResolvedType(constant.ResolvedType, .. scope .()));
 
-					// emitExpr(v.Type, code, _scope);
-					code.Append(scope $" {basic.Name.Lexeme}");
+					// The space between type and name
+					code.Append(' ');
+
+					// Write namespace
+					code.Append(namespaceStr);
+					code.Append("_");
+
+					// Write name
+					code.Append(basic.Name.Lexeme);
 
 					if (constant.ResolvedType case .Array(let element, let count))
 					{
@@ -367,10 +378,20 @@ class Generator
 		let parameters = scope StringCodeBuilder();
 		for (let param in func.Parameters)
 		{
-			let entity = func.Scope.LookupStmtAs<Entity.Variable>(param);
-			parameters.Append(writeResolvedType(entity.Value.ResolvedType, .. scope .()));
-			// emitExpr(param.Type, parameters, func.Scope);
-			parameters.Append(scope $" {param.Name.Lexeme}");
+			let entity = func.Scope.LookupStmtAs<Entity.Variable>(param).Value;
+
+			// Write type
+			parameters.Append(writeResolvedType(entity.ResolvedType, .. scope .()));
+
+			// Space between type and name
+			parameters.Append(' ');
+
+			let ns = buildNamespaceString(entity, .. scope .(), true);
+			parameters.Append(ns);
+			parameters.Append('_');
+
+			// Write name
+			parameters.Append(param.Name.Lexeme);
 			if (param != func.Parameters.Back)
 				parameters.Append(", ");
 		}
@@ -415,10 +436,20 @@ class Generator
 			{
 				isStructType = true;
 			}
+
+			// Write type
 			code.Append(writeResolvedType(entity.ResolvedType, .. scope .()));
 
-			// emitExpr(v.Type, code, _scope);
-			code.Append(scope $" {v.Name.Lexeme}");
+			// Space between type and name
+			code.Append(' ');
+
+			// Write namespace
+			let ns = buildNamespaceString(entity, .. scope .(), true);
+			code.Append(ns);
+			code.Append('_');
+
+			// Write name
+			code.Append(v.Name.Lexeme);
 
 			if (entity.ResolvedType case .Array(let element, let count))
 			{
@@ -572,6 +603,30 @@ class Generator
 			break;
 
 		case .Variable(let _var):
+			let entity = _scope.LookupName(_var.Name.Lexeme);
+			if (entity case .Ok(let val))
+			{
+				if (let _constEnt = val as Entity.Constant)
+				{
+					// for builtin constants they don't have namespaces lol
+					// this is a big @HACK anyway
+					if (_constEnt.NamespaceParent != null)
+					{
+						let ns = buildNamespaceString(_constEnt, .. scope .(), true);
+						code.Append(ns);
+						code.Append("_");
+					}
+				}
+				if (let _varEnt = val as Entity.Variable)
+				{
+					if (_varEnt.NamespaceParent != null)
+					{
+						let ns = buildNamespaceString(_varEnt, .. scope .(), true);
+						code.Append(ns);
+						code.Append("_");
+					}
+				}
+			}
 			code.Append(_var.Name.Lexeme);
 			break;
 

@@ -123,31 +123,31 @@ typedef enum {
 	zen_raylib_KeyboardKey_VOLUME_DOWN = 25
 } zen_raylib_KeyboardKey;
 void zen_main();
-const int32 GAME_WIDTH = 320;
-const int32 GAME_HEIGHT = 180;
-const int32 GAME_ZOOM = 4;
-const int32 CELL_WIDTH = 16;
-const int32 CELL_HEIGHT = 16;
+const int32 zen_game_GAME_WIDTH = 320;
+const int32 zen_game_GAME_HEIGHT = 180;
+const int32 zen_game_GAME_ZOOM = 4;
+const int32 zen_game_CELL_WIDTH = 16;
+const int32 zen_game_CELL_HEIGHT = 16;
 void zen_game_start_game();
-void zen_game_game_update(zen_game_GameManager* gameManager);
-void zen_game_game_draw(zen_game_GameManager* gameManager);
-void zen_game_entity_update(zen_game_Entity* e);
-const float PLAYER_SPEED = 500.0f;
-void zen_game_player_init(zen_game_Player* player);
-void zen_game_player_update(zen_game_Player* player);
-void zen_game_player_draw(zen_game_Player* player);
-void zen_game_crate_init(zen_game_Crate* crate);
-void zen_game_crate_draw(zen_game_Crate* crate);
-const int MAP_WIDTH = 12;
-const int MAP_HEIGHT = 6;
+void zen_game_game_update(zen_game_GameManager* zen_game_gameManager);
+void zen_game_game_draw(zen_game_GameManager* zen_game_gameManager);
+void zen_game_entity_update(zen_game_Entity* zen_game_e);
+const float zen_game_PLAYER_SPEED = 500.0f;
+void zen_game_player_init(zen_game_Player* zen_game_player);
+void zen_game_player_update(zen_game_Player* zen_game_player);
+void zen_game_player_draw(zen_game_Player* zen_game_player);
+void zen_game_crate_init(zen_game_Crate* zen_game_crate);
+void zen_game_crate_draw(zen_game_Crate* zen_game_crate);
+const int zen_game_MAP_WIDTH = 12;
+const int zen_game_MAP_HEIGHT = 6;
 void zen_game_map_load();
 void zen_game_map_draw();
-void zen_game_draw_line(float x1, float y1, float x2, float y2, Color color);
-void zen_game_draw_rect(float x, float y, float w, float h, Color color);
-void zen_game_draw_rect_lines(float x, float y, float w, float h, Color color);
-const float64 PI = 3.14159265358979323846f;
-const float64 HALF_PI = 1.57079632679489661923f;
-const float64 EPSILON = 0.00001f;
+void zen_game_draw_line(float zen_game_x1, float zen_game_y1, float zen_game_x2, float zen_game_y2, Color zen_game_color);
+void zen_game_draw_rect(float zen_game_x, float zen_game_y, float zen_game_w, float zen_game_h, Color zen_game_color);
+void zen_game_draw_rect_lines(float zen_game_x, float zen_game_y, float zen_game_w, float zen_game_h, Color zen_game_color);
+const float64 zen_math_PI = 3.14159265358979323846f;
+const float64 zen_math_HALF_PI = 1.57079632679489661923f;
+const float64 zen_math_EPSILON = 0.00001f;
 struct zen_game_GameManager {
 	zen_game_Player* player;
 };
@@ -172,162 +172,162 @@ void zen_main()
 {
 	zen_game_start_game();
 }
-float delta_time = 0.0f;
-float game_time = 0.0f;
-uint64 game_frame = 0;
+float zen_game_delta_time = 0.0f;
+float zen_game_game_time = 0.0f;
+uint64 zen_game_game_frame = 0;
 void zen_game_start_game()
 {
-	Color black = {};
-	black.r = 0;
-	black.g = 0;
-	black.b = 0;
-	black.a = 255;
-	InitWindow(GAME_WIDTH * GAME_ZOOM, GAME_HEIGHT * GAME_ZOOM, "Zen");
+	Color zen_game_black = {};
+	zen_game_black.r = 0;
+	zen_game_black.g = 0;
+	zen_game_black.b = 0;
+	zen_game_black.a = 255;
+	InitWindow(zen_game_GAME_WIDTH * zen_game_GAME_ZOOM, zen_game_GAME_HEIGHT * zen_game_GAME_ZOOM, "Zen");
 	SetTargetFPS(185);
-	zen_game_GameManager gameManager = {};
-	zen_game_Player player = {};
-	Camera2D cam = {};
-	cam.target.x = -(float)(58);
-	cam.target.y = -(float)(32);
-	cam.zoom = (float)GAME_ZOOM;
-	gameManager.player = &player;
-	zen_game_player_init(gameManager.player);
+	zen_game_GameManager zen_game_gameManager = {};
+	zen_game_Player zen_game_player = {};
+	Camera2D zen_game_cam = {};
+	zen_game_cam.target.x = -(float)(58);
+	zen_game_cam.target.y = -(float)(32);
+	zen_game_cam.zoom = (float)zen_game_GAME_ZOOM;
+	zen_game_gameManager.player = &zen_game_player;
+	zen_game_player_init(zen_game_gameManager.player);
 	zen_game_map_load();
 	while (!WindowShouldClose())
 	{
-		zen_game_game_update(&gameManager);
+		zen_game_game_update(&zen_game_gameManager);
 		BeginDrawing();
-		ClearBackground(black);
-		BeginMode2D(cam);
-		zen_game_game_draw(&gameManager);
+		ClearBackground(zen_game_black);
+		BeginMode2D(zen_game_cam);
+		zen_game_game_draw(&zen_game_gameManager);
 		EndMode2D();
 		DrawFPS(20, 20);
 		EndDrawing();
 	}
 	CloseWindow();
 }
-void zen_game_game_update(zen_game_GameManager* gameManager)
+void zen_game_game_update(zen_game_GameManager* zen_game_gameManager)
 {
-	delta_time = GetFrameTime();
-	game_time += delta_time;
-	game_frame += 1;
-	zen_game_player_update(gameManager->player);
+	zen_game_delta_time = GetFrameTime();
+	zen_game_game_time += zen_game_delta_time;
+	zen_game_game_frame += 1;
+	zen_game_player_update(zen_game_gameManager->player);
 }
-void zen_game_game_draw(zen_game_GameManager* gameManager)
+void zen_game_game_draw(zen_game_GameManager* zen_game_gameManager)
 {
 	zen_game_map_draw();
-	zen_game_player_draw(gameManager->player);
+	zen_game_player_draw(zen_game_gameManager->player);
 }
-void zen_game_entity_update(zen_game_Entity* e)
+void zen_game_entity_update(zen_game_Entity* zen_game_e)
 {
-	float targetX = (float)e->x;
-	float targetY = (float)e->y;
-	float dx = targetX - e->visualX;
-	float dy = targetY - e->visualY;
-	e->visualX += dx * 30.0f * delta_time;
-	e->visualY += dy * 30.0f * delta_time;
+	float zen_game_targetX = (float)zen_game_e->x;
+	float zen_game_targetY = (float)zen_game_e->y;
+	float zen_game_dx = zen_game_targetX - zen_game_e->visualX;
+	float zen_game_dy = zen_game_targetY - zen_game_e->visualY;
+	zen_game_e->visualX += zen_game_dx * 30.0f * zen_game_delta_time;
+	zen_game_e->visualY += zen_game_dy * 30.0f * zen_game_delta_time;
 }
-void zen_game_player_init(zen_game_Player* player)
+void zen_game_player_init(zen_game_Player* zen_game_player)
 {
-	player->color.r = 255;
-	player->color.g = 255;
-	player->color.b = 0;
-	player->color.a = 255;
+	zen_game_player->color.r = 255;
+	zen_game_player->color.g = 255;
+	zen_game_player->color.b = 0;
+	zen_game_player->color.a = 255;
 }
-void zen_game_player_update(zen_game_Player* player)
+void zen_game_player_update(zen_game_Player* zen_game_player)
 {
-	zen_game_entity_update(&player->entity);
-	int dx = 0;
-	int dy = 0;
+	zen_game_entity_update(&zen_game_player->entity);
+	int zen_game_dx = 0;
+	int zen_game_dy = 0;
 	if (IsKeyPressed(zen_raylib_KeyboardKey_LEFT))
 	{
-		dx -= 1;
+		zen_game_dx -= 1;
 	}
 	if (IsKeyPressed(zen_raylib_KeyboardKey_RIGHT))
 	{
-		dx += 1;
+		zen_game_dx += 1;
 	}
 	if (IsKeyPressed(zen_raylib_KeyboardKey_UP))
 	{
-		dy -= 1;
+		zen_game_dy -= 1;
 	}
 	if (IsKeyPressed(zen_raylib_KeyboardKey_DOWN))
 	{
-		dy += 1;
+		zen_game_dy += 1;
 	}
-	int nx = player->entity.x + dx;
-	int ny = player->entity.y + dy;
-	player->entity.x = nx;
-	player->entity.y = ny;
+	int zen_game_nx = zen_game_player->entity.x + zen_game_dx;
+	int zen_game_ny = zen_game_player->entity.y + zen_game_dy;
+	zen_game_player->entity.x = zen_game_nx;
+	zen_game_player->entity.y = zen_game_ny;
 }
-void zen_game_player_draw(zen_game_Player* player)
+void zen_game_player_draw(zen_game_Player* zen_game_player)
 {
-	DrawRectangle((int)(player->entity.visualX * (float)CELL_WIDTH), (int)(player->entity.visualY * (float)CELL_HEIGHT), CELL_WIDTH, CELL_WIDTH, player->color);
+	DrawRectangle((int)(zen_game_player->entity.visualX * (float)zen_game_CELL_WIDTH), (int)(zen_game_player->entity.visualY * (float)zen_game_CELL_HEIGHT), zen_game_CELL_WIDTH, zen_game_CELL_WIDTH, zen_game_player->color);
 }
-void zen_game_crate_init(zen_game_Crate* crate)
+void zen_game_crate_init(zen_game_Crate* zen_game_crate)
 {
 }
-void zen_game_crate_draw(zen_game_Crate* crate)
+void zen_game_crate_draw(zen_game_Crate* zen_game_crate)
 {
-	Color color = {};
-	color.r = 0;
-	color.g = 0;
-	color.b = 255;
-	color.a = 255;
-	DrawRectangle((int)(crate->entity.visualX * (float)CELL_WIDTH), (int)(crate->entity.visualY * (float)CELL_HEIGHT), 32, 32, color);
+	Color zen_game_color = {};
+	zen_game_color.r = 0;
+	zen_game_color.g = 0;
+	zen_game_color.b = 255;
+	zen_game_color.a = 255;
+	DrawRectangle((int)(zen_game_crate->entity.visualX * (float)zen_game_CELL_WIDTH), (int)(zen_game_crate->entity.visualY * (float)zen_game_CELL_HEIGHT), 32, 32, zen_game_color);
 }
-zen_game_Tile map_tiles[72];
+zen_game_Tile zen_game_map_tiles[72];
 void zen_game_map_load()
 {
-	for (int i = 0; i < MAP_WIDTH * MAP_HEIGHT; i += 1)
+	for (int zen_game_i = 0; zen_game_i < zen_game_MAP_WIDTH * zen_game_MAP_HEIGHT; zen_game_i += 1)
 	{
-		map_tiles[i].active = false;
+		zen_game_map_tiles[zen_game_i].active = false;
 	}
-	for (int i = 0; i < 2; i += 1)
+	for (int zen_game_i = 0; zen_game_i < 2; zen_game_i += 1)
 	{
-		map_tiles[i].active = true;
+		zen_game_map_tiles[zen_game_i].active = true;
 	}
 }
 void zen_game_map_draw()
 {
-	for (int y = 0; y < MAP_WIDTH; y += 1)
+	for (int zen_game_y = 0; zen_game_y < zen_game_MAP_WIDTH; zen_game_y += 1)
 	{
-		for (int x = 0; x < MAP_HEIGHT; x += 1)
+		for (int zen_game_x = 0; zen_game_x < zen_game_MAP_HEIGHT; zen_game_x += 1)
 		{
-			zen_game_Tile tile = map_tiles[y * MAP_HEIGHT + x];
-			Color tileColor = {};
-			tileColor.a = 255;
-			if (tile.active == true)
+			zen_game_Tile zen_game_tile = zen_game_map_tiles[zen_game_y * zen_game_MAP_HEIGHT + zen_game_x];
+			Color zen_game_tileColor = {};
+			zen_game_tileColor.a = 255;
+			if (zen_game_tile.active == true)
 			{
-				tileColor.r = 255;
+				zen_game_tileColor.r = 255;
 			}
-			if (tile.active == true)
+			if (zen_game_tile.active == true)
 			{
-				DrawRectangle(x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT, tileColor);
+				DrawRectangle(zen_game_x * zen_game_CELL_WIDTH, zen_game_y * zen_game_CELL_HEIGHT, zen_game_CELL_WIDTH, zen_game_CELL_HEIGHT, zen_game_tileColor);
 			}
 		}
 	}
-	Color white = {};
-	white.r = 255;
-	white.g = 255;
-	white.b = 255;
-	white.a = 255;
-	zen_game_draw_rect_lines(0.0f, 0.0f, (float)(MAP_WIDTH * CELL_WIDTH), (float)(MAP_HEIGHT * CELL_HEIGHT), white);
+	Color zen_game_white = {};
+	zen_game_white.r = 255;
+	zen_game_white.g = 255;
+	zen_game_white.b = 255;
+	zen_game_white.a = 255;
+	zen_game_draw_rect_lines(0.0f, 0.0f, (float)(zen_game_MAP_WIDTH * zen_game_CELL_WIDTH), (float)(zen_game_MAP_HEIGHT * zen_game_CELL_HEIGHT), zen_game_white);
 }
-void zen_game_draw_line(float x1, float y1, float x2, float y2, Color color)
+void zen_game_draw_line(float zen_game_x1, float zen_game_y1, float zen_game_x2, float zen_game_y2, Color zen_game_color)
 {
-	DrawLine((int)x1, (int)y1, (int)x2, (int)y2, color);
+	DrawLine((int)zen_game_x1, (int)zen_game_y1, (int)zen_game_x2, (int)zen_game_y2, zen_game_color);
 }
-void zen_game_draw_rect(float x, float y, float w, float h, Color color)
+void zen_game_draw_rect(float zen_game_x, float zen_game_y, float zen_game_w, float zen_game_h, Color zen_game_color)
 {
-	DrawRectangle((int)x, (int)y, (int)w, (int)h, color);
+	DrawRectangle((int)zen_game_x, (int)zen_game_y, (int)zen_game_w, (int)zen_game_h, zen_game_color);
 }
-void zen_game_draw_rect_lines(float x, float y, float w, float h, Color color)
+void zen_game_draw_rect_lines(float zen_game_x, float zen_game_y, float zen_game_w, float zen_game_h, Color zen_game_color)
 {
-	DrawLine((int)x, (int)y, (int)w, (int)y, color);
-	DrawLine((int)x, (int)h, (int)w, (int)h, color);
-	DrawLine((int)x, (int)y, (int)x, (int)h, color);
-	DrawLine((int)w, (int)y, (int)w, (int)h, color);
+	DrawLine((int)zen_game_x, (int)zen_game_y, (int)zen_game_w, (int)zen_game_y, zen_game_color);
+	DrawLine((int)zen_game_x, (int)zen_game_h, (int)zen_game_w, (int)zen_game_h, zen_game_color);
+	DrawLine((int)zen_game_x, (int)zen_game_y, (int)zen_game_x, (int)zen_game_h, zen_game_color);
+	DrawLine((int)zen_game_w, (int)zen_game_y, (int)zen_game_w, (int)zen_game_h, zen_game_color);
 }
 
 void main()
