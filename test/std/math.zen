@@ -27,3 +27,13 @@ extern fun float floorf(float x);
 extern fun float fmodf(float x, float y);
 extern fun float fabsf(float x);
 extern fun float roundf(float x);
+
+fun float lerp(float x, float y, float pct)
+{
+    return x + (y - x) * pct;
+}
+
+fun float distance(float dx, float dy)
+{
+    return sqrtf(dx * dx + dy * dy);
+}

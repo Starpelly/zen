@@ -150,6 +150,8 @@ void zen_game_draw_rect_lines(float zen_game_x, float zen_game_y, float zen_game
 const float64 zen_math_PI = 3.14159265358979323846f;
 const float64 zen_math_HALF_PI = 1.57079632679489661923f;
 const float64 zen_math_EPSILON = 0.00001f;
+float zen_math_lerp(float zen_math_x, float zen_math_y, float zen_math_pct);
+float zen_math_distance(float zen_math_dx, float zen_math_dy);
 struct zen_game_GameManager {
 	zen_game_Player* player;
 	zen_game_Crate* testCrate;
@@ -170,7 +172,6 @@ struct zen_game_Crate {
 	zen_game_Entity entity;
 };
 struct zen_game_Tile {
-	bool active;
 	zen_game_Entity* entity;
 };
 void zen_main()
@@ -232,10 +233,8 @@ void zen_game_entity_update(zen_game_Entity* zen_game_e)
 {
 	float zen_game_targetX = (float)zen_game_e->x;
 	float zen_game_targetY = (float)zen_game_e->y;
-	float zen_game_dx = zen_game_targetX - zen_game_e->visualX;
-	float zen_game_dy = zen_game_targetY - zen_game_e->visualY;
-	zen_game_e->visualX += zen_game_dx * 30.0f * zen_game_delta_time;
-	zen_game_e->visualY += zen_game_dy * 30.0f * zen_game_delta_time;
+	zen_game_e->visualX = zen_math_lerp(zen_game_e->visualX, zen_game_targetX, 30.0f * zen_game_delta_time);
+	zen_game_e->visualY = zen_math_lerp(zen_game_e->visualY, zen_game_targetY, 30.0f * zen_game_delta_time);
 }
 void zen_game_player_init(zen_game_Player* zen_game_player)
 {
@@ -293,11 +292,7 @@ void zen_game_map_load()
 {
 	for (int zen_game_i = 0; zen_game_i < zen_game_MAP_WIDTH * zen_game_MAP_HEIGHT; zen_game_i += 1)
 	{
-		zen_game_map_tiles[zen_game_i].active = false;
-	}
-	for (int zen_game_i = 0; zen_game_i < 2; zen_game_i += 1)
-	{
-		zen_game_map_tiles[zen_game_i].active = true;
+		zen_game_map_tiles[zen_game_i].entity = null;
 	}
 }
 void zen_game_map_draw()
@@ -307,16 +302,6 @@ void zen_game_map_draw()
 		for (int zen_game_x = 0; zen_game_x < zen_game_MAP_HEIGHT; zen_game_x += 1)
 		{
 			zen_game_Tile zen_game_tile = zen_game_map_tiles[zen_game_y * zen_game_MAP_HEIGHT + zen_game_x];
-			Color zen_game_tileColor = {};
-			zen_game_tileColor.a = 255;
-			if (zen_game_tile.active == true)
-			{
-				zen_game_tileColor.r = 255;
-			}
-			if (zen_game_tile.active == true)
-			{
-				DrawRectangle(zen_game_x * zen_game_CELL_WIDTH, zen_game_y * zen_game_CELL_HEIGHT, zen_game_CELL_WIDTH, zen_game_CELL_HEIGHT, zen_game_tileColor);
-			}
 		}
 	}
 	Color zen_game_white = {};
@@ -331,6 +316,14 @@ void zen_game_map_update()
 }
 void zen_game_map_move_entity(zen_game_Entity* zen_game_e, int zen_game_dx, int zen_game_dy)
 {
+	if (zen_game_dx == 0 && zen_game_dy == 0)
+	{
+		return;
+	}
+	if (zen_game_e == null)
+	{
+		return;
+	}
 	int zen_game_nx = zen_game_e->x + zen_game_dx;
 	int zen_game_ny = zen_game_e->y + zen_game_dy;
 	zen_game_Entity* zen_game_destE = zen_game_map_tiles[zen_game_nx + (zen_game_ny * zen_game_MAP_WIDTH)].entity;
@@ -360,6 +353,14 @@ void zen_game_draw_rect_lines(float zen_game_x, float zen_game_y, float zen_game
 	DrawLine((int)zen_game_x, (int)zen_game_h, (int)zen_game_w, (int)zen_game_h, zen_game_color);
 	DrawLine((int)zen_game_x, (int)zen_game_y, (int)zen_game_x, (int)zen_game_h, zen_game_color);
 	DrawLine((int)zen_game_w, (int)zen_game_y, (int)zen_game_w, (int)zen_game_h, zen_game_color);
+}
+float zen_math_lerp(float zen_math_x, float zen_math_y, float zen_math_pct)
+{
+	return zen_math_x + (zen_math_y - zen_math_x) * zen_math_pct;
+}
+float zen_math_distance(float zen_math_dx, float zen_math_dy)
+{
+	return sqrtf(zen_math_dx * zen_math_dx + zen_math_dy * zen_math_dy);
 }
 
 void main()

@@ -13,6 +13,7 @@ const float PLAYER_SPEED = 500.0;
 
 fun void player_init(Player* player)
 {
+	// @TEMP, should use an enum but those are broken lol
 	player.entity.player = true;
 	// player.entity.type = EntityType::Player;
 	player.color.r = 255; player.color.g = 255; player.color.b = 0; player.color.a = 255;

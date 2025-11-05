@@ -4,7 +4,6 @@ namespace game;
 
 struct Tile
 {
-	bool active;
 	Entity* entity;
 }
 
@@ -19,12 +18,8 @@ fun void map_load()
     // @TODO arrays should be initialized to their default values by default.
 	for (let int i = 0; i < MAP_WIDTH * MAP_HEIGHT; i += 1)
 	{
-		map_tiles[i].active = false;
-	}
-
-	for (let int i = 0; i < 2; i += 1)
-	{
-		map_tiles[i].active = true;
+		// map_tiles[i].active = false;
+		map_tiles[i].entity = null;
 	}
 }
 
@@ -36,6 +31,7 @@ fun void map_draw()
 		{
 			let Tile tile = map_tiles[y * MAP_HEIGHT + x];
 
+/*
 			var raylib::Color tileColor; tileColor.a = 255;
 			if (tile.active == true)
 			{
@@ -46,6 +42,7 @@ fun void map_draw()
 			{
 				raylib::DrawRectangle(x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT, tileColor);
 			}
+			*/
 		}
 	}
 
@@ -60,14 +57,15 @@ fun void map_update()
 
 fun void map_move_entity(Entity* e, int dx, int dy)
 {
-	// @TODO
-	// Crashes compiler lol
-	/*
+	if (dx == 0 && dy == 0)
+	{
+		// We didn't move lol
+		return;
+	}
 	if (e == null)
 	{
 		return;
 	}
-	*/
 
 	let int nx = e.x + dx;
 	let int ny = e.y + dy;

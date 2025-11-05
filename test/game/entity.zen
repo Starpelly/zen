@@ -22,12 +22,7 @@ fun void entity_update(Entity* e)
     let float targetX = cast(float)e.x;
     let float targetY = cast(float)e.y;
 
-    let float dx = targetX - e.visualX;
-    let float dy = targetY - e.visualY;
-
-    e.visualX += dx * 30.0 * delta_time;
-    e.visualY += dy * 30.0 * delta_time;
-
-    // let float x = e.visualX;
-    // println(x);
+    // Interpolate the visual position to the game world position
+    e.visualX = math::lerp(e.visualX, targetX, 30.0 * delta_time);
+    e.visualY = math::lerp(e.visualY, targetY, 30.0 * delta_time);
 }
