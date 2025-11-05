@@ -142,6 +142,8 @@ const int zen_game_MAP_WIDTH = 12;
 const int zen_game_MAP_HEIGHT = 6;
 void zen_game_map_load();
 void zen_game_map_draw();
+void zen_game_map_update();
+void zen_game_map_move_entity(zen_game_Entity* zen_game_e, int zen_game_dx, int zen_game_dy);
 void zen_game_draw_line(float zen_game_x1, float zen_game_y1, float zen_game_x2, float zen_game_y2, Color zen_game_color);
 void zen_game_draw_rect(float zen_game_x, float zen_game_y, float zen_game_w, float zen_game_h, Color zen_game_color);
 void zen_game_draw_rect_lines(float zen_game_x, float zen_game_y, float zen_game_w, float zen_game_h, Color zen_game_color);
@@ -150,6 +152,7 @@ const float64 zen_math_HALF_PI = 1.57079632679489661923f;
 const float64 zen_math_EPSILON = 0.00001f;
 struct zen_game_GameManager {
 	zen_game_Player* player;
+	zen_game_Crate* testCrate;
 };
 struct zen_game_Entity {
 	zen_game_EntityType type;
@@ -157,6 +160,7 @@ struct zen_game_Entity {
 	int y;
 	float visualX;
 	float visualY;
+	bool player;
 };
 struct zen_game_Player {
 	zen_game_Entity entity;
@@ -167,6 +171,7 @@ struct zen_game_Crate {
 };
 struct zen_game_Tile {
 	bool active;
+	zen_game_Entity* entity;
 };
 void zen_main()
 {
@@ -186,13 +191,16 @@ void zen_game_start_game()
 	SetTargetFPS(185);
 	zen_game_GameManager zen_game_gameManager = {};
 	zen_game_Player zen_game_player = {};
+	zen_game_Crate zen_game_testCrate = {};
 	Camera2D zen_game_cam = {};
 	zen_game_cam.target.x = -(float)(58);
 	zen_game_cam.target.y = -(float)(32);
 	zen_game_cam.zoom = (float)zen_game_GAME_ZOOM;
 	zen_game_gameManager.player = &zen_game_player;
+	zen_game_gameManager.testCrate = &zen_game_testCrate;
 	zen_game_player_init(zen_game_gameManager.player);
 	zen_game_map_load();
+	zen_game_map_move_entity(&zen_game_gameManager.testCrate->entity, 4, 2);
 	while (!WindowShouldClose())
 	{
 		zen_game_game_update(&zen_game_gameManager);
@@ -211,12 +219,14 @@ void zen_game_game_update(zen_game_GameManager* zen_game_gameManager)
 	zen_game_delta_time = GetFrameTime();
 	zen_game_game_time += zen_game_delta_time;
 	zen_game_game_frame += 1;
+	zen_game_entity_update(&zen_game_gameManager->testCrate->entity);
 	zen_game_player_update(zen_game_gameManager->player);
 }
 void zen_game_game_draw(zen_game_GameManager* zen_game_gameManager)
 {
 	zen_game_map_draw();
 	zen_game_player_draw(zen_game_gameManager->player);
+	zen_game_crate_draw(zen_game_gameManager->testCrate);
 }
 void zen_game_entity_update(zen_game_Entity* zen_game_e)
 {
@@ -229,6 +239,7 @@ void zen_game_entity_update(zen_game_Entity* zen_game_e)
 }
 void zen_game_player_init(zen_game_Player* zen_game_player)
 {
+	zen_game_player->entity.player = true;
 	zen_game_player->color.r = 255;
 	zen_game_player->color.g = 255;
 	zen_game_player->color.b = 0;
@@ -255,10 +266,14 @@ void zen_game_player_update(zen_game_Player* zen_game_player)
 	{
 		zen_game_dy += 1;
 	}
-	int zen_game_nx = zen_game_player->entity.x + zen_game_dx;
-	int zen_game_ny = zen_game_player->entity.y + zen_game_dy;
-	zen_game_player->entity.x = zen_game_nx;
-	zen_game_player->entity.y = zen_game_ny;
+	if (zen_game_dx == 0)
+	{
+		if (zen_game_dy == 0)
+		{
+			return;
+		}
+	}
+	zen_game_map_move_entity(&zen_game_player->entity, zen_game_dx, zen_game_dy);
 }
 void zen_game_player_draw(zen_game_Player* zen_game_player)
 {
@@ -274,7 +289,7 @@ void zen_game_crate_draw(zen_game_Crate* zen_game_crate)
 	zen_game_color.g = 0;
 	zen_game_color.b = 255;
 	zen_game_color.a = 255;
-	DrawRectangle((int)(zen_game_crate->entity.visualX * (float)zen_game_CELL_WIDTH), (int)(zen_game_crate->entity.visualY * (float)zen_game_CELL_HEIGHT), 32, 32, zen_game_color);
+	DrawRectangle((int)(zen_game_crate->entity.visualX * (float)zen_game_CELL_WIDTH), (int)(zen_game_crate->entity.visualY * (float)zen_game_CELL_HEIGHT), zen_game_CELL_WIDTH, zen_game_CELL_HEIGHT, zen_game_color);
 }
 zen_game_Tile zen_game_map_tiles[72];
 void zen_game_map_load()
@@ -313,6 +328,26 @@ void zen_game_map_draw()
 	zen_game_white.b = 255;
 	zen_game_white.a = 255;
 	zen_game_draw_rect_lines(0.0f, 0.0f, (float)(zen_game_MAP_WIDTH * zen_game_CELL_WIDTH), (float)(zen_game_MAP_HEIGHT * zen_game_CELL_HEIGHT), zen_game_white);
+}
+void zen_game_map_update()
+{
+}
+void zen_game_map_move_entity(zen_game_Entity* zen_game_e, int zen_game_dx, int zen_game_dy)
+{
+	int zen_game_nx = zen_game_e->x + zen_game_dx;
+	int zen_game_ny = zen_game_e->y + zen_game_dy;
+	zen_game_Entity* zen_game_destE = zen_game_map_tiles[zen_game_nx + (zen_game_ny * zen_game_MAP_WIDTH)].entity;
+	if (zen_game_destE != null)
+	{
+		if (zen_game_e->player == true)
+		{
+			zen_game_map_move_entity(zen_game_destE, zen_game_dx, zen_game_dy);
+		}
+	}
+	zen_game_map_tiles[zen_game_e->x + (zen_game_e->y * zen_game_MAP_WIDTH)].entity = null;
+	zen_game_map_tiles[zen_game_nx + (zen_game_ny * zen_game_MAP_WIDTH)].entity = zen_game_e;
+	zen_game_e->x = zen_game_nx;
+	zen_game_e->y = zen_game_ny;
 }
 void zen_game_draw_line(float zen_game_x1, float zen_game_y1, float zen_game_x2, float zen_game_y2, Color zen_game_color)
 {

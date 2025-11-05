@@ -34,7 +34,14 @@ file(GLOB_RECURSE ZEN_FILES
 
 add_executable(Zen ${ZEN_FILES})
 
+set(RAYLIB_PATH "C:/Users/Braedon/Downloads/raylib-5.5_win64_msvc16/raylib-5.5_win64_msvc16")
+
 target_include_directories(Zen PUBLIC ${ZEN_SOURCE_DIR})
+
+# raylib
+target_include_directories(Zen PUBLIC ${RAYLIB_PATH}/include)
+target_link_libraries(Zen PUBLIC ${RAYLIB_PATH}/lib/raylib.lib)
+target_link_libraries(Zen PUBLIC winmm.lib)
 
 #====================================================================
 # Folder structuring in Visual Studio

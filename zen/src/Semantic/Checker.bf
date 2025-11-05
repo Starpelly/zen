@@ -83,10 +83,13 @@ class Checker
 
 		if (let ret = stmt as AstNode.Stmt.Return)
 		{
-			let retType = checkExpr(ret.Value, _scope);
-			if (!ZenType.AreTypesIdenticalUntyped(m_functionStack.Back.Type, retType))
+			if (ret.Value != null)
 			{
-				reportError(ret.Token, scope $"Return type mismatch: expected '{m_functionStack.Back.Type.GetName(.. scope .())}', got '{retType.GetName(.. scope .())}'");
+				let retType = checkExpr(ret.Value, _scope);
+				if (!ZenType.AreTypesIdenticalUntyped(m_functionStack.Back.Type, retType))
+				{
+					reportError(ret.Token, scope $"Return type mismatch: expected '{m_functionStack.Back.Type.GetName(.. scope .())}', got '{retType.GetName(.. scope .())}'");
+				}
 			}
 		}
 
@@ -469,6 +472,13 @@ class Checker
 		// @HACK
 		if (!ZenType.AreTypesIdenticalUntyped(x, y))
 		{
+			if (x case .Pointer && y case .Basic(let basic))
+			{
+				// This allows pointers to be assigned as NULL, not valid for other types I assume.
+				if (basic.Kind == .UntypedNull)
+					return;
+			}
+
 			// @FIX
 			// Bad error message
 			reportError(token, scope $"Types mismatch ({x.GetName(.. scope .())}) to ({y.GetName(.. scope .())})");

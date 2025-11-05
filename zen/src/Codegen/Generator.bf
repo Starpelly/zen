@@ -16,6 +16,8 @@ class Generator
 		public readonly List<CFile> Files;
 	}
 
+	private const String USER_SYMBOL_PREFIX = "zen";
+
 	const String BOILERPLATE =
 		"""
 		#include <stdio.h>
@@ -36,18 +38,20 @@ class Generator
 		typedef			 float		float32;
 		typedef			 double		float64;
 
+		#define null NULL
+
 		#if defined(_WIN32)
-		#define ZEN_PLATFORM_WINDOWS
+		#define ZENC_PLATFORM_WINDOWS
 			#ifdef _WIN64
-				#define ZEN_X64
+				#define ZENC_X64
 			#endif
 		#elif defined(__linux__)
-			#define ZEN_PLATFORM_LINUX
+			#define ZENC_PLATFORM_LINUX
 		#else
 			#error "Unknown platform!"
 		#endif
 
-		#ifdef ZEN_PLATFORM_WINDOWS
+		#ifdef ZENC_PLATFORM_WINDOWS
 		// #include <windows.h>
 		#endif
 
@@ -73,11 +77,11 @@ class Generator
 		mainCode.AppendLine(headerCode.Code);
 		mainCode.AppendEmptyLine();
 		mainCode.AppendLine(
-		"""
+		scope $"""
 		void main()
-		{
-			zen_main();
-		}
+		\{
+			{USER_SYMBOL_PREFIX}_main();
+		\}
 		""");
 		let mainFile = createNewFile(new .("main.c", mainCode.Code));
 
@@ -126,7 +130,7 @@ class Generator
 	{
 		if (zenPrefix)
 		{
-			outStr.Append("zen");
+			outStr.Append(USER_SYMBOL_PREFIX);
 		}
 		if (_namespace != null)
 		{
@@ -481,8 +485,13 @@ class Generator
 			break;
 
 		case .Return(let ret):
-			code.AppendLine(scope $"return ");
-			emitExpr(ret.Value, code, _scope);
+			code.AppendLine(scope $"return");
+
+			if (ret.Value != null)
+			{
+				code.Append(' ');
+				emitExpr(ret.Value, code, _scope);
+			}
 			addSemicolon!();
 			break;
 
@@ -549,7 +558,7 @@ class Generator
 			}
 			if (writeNamespace )
 			{
-				outStr.Append("zen");
+				outStr.Append(USER_SYMBOL_PREFIX);
 				if (_struct.Scope.NamespaceParent case .Ok(let ns))
 				{
 					buildNamespaceString(ns, outStr, false);
@@ -853,7 +862,10 @@ class Generator
 			if (writeNamespace)
 			{
 				if (zenNamespacePrefix)
-				code.Append("zen_");
+				{
+					code.Append(USER_SYMBOL_PREFIX);
+					code.Append('_');
+				}
 
 				// @FIX
 				// I don't think the codegen should have to do this

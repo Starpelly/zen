@@ -39,6 +39,8 @@ extern fun void DrawRectangle(int x, int y, int w, int h, Color color);
 extern fun void DrawCircle(int x, int y, int r, Color color);
 extern fun void DrawLine(int ax, int ay, int bx, int by, Color color);
 
+extern fun void DrawRectangleV(Vector2 pos, Vector2 size, Color color);
+
 extern fun void SetTargetFPS(int fps);
 
 extern fun int GetMouseX();

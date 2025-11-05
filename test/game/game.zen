@@ -29,6 +29,7 @@ let uint64 game_frame = 0;
 struct GameManager
 {
 	Player* player;
+	Crate* testCrate;
 }
 
 fun void start_game()
@@ -41,6 +42,7 @@ fun void start_game()
 
 	let GameManager gameManager;
 	let Player player;
+	let Crate testCrate;
 
 	let raylib::Camera2D cam;
 	cam.target.x = -cast(float)(58);
@@ -48,9 +50,12 @@ fun void start_game()
 	cam.zoom = cast(float)GAME_ZOOM;
 
 	gameManager.player = &player;
+	gameManager.testCrate = &testCrate;
 	player_init(gameManager.player);
 
 	map_load();
+
+	map_move_entity(&gameManager.testCrate.entity, 4, 2);
 
 	while (!raylib::WindowShouldClose())
 	{
@@ -76,6 +81,7 @@ fun void game_update(GameManager* gameManager)
 	game_time += delta_time;
 	game_frame += 1;
 
+	entity_update(&gameManager.testCrate.entity);
 	player_update(gameManager.player);
 }
 
@@ -83,4 +89,5 @@ fun void game_draw(GameManager* gameManager)
 {
 	map_draw();
 	player_draw(gameManager.player);
+	crate_draw(gameManager.testCrate);
 }

@@ -26,3 +26,4 @@ extern fun float ceilf(float x);
 extern fun float floorf(float x);
 extern fun float fmodf(float x, float y);
 extern fun float fabsf(float x);
+extern fun float roundf(float x);

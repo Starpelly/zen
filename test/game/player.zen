@@ -13,6 +13,7 @@ const float PLAYER_SPEED = 500.0;
 
 fun void player_init(Player* player)
 {
+	player.entity.player = true;
 	// player.entity.type = EntityType::Player;
 	player.color.r = 255; player.color.g = 255; player.color.b = 0; player.color.a = 255;
 }
@@ -41,11 +42,18 @@ fun void player_update(Player* player)
 		dy += 1;
 	}
 
-	var int nx = player.entity.x + dx;
-	var int ny = player.entity.y + dy;
+	// @TODO this should be an && but we don't have those yet LOL
+	// I'll do that tomorrow but I'm sleepppyyy
+	if (dx == 0)
+	{
+		if (dy == 0)
+		{
+			// we didn't move lol
+			return;
+		}
+	}
 
-	player.entity.x = nx;
-	player.entity.y = ny;
+	map_move_entity(&player.entity, dx, dy);
 }
 
 fun void player_draw(Player* player)

@@ -16,5 +16,5 @@ fun void crate_draw(Crate* crate)
 {
     let raylib::Color color;
     color.r = 0; color.g = 0; color.b = 255; color.a = 255;
-    raylib::DrawRectangle(cast(int)(crate.entity.visualX * cast(float)CELL_WIDTH), cast(int)(crate.entity.visualY * cast(float)CELL_HEIGHT), 32, 32, color);
+    raylib::DrawRectangle(cast(int)(crate.entity.visualX * cast(float)CELL_WIDTH), cast(int)(crate.entity.visualY * cast(float)CELL_HEIGHT), CELL_WIDTH, CELL_HEIGHT, color);
 }

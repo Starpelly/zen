@@ -5,6 +5,7 @@ namespace game;
 struct Tile
 {
 	bool active;
+	Entity* entity;
 }
 
 const int MAP_WIDTH  = 12;
@@ -50,4 +51,44 @@ fun void map_draw()
 
 	let raylib::Color white; white.r = 255; white.g = 255; white.b = 255; white.a = 255;
 	draw_rect_lines(0.0, 0.0, cast(float)(MAP_WIDTH * CELL_WIDTH), cast(float)(MAP_HEIGHT * CELL_HEIGHT), white);
+}
+
+fun void map_update()
+{
+	
+}
+
+fun void map_move_entity(Entity* e, int dx, int dy)
+{
+	// @TODO
+	// Crashes compiler lol
+	/*
+	if (e == null)
+	{
+		return;
+	}
+	*/
+
+	let int nx = e.x + dx;
+	let int ny = e.y + dy;
+
+	// @TODO
+	// Array indexing OOB is undefined behavior in C,
+	// meaning it can crash on TinyCC, but appear to work in MSVC, or vice versa...
+	// That's not good! So we'll want to use our own array type or potentially emit some macro that does bounds checking for us.
+	// Basically, we want to omit as much UB as possible.
+	let Entity* destE = map_tiles[nx + (ny * MAP_WIDTH)].entity;
+	if (destE != null)
+	{
+		if (e.player == true)
+		{
+			map_move_entity(destE, dx, dy);
+		}
+	}
+
+	map_tiles[e.x + (e.y * MAP_WIDTH)].entity = null;
+	map_tiles[nx + (ny * MAP_WIDTH)].entity = e;
+
+	e.x = nx;
+	e.y = ny;
 }

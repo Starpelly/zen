@@ -94,7 +94,8 @@ class Resolver
 
 		case .BasicDirective,
 			 .Expression,
-			 .EOF
+			 .EOF,
+			 .Return
 			 :
 			return;
 

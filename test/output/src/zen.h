@@ -16,18 +16,20 @@ typedef			 char		int8;
 typedef			 float		float32;
 typedef			 double		float64;
 
+#define null NULL
+
 #if defined(_WIN32)
-#define ZEN_PLATFORM_WINDOWS
+#define ZENC_PLATFORM_WINDOWS
 	#ifdef _WIN64
-		#define ZEN_X64
+		#define ZENC_X64
 	#endif
 #elif defined(__linux__)
-	#define ZEN_PLATFORM_LINUX
+	#define ZENC_PLATFORM_LINUX
 #else
 	#error "Unknown platform!"
 #endif
 
-#ifdef ZEN_PLATFORM_WINDOWS
+#ifdef ZENC_PLATFORM_WINDOWS
 // #include <windows.h>
 #endif
 
