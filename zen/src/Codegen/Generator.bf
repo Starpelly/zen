@@ -604,13 +604,6 @@ class Generator
 					}
 				}
 				*/
-				if (builtinFunc case .Ok(let name))
-				{
-					if (name.Name == "sizeof")
-					{
-						let a = 0;
-					}
-				}
 
 				emitExpr(arg, arguments, _scope);
 				if (arg != call.Arguments.Back)

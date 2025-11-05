@@ -216,6 +216,7 @@ class Resolver
 		}
 		else if (type case .Basic)
 		{
+#pragma warning disable 4204
 			return (type, &type);
 		}
 
