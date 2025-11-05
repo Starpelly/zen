@@ -781,6 +781,9 @@ class Generator
 			break;
 
 		case .Logical(let logical):
+			emitExpr(logical.Left, code, _scope);
+			code.Append(scope $" {logical.Op.Lexeme} ");
+			emitExpr(logical.Right, code, _scope);
 			break;
 
 		case .Literal(let literal):

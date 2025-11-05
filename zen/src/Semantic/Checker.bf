@@ -334,8 +334,22 @@ class Checker
 
 		case .Set(let set):
 			break;
+
 		case .Logical(let log):
-			break;
+			let op = log.Op;
+			let leftType = checkExpr(log.Left, _scope);
+			let rightType = checkExpr(log.Right, _scope);
+
+			if (!leftType.IsTypeBoolean())
+			{
+				reportError(log.Left, "Conditional expression isn't a boolean");
+			}
+			if (!rightType.IsTypeBoolean())
+			{
+				reportError(log.Right, "Conditional expression isn't a boolean");
+			}
+
+			return .Basic(.FromKind(.UntypedBool));
 
 		case .Unary(let un):
 			let op = un.Operator;

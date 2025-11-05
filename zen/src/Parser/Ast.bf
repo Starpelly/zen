@@ -386,9 +386,9 @@ abstract class AstNode
 
 		public class Logical : Expression
 		{
-			public readonly Expression Left;
+			public readonly Expression Left ~ delete _;
 			public readonly Token Op;
-			public readonly Expression Right;
+			public readonly Expression Right ~ delete _;
 			
 			public this(Expression left, Token op, Expression right)
 			{

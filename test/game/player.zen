@@ -42,15 +42,10 @@ fun void player_update(Player* player)
 		dy += 1;
 	}
 
-	// @TODO this should be an && but we don't have those yet LOL
-	// I'll do that tomorrow but I'm sleepppyyy
-	if (dx == 0)
+	if (dx == 0 && dy == 0)
 	{
-		if (dy == 0)
-		{
-			// we didn't move lol
-			return;
-		}
+		// we didn't move lol
+		return;
 	}
 
 	map_move_entity(&player.entity, dx, dy);

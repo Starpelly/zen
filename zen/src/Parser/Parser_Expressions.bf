@@ -68,7 +68,7 @@ extension Parser
 	{
 		var expr = getExprAnd();
 
-		while (match(.Or))
+		while (match(.Or)) // ||
 		{
 			let op = previous();
 			let right = getExprAnd();
@@ -82,7 +82,7 @@ extension Parser
 	{
 		var expr = getExprEquality();
 
-		while (match(.And))
+		while (match(.And)) // &&
 		{
 			let op = previous();
 			let right = getExprEquality();

@@ -266,12 +266,9 @@ void zen_game_player_update(zen_game_Player* zen_game_player)
 	{
 		zen_game_dy += 1;
 	}
-	if (zen_game_dx == 0)
+	if (zen_game_dx == 0 && zen_game_dy == 0)
 	{
-		if (zen_game_dy == 0)
-		{
-			return;
-		}
+		return;
 	}
 	zen_game_map_move_entity(&zen_game_player->entity, zen_game_dx, zen_game_dy);
 }

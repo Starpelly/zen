@@ -39,6 +39,7 @@ public enum TokenKind : uint8
 	case Question;			// ?
 	case Hash;				// #
 	case Ampersand;			// &
+	case VerticalBar;		// |
 
 	case PlusEqual;			// +=
 	case MinusEqual;		// -=
@@ -51,6 +52,9 @@ public enum TokenKind : uint8
 	case BangEqual;			// !=
 	case LessEqual;			// <=
 	case GreaterEqual;		// >=
+
+	case And;	// &&
+	case Or;	// ||
 
 	case Identifier;
 	case Comment;
@@ -102,12 +106,6 @@ public enum TokenKind : uint8
 
 	[RegisterKeyword("enum")]
 	case Enum;
-
-	[RegisterKeyword("and")]
-	case And;
-
-	[RegisterKeyword("or")]
-	case Or;
 
 	[RegisterKeyword("this")]
 	case This;
