@@ -461,6 +461,8 @@ abstract class AstNode
 			public readonly Token Operator;
 			public readonly Expression Right ~ delete _;
 
+			public ZenType StoredType;
+
 			public this(Token @operator, Expression right)
 			{
 				this.Operator = @operator;

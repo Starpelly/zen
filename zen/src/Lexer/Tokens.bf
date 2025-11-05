@@ -13,7 +13,7 @@ public struct RegisterKeywordAttribute : Attribute
 	}
 }
 
-public enum TokenKind
+public enum TokenKind : uint8
 {
 	case LeftParen;			// (
 	case RightParen;		// )
@@ -59,10 +59,10 @@ public enum TokenKind
 	case Number_Int;
 	case Number_Float;
 
-	case EOF;
+	case EOF = 255;
 
 	[RegisterKeyword("if")]
-	case If;
+	case If = 128;
 
 	[RegisterKeyword("else")]
 	case Else;

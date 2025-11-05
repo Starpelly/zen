@@ -143,16 +143,10 @@ class Checker
 
 	private ZenType checkExpr(AstNode.Expression expr, Scope _scope, Scope callScope = null)
 	{
-		mixin returnVal(ZenType type)
-		{
-			// expr.Type = type;
-			return type;
-		}
-
 		switch (expr.GetKind())
 		{
 		case .Literal(let lit):
-			returnVal!(lit.GetLiteralType());
+			return lit.GetLiteralType();
 
 		case .Binary(let bin):
 			// First we'll check the x and y expressions, we MIGHT return a boolean depending on the operator type.
@@ -169,14 +163,14 @@ class Checker
 				 .GreaterEqual,	// >=
 				 .EqualEqual,	// ==
 				 .BangEqual:	// !=
-				returnVal!(ZenType.Basic(BasicType.FromKind(.UntypedBool)));
+				return ZenType.Basic(BasicType.FromKind(.UntypedBool));
 			default:
 			}
 
 			checkTypesComparable(bin.Op, x, y);
 
 			// If X and Y matches, we can just return X because they're the same type.
-			returnVal!(x);
+			return x;
 
 		case .Variable(let variable):
 			let entity = lookupScopeForIdentifier(_scope, variable.Name);
@@ -240,7 +234,7 @@ class Checker
 			}
 			*/
 
-			returnVal!(entity.Value.Type);
+			return entity.Value.Type;
 
 		case .Call(let call):
 			let entity = lookupScopeForIdentifier(_scope, call.Callee.Name);
@@ -254,12 +248,12 @@ class Checker
 				if (call.Arguments.Count > calleeFun.Decl.Parameters.Count)
 				{
 					reportError(call.Close, scope $"Too many arguments, expected {call.Arguments.Count - calleeFun.Decl.Parameters.Count} fewer.");
-					returnVal!(entity.Value.Type);
+					return entity.Value.Type;
 				}
 				else if (call.Arguments.Count < calleeFun.Decl.Parameters.Count)
 				{
 					reportError(call.Close, scope $"Not enough arguments, expected {calleeFun.Decl.Parameters.Count - call.Arguments.Count} more.");
-					returnVal!(entity.Value.Type);
+					return entity.Value.Type;
 				}
 
 				// for (let arg in call.Arguments)
@@ -278,14 +272,14 @@ class Checker
 			{
 
 			}
-			returnVal!(entity.Value.Type);
+			return entity.Value.Type;
 
 		case .Assign(let ass):
 			let x = checkExpr(ass.Assignee, _scope);
 			let y = checkExpr(ass.Value, _scope);
 			checkTypesComparable(ass.Op, x, y);
 
-			returnVal!(x);
+			return x;
 
 		case .Get(let get):
 			let objType = checkExpr(get.Object, _scope);
@@ -310,9 +304,9 @@ class Checker
 					if (let _var = val as Entity.Variable)
 					{
 						// if (_var.ResolvedType != null)
-						returnVal!(_var.ResolvedType);
+						return _var.ResolvedType;
 					}
-					returnVal!(val.Type);
+					return val.Type;
 				}
 			}
 
@@ -333,7 +327,7 @@ class Checker
 				reportError(get.Name, "You can only get on structs.");
 			}
 
-			returnVal!(ZenType.Invalid);
+			return ZenType.Invalid;
 
 		case .Set(let set):
 			break;
@@ -343,37 +337,38 @@ class Checker
 		case .Unary(let un):
 			let op = un.Operator;
 			var rightType = checkExpr(un.Right, _scope);
+			un.StoredType = rightType;
 
 			switch (op.Kind)
-			{
+			{ 
 			case .Ampersand:
-				returnVal!(ZenType.Pointer(&rightType));
+				return ZenType.Pointer(&un.StoredType);
 			case .Star:
 				if (!rightType.IsTypePointer())
 				{
 					reportError(op, "Cannot de-reference a non-pointer type");
 				}
-				returnVal!(rightType);
+				return rightType;
 			case .Bang:
 				if (!rightType.IsTypeBoolean())
 				{
 					reportError(op, "Conditional expression isn't a boolean");
 				}
 				// Actually reversing it is the compiler and/or interpreter's job.
-				returnVal!(rightType);
+				return rightType;
 			case .Minus:
 				if (!rightType.IsTypeNumeric())
 				{
 					reportError(op, "Expression doesn't evaluate to a numeric value");
 				}
-				returnVal!(rightType);
+				return rightType;
 
 			default:
 				Runtime.Assert(false);
 			}
 
 		case .Grouping(let group):
-			returnVal!(checkExpr(group.Expression, _scope));
+			return checkExpr(group.Expression, _scope);
 
 		case .This(let _this):
 			break;
@@ -388,12 +383,12 @@ class Checker
 					if (let iScope = decl.Decl as AstNode.Stmt.IScope)
 					{
 						let val = checkExpr(qn.Right, iScope.Scope, _scope);
-						returnVal!(val);
+						return val;
 					}
 				}
 			}
 
-			returnVal!(ZenType.Invalid);
+			return ZenType.Invalid;
 
 		case .NamedType(let type):
 			switch (type.Kind)
@@ -411,7 +406,7 @@ class Checker
 						if (let typename = found as Entity.TypeName)
 						{
 							Runtime.Assert(typename.Decl is AstNode.Stmt.StructDeclaration);
-							returnVal!(typename.Type);
+							return typename.Type;
 						}
 					}
 				}
@@ -421,14 +416,14 @@ class Checker
 				break;
 
 			case .Qualified(let qualified):
-				returnVal!(checkExpr(qualified, _scope));
+				return checkExpr(qualified, _scope);
 
 			case .Pointer(let innerType):
 				var a = checkExpr(innerType, _scope);
-				returnVal!(ZenType.Pointer(&a));
+				return ZenType.Pointer(&a);
 
 			case .Array(let innerType, let countExpr):
-				returnVal!(checkExpr(innerType, _scope));
+				return checkExpr(innerType, _scope);
 			}
 
 		case .Cast(let cast):
@@ -443,7 +438,7 @@ class Checker
 			// @TODO
 			// We should actually validate that this cast is valid, but I'm lazy
 			// so for now, we'll assume you can cast anything into anything (even if it's nonsensical)
-			returnVal!(castType);
+			return castType;
 
 		case .Index(let index):
 			let arrayType = checkExpr(index.Array, _scope);
@@ -463,7 +458,7 @@ class Checker
 				return *pointerE;
 
 			reportError(index.Array, "Cannot index into a non-array type");
-			returnVal!(ZenType.Invalid);
+			return ZenType.Invalid;
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");

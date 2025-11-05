@@ -1,8 +1,14 @@
 FileVersion = 1
-Projects = {zen = {Path = "."}, libtcc = {Path = "vendor/libtcc"}, raylib-beef = {Path = "vendor/raylib-beef/raylib-beef"}, "zen.tests" = {Path = "zen.tests"}}
+Projects = {libtcc = {Path = "vendor/libtcc"}, raylib-beef = {Path = "vendor/raylib-beef/raylib-beef"}, "zen.tests" = {Path = "zen.tests"}, zen = {Path = "zen"}}
 
 [Workspace]
 StartupProject = "zen"
 
 [Configs.Release.Win64]
 LTOType = "None"
+
+[Configs.Test.Win32]
+ConfigSelections = {libtcc = {Config = "Debug"}}
+
+[Configs.Test.Win64]
+ConfigSelections = {libtcc = {Config = "Debug"}}
