@@ -33,7 +33,7 @@ class Builder
 		Console.ResetColor();
 	}
 
-	public Result<Generator.GeneratorResult> Run(String mainFilePath, String outputDirectory, FinishCompCallback finishCompCallback, List<CFile> outCFiles)
+	public Result<Generator.GeneratorResult> Run(String mainFilePath, String outputDirectory, FinishCompCallback finishCompCallback, List<CFile> outCFiles, bool printScopes)
 	{
 		// Load files
 		pleaseDoFile(mainFilePath, m_compFiles);
@@ -67,7 +67,10 @@ class Builder
 
 		StopwatchChecker.Stop();
 
-		Binder.PrintScopeTree(globalScope);
+		if (printScopes)
+		{
+			Binder.PrintScopeTree(globalScope);
+		}
 
 		checkAddErrorsAndReturn!(scoper);
 

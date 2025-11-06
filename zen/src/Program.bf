@@ -13,6 +13,7 @@ class Program
 		public bool RunAfterBuild = false;
 		public bool KeepOpen = false;
 		public bool DontBuild = false;
+		public bool PrintScopes = false;
 	}
 
 	public static int Main(String[] args)
@@ -38,6 +39,9 @@ class Program
 				break;
 			case "-nobuild":
 				cliArgs.DontBuild = true;
+				break;
+			case "-printscopes":
+				cliArgs.PrintScopes = true;
 				break;
 			}
 		}
@@ -67,7 +71,7 @@ class Program
 		}
 
 		let builder = scope Builder();
-		let cRes = builder.Run(args.MainFile, outputDirectory, scope => finishCompile, outputFiles);
+		let cRes = builder.Run(args.MainFile, outputDirectory, scope => finishCompile, outputFiles, args.PrintScopes);
 
 		Console.ResetColor();
 		if (!builder.HadErrors)
