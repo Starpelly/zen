@@ -210,7 +210,6 @@ uint64 zen_game_game_frame = 0;
 void zen_game_start_game()
 {
 	InitWindow(zen_game_GAME_WIDTH * zen_game_GAME_ZOOM, zen_game_GAME_HEIGHT * zen_game_GAME_ZOOM, "Zen");
-	SetTargetFPS(185);
 	zen_game_GameManager zen_game_gameManager = {  };
 	zen_game_Player zen_game_player = { .color = zen_raylib_Yellow };
 	zen_game_Crate zen_game_testCrate = {  };
@@ -222,6 +221,7 @@ void zen_game_start_game()
 	zen_game_gameManager.testCrate = &zen_game_testCrate;
 	zen_game_player_init(zen_game_gameManager.player);
 	zen_game_map_load();
+	Color zen_game_test = CLITERAL(Color){ 15, 15, 15, 15 };
 	zen_game_map_move_entity(&zen_game_gameManager.testCrate->entity, 4, 2);
 	while (!WindowShouldClose())
 	{

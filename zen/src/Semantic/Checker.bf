@@ -233,11 +233,6 @@ class Checker
 				{
 					let arg = call.Arguments[i];
 
-					if (let t = arg as AstNode.Expression.QualifiedName)
-					{
-						var a = 0;
-					}
-
 					let argType = checkExpr(arg, callScope ?? _scope);
 					let calleeParamType = checkExpr(calleeFun.Decl.Parameters[i].Type, _scope);
 
@@ -310,7 +305,9 @@ class Checker
 			break;
 
 		case .Logical(let log):
-			let op = log.Op;
+			// @TODO is this important?
+			//let op = log.Op;
+
 			let leftType = checkExpr(log.Left, _scope);
 			let rightType = checkExpr(log.Right, _scope);
 
@@ -452,7 +449,15 @@ class Checker
 			return ZenType.Invalid;
 
 		case .CompositeLiteral(let composite):
-			Debug.Assert(expectedTypeQ != null, "Composite literal is context dependent, so we'll need an expected type!");
+			if (expectedTypeQ == null)
+			{
+				// @TODO
+				// Wrong token
+				reportError(composite.LBrace, "Composite literal is context dependent, so we'll need an expected type!");
+				return .Invalid;
+			}
+
+			// Debug.Assert(expectedTypeQ != null, "Composite literal is context dependent, so we'll need an expected type!");
 			let expectedType = expectedTypeQ.Value;
 
 			if (expectedType case .Structure(let _struct))
@@ -469,6 +474,10 @@ class Checker
 				{
 					let fieldType = checkExpr(fields[i].Type, _scope, callScope);
 					let elemType = checkExpr(composite.Elements[i], _scope, callScope, fieldType);
+
+					// @TODO
+					// Wrong token
+					checkTypesComparable(composite.LBrace, fieldType, elemType);
 				}
 
 				composite.ResolvedInferredType = expectedType;

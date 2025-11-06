@@ -35,7 +35,7 @@ struct GameManager
 fun void start_game()
 {
     raylib::InitWindow(GAME_WIDTH * GAME_ZOOM, GAME_HEIGHT * GAME_ZOOM, "Zen");
-	raylib::SetTargetFPS(185);
+	// raylib::SetTargetFPS(185);
 
 	let GameManager gameManager;
 	let Player player;
@@ -51,6 +51,8 @@ fun void start_game()
 	player_init(gameManager.player);
 
 	map_load();
+
+	let raylib::Color test = { 15, 15, 15, 15 };
 
 	map_move_entity(&gameManager.testCrate.entity, 4, 2);
 

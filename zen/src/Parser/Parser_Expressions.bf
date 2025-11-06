@@ -16,6 +16,9 @@ extension Parser
 
 	private AstNode.Expression getExpression()
 	{
+		// @TODO
+		// reportError(previous(), "An empty block cannot be used as an expression");
+
 		return getExprAssignment();
 	}
 
@@ -293,7 +296,7 @@ extension Parser
 			returnValue!(getExprCompositeLiteral());
 		}
 
-		reportError(peek(), "Expected expression.");
+		reportError(peek(), "Expected an expression.");
 		advance();
 		return null;
 	}
