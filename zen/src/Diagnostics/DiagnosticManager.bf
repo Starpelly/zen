@@ -45,6 +45,10 @@ public class DiagnosticManager
 			let arrowLine = scope String();
 			for (let i < span.Range.Start.Column)
 			{
+				// I hate that I have to do this lol....
+				// Think about what it could've been:
+				// 		let space = scope String(' ', span.Range.Start.Column);
+				// beautiful...
 				let char = line[i];
 				switch (char)
 				{
@@ -59,7 +63,6 @@ public class DiagnosticManager
 			arrowLine.Append('^', span.Range.End.Offset - span.Range.Start.Offset);
 			let pad = scope String()..PadLeft(lineNumStr.Length);
 			Console.WriteLine(writeStringWithNumberBar(pad, arrowLine, .. scope .()));
-
 		}
 
 		void writeStringWithNumberBar(StringView number, StringView text, String outString)

@@ -182,7 +182,8 @@ class Binder : Visitor
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, getNamespaceParent(), str.Name, .Structure(str)), str);
+			let type = ZenType.Structure(str);
+			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, getNamespaceParent(), str.Name, type), str);
 		}
 
 		if (let _enum = node as AstNode.Stmt.EnumDeclaration)
@@ -197,22 +198,26 @@ class Binder : Visitor
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, getNamespaceParent(), _enum.Name, .Enum(_enum)), _enum);
+			let type = ZenType.Enum(_enum);
+			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, getNamespaceParent(), _enum.Name, type), _enum);
 		}
 
 		if (let enumVal = node as AstNode.Stmt.EnumFieldValue)
 		{
-			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(.EnumField(enumVal), getNamespaceParent(), default, enumVal.Name, .Basic(.FromKind(.UntypedInteger))), node);
+			let type = ZenType.Basic(.FromKind(.UntypedInteger));
+			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(.EnumField(enumVal), getNamespaceParent(), default, enumVal.Name, type), node);
 		}
 
 		if (let vari = node as AstNode.Stmt.VariableDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, vari.Name, new Entity.Variable(vari, getNamespaceParent(), vari.Name, getZenTypeFromNamedTypeExpr(vari.Type)), vari);
+			let type = getZenTypeFromNamedTypeExpr(vari.Type);
+			scope_tryDeclare(m_currentScope, vari.Name, new Entity.Variable(vari, getNamespaceParent(), vari.Name, type), vari);
 		}
 
 		if (let constant = node as AstNode.Stmt.ConstantDeclaration)
 		{
-			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Normal(constant), getNamespaceParent(), default, constant.Name, getZenTypeFromNamedTypeExpr(constant.Type)), constant);
+			let type = getZenTypeFromNamedTypeExpr(constant.Type);
+			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Normal(constant), getNamespaceParent(), default, constant.Name, type), constant);
 		}
 
 		if (let _if = node as AstNode.Stmt.If)

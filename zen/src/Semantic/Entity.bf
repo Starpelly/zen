@@ -120,6 +120,9 @@ abstract class Entity
 		public readonly AstNode.Stmt.FunctionDeclaration Decl;
 		public readonly Namespace NamespaceParent;
 
+		/// The type the function returns, not to be confused with Function.Type
+		public ZenType ResolvedType;
+
 		public this(AstNode.Stmt.FunctionDeclaration decl, Namespace namespaceParent, Token token, ZenType type) : base(token, type)
 		{
 			this.Decl = decl;

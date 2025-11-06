@@ -74,13 +74,15 @@ class Resolver : Visitor
 			resolveStatement(_for.Body, _for.Scope);
 			return;
 		case .FunctionDecl(let fun):
-			if (fun.Kind == .Extern)
-				return;
+			resolveFunction(fun, _scope);
 
 			for (let param in fun.Parameters)
 			{
 				resolveStatement(param, fun.Scope);
 			}
+
+			if (fun.Kind == .Extern)
+				return;
 			resolveStatementList(fun.Body.List, fun.Scope);
 			return;
 		case .VarDecl(let _var):
@@ -114,6 +116,9 @@ class Resolver : Visitor
 		return .Ok(entity);
 	}
 
+
+	// @TODO @FIX @REFACTOR
+	// This could be one function lol
 	private void resolveVariable(AstNode.Stmt.VariableDeclaration varDecl, Scope _scope)
 	{
 		let entity = _scope.LookupName(varDecl.Name.Lexeme).Value as Entity.Variable;
@@ -136,6 +141,25 @@ class Resolver : Visitor
 	private void resolveConstant(AstNode.Stmt.ConstantDeclaration constDecl, Scope _scope)
 	{
 		let entity = _scope.LookupName(constDecl.Name.Lexeme).Value as Entity.Constant;
+
+		if (entity.Type case .Pointer(let inner))
+		{
+			entity.ResolvedType = .Pointer(resolveInnerType(*inner, _scope).1);
+		}
+		else if (entity.Type case .Array(let element, let count))
+		{
+			entity.ResolvedType = .Array(resolveInnerType(*element, _scope).1, count);
+			// Debug.Assert(false);
+		}
+		else
+		{
+			entity.ResolvedType = resolveInnerType(entity.Type, _scope).0;
+		}
+	}
+
+	private void resolveFunction(AstNode.Stmt.FunctionDeclaration funcDecl, Scope _scope)
+	{
+		let entity = _scope.LookupName(funcDecl.Name.Lexeme).Value as Entity.Function;
 
 		if (entity.Type case .Pointer(let inner))
 		{

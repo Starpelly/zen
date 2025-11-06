@@ -210,6 +210,7 @@ uint64 zen_game_game_frame = 0;
 void zen_game_start_game()
 {
 	InitWindow(zen_game_GAME_WIDTH * zen_game_GAME_ZOOM, zen_game_GAME_HEIGHT * zen_game_GAME_ZOOM, "Zen");
+	Texture2D zen_game_tex = LoadTexture("C:/Users/Braedon/Pictures/socialmedia/24588691.jpg");
 	zen_game_GameManager zen_game_gameManager = {  };
 	zen_game_Player zen_game_player = { .color = zen_raylib_Yellow };
 	zen_game_Crate zen_game_testCrate = {  };
@@ -231,6 +232,7 @@ void zen_game_start_game()
 		BeginMode2D(zen_game_cam);
 		zen_game_game_draw(&zen_game_gameManager);
 		EndMode2D();
+		DrawTexture(zen_game_tex, 0, 0, zen_raylib_White);
 		DrawFPS(20, 20);
 		EndDrawing();
 	}

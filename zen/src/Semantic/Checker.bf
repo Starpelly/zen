@@ -240,12 +240,12 @@ class Checker : Visitor
 					// Check if the two types are compatible
 					checkTypesComparable(call.Close, argType, calleeParamType);
 				}
-			}
-			else
-			{
 
+				return calleeFun.ResolvedType;
 			}
-			return entity.Value.Type;
+
+			Debug.Assert(false);
+			return .Invalid;
 
 		case .Assign(let ass):
 			let x = checkExpr(ass.Assignee, _scope);

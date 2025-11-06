@@ -37,6 +37,8 @@ fun void start_game()
     raylib::InitWindow(GAME_WIDTH * GAME_ZOOM, GAME_HEIGHT * GAME_ZOOM, "Zen");
 	// raylib::SetTargetFPS(185);
 
+	let raylib::Texture2D tex = raylib::LoadTexture("C:/Users/Braedon/Pictures/socialmedia/24588691.jpg");
+
 	let GameManager gameManager;
 	let Player player;
 	let Crate testCrate;
@@ -66,6 +68,8 @@ fun void start_game()
 		raylib::BeginMode2D(cam);
 		game_draw(&gameManager);
 		raylib::EndMode2D();
+
+		raylib::DrawTexture(tex, 0, 0, raylib::White);
 
 		raylib::DrawFPS(20, 20);
 

@@ -82,6 +82,18 @@ extern fun bool IsKeyPressed(int key);
 extern fun void DrawFPS(int x, int y);
 extern fun void DrawText(string text, int x, int y, int fontSize, Color color);
 
+extern struct Texture2D
+{
+	uint32 id;
+	int width;
+	int height;
+	int mipmaps;
+	int format;
+}
+
+extern fun Texture2D LoadTexture(string fileName);
+extern fun void DrawTexture(Texture2D texture, int posX, int posY, Color tint);
+
 enum KeyboardKey
 {
 	NULL            = 0,        // Key: NULL, used for no key pressed
