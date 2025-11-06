@@ -1,0 +1,16 @@
+namespace game;
+
+let	raylib::Texture2D sprite_player;
+let raylib::Texture2D sprite_crate;
+
+fun void assets_load()
+{
+	sprite_player = raylib::LoadTexture("C:/Users/Braedon/Pictures/socialmedia/24588691.jpg");
+	sprite_crate = raylib::LoadTexture("C:/Users/Braedon/Downloads/crate.png");
+}
+
+fun void assets_unload()
+{
+    raylib::UnloadTexture(sprite_player);
+    raylib::UnloadTexture(sprite_crate);
+}

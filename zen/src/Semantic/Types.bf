@@ -244,10 +244,10 @@ public enum ZenType
 			outName.Append("Simple named type");
 		case .QualifiedNamed:
 			outName.Append("Qualified named type");
-		case .Structure:
-			outName.Append("Struct");
-		case .Enum:
-			outName.Append("Enum");
+		case .Structure(let _struct):
+			outName.Append(scope $"{_struct.Name.Lexeme}");
+		case .Enum(let _enum):
+			outName.Append(scope $"{_enum.Name.Lexeme}");
 		case .Namespace:
 			outName.Append("Namespace");
 		case .Pointer(let element):

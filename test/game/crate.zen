@@ -14,5 +14,11 @@ fun void crate_init(Crate* crate)
 
 fun void crate_draw(Crate* crate)
 {
-    raylib::DrawRectangle(cast(int)(crate.entity.visualX * cast(float)CELL_WIDTH), cast(int)(crate.entity.visualY * cast(float)CELL_HEIGHT), CELL_WIDTH, CELL_HEIGHT, raylib::Blue);
+	let float x = crate.entity.visualX * cast(float)CELL_WIDTH;
+	let float y = crate.entity.visualY * cast(float)CELL_HEIGHT;
+
+    let raylib::Rectangle src = { 0.0, 0.0, cast(float)sprite_crate.width, cast(float)sprite_crate.height };
+	let raylib::Rectangle dest = { x, y, cast(float)CELL_WIDTH, cast(float)CELL_HEIGHT };
+	let raylib::Vector2 origin = { 0.0, 0.0 };
+	raylib::DrawTexturePro(sprite_crate, src, dest, origin, 0.0, raylib::White);
 }

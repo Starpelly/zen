@@ -1,0 +1,14 @@
+struct EmptyStruct
+{
+
+}
+
+let float x = 0.0;
+
+fun void main()
+{
+    let EmptyStruct empty;
+    let float result = empty.x; // <- This is passing the checker because 'x' is defined in the global scope, and we're not doing it on a by namespace basis. Maybe we need a "strict search" option? 
+
+    println(result);
+}

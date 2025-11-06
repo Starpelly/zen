@@ -55,5 +55,11 @@ fun void player_draw(Player* player)
 {
 	let float x = player.entity.visualX * cast(float)CELL_WIDTH;
 	let float y = player.entity.visualY * cast(float)CELL_HEIGHT;
-	draw_rect(x, y, cast(float)CELL_WIDTH, cast(float)CELL_HEIGHT, player.color);
+
+	// draw_rect(x, y, cast(float)CELL_WIDTH, cast(float)CELL_HEIGHT, player.color);
+	
+	let raylib::Rectangle src = { 0.0, 0.0, cast(float)sprite_player.width, cast(float)sprite_player.height };
+	let raylib::Rectangle dest = { x, y, cast(float)CELL_WIDTH, cast(float)CELL_HEIGHT };
+	let raylib::Vector2 origin = { 0.0, 0.0 };
+	raylib::DrawTexturePro(sprite_player, src, dest, origin, 0.0, raylib::White);
 }

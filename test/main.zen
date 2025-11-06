@@ -1,5 +1,6 @@
-#load "game/game.zen";
+// #load "game/game.zen";
 // #load "tests/arrays.zen";
 // #load "tests/pointers.zen";
 // #load "tests/checker/loop_basic.zen";
 // #load "tests/error.zen";
+#load "plsfix.zen";

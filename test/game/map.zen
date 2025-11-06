@@ -13,6 +13,9 @@ const int MAP_HEIGHT = 6;
 // 12 * 6
 let Tile[72] map_tiles;
 
+let	Player player;
+let	Crate testCrate;
+
 fun void map_load()
 {
     // @TODO arrays should be initialized to their default values by default.
@@ -21,6 +24,8 @@ fun void map_load()
 		// map_tiles[i].active = false;
 		map_tiles[i].entity = null;
 	}
+
+	player_init(&player);
 }
 
 fun void map_draw()
@@ -47,11 +52,15 @@ fun void map_draw()
 	}
 
 	draw_rect_lines(0.0, 0.0, cast(float)(MAP_WIDTH * CELL_WIDTH), cast(float)(MAP_HEIGHT * CELL_HEIGHT), raylib::LightGray);
+
+	crate_draw(&testCrate);
+	player_draw(&player);
 }
 
 fun void map_update()
 {
-	
+	entity_update(&testCrate.entity);
+	player_update(&player);
 }
 
 fun void map_move_entity(Entity* e, int dx, int dy)

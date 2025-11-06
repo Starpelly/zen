@@ -91,6 +91,7 @@ class Generator
 		mainCode.AppendEmptyLine();
 		mainCode.AppendLine(headerCode.Code);
 		mainCode.AppendEmptyLine();
+		mainCode.AppendBanner("Entry point");
 		mainCode.AppendLine(
 		scope $"""
 		void main()
@@ -122,9 +123,17 @@ class Generator
 			}
 		}
 
+		headerCode.AppendBanner("Symbol declarations");
 		doScopeRecursive(.NamedTypeDeclares, m_globalScope, headerCode);
+		headerCode.AppendBanner("Function declarations");
 		doScopeRecursive(.FunctionDeclares, m_globalScope, headerCode);
+		headerCode.AppendBanner("Symbol implementations");
 		doScopeRecursive(.NamedTypeImpls, m_globalScope, headerCode);
+		headerCode.AppendBanner("Global constants");
+		doScopeRecursive(.GlobalConstants, m_globalScope, headerCode);
+		headerCode.AppendBanner("Global variables");
+		doScopeRecursive(.GlobalVars, m_globalScope, headerCode);
+		headerCode.AppendBanner("Function implementations");
 		doScopeRecursive(.FunctionImpls, m_globalScope, headerCode);
 	}
 
@@ -133,6 +142,8 @@ class Generator
 		NamedTypeDeclares,
 		FunctionDeclares,
 		NamedTypeImpls,
+		GlobalConstants,
+		GlobalVars,
 		FunctionImpls
 	}
 
@@ -208,8 +219,9 @@ class Generator
 		{
 			for (let entity in _scope.EntityMap)
 			{
-				if (let funEnt = entity.value as Entity.Function)
+				switch (entity.value.GetKind())
 				{
+				case .Function(let funEnt):
 					let fun = funEnt.Decl;
 
 					if (fun.Kind == .Extern)
@@ -218,68 +230,8 @@ class Generator
 					let namespaceStr = buildNamespaceString(funEnt, .. scope .(), true);
 					appendFunctionHead(fun, namespaceStr, code);
 					code.Append(';');
-				}
-				if (let constant = entity.value as Entity.Constant)
-				{
-					// This means it's a built in constant, so like int32s and stuff. We can safely ignore those as they're defined in the zen.h header.
-					if (constant.Decl case .Builtin)
-						continue;
-
-					Runtime.Assert(constant.Decl case .Normal(let basic));
-
-					let namespaceStr = buildNamespaceString(constant, .. scope .(), true);
-
-					code.AppendLine("const ");
-					bool isStructType = false;
-
-					if (constant.ResolvedType case .Structure)
-					{
-						isStructType = true;
-					}
-
-					// Write type
-					code.Append(writeResolvedType(constant.ResolvedType, .. scope .()));
-
-					// The space between type and name
-					code.Append(' ');
-
-					// Write namespace
-					code.Append(namespaceStr);
-					code.Append("_");
-
-					// Write name
-					code.Append(basic.Name.Lexeme);
-
-					if (constant.ResolvedType case .Array(let element, let count))
-					{
-						code.Append(scope $"[{count}]");
-					}
-
-					if (basic.Initializer != null)
-					{
-						code.Append(scope $" = ");
-						emitExpr(basic.Initializer, code, _scope, true, .()
-							{
-								FromConst = true
-							});
-					}
-					else
-					{
-						if (isStructType)
-						{
-							// Because C doesn't initialize structs automatically without an initializer (but we want to),
-							// we'll have to tell it to do so manually.
-
-							// @TODO - pelly, 11/2/25
-							// Actually, we want initializers in the future, and we want to throw errors when we try to use uninitialized variables.
-							// So this needs to be removed or changed in the future!
-							Console.ForegroundColor = .Yellow;
-							Console.WriteLine("please fix this implicit initializer");
-							Console.ResetColor();
-							code.Append(scope $" = \{\}");
-						}
-					}
-					code.Append(';');
+					break;
+				default:
 				}
 			}
 		}
@@ -353,6 +305,94 @@ class Generator
 			}
 		}
 
+		if (kind == .GlobalConstants)
+		{
+			for (let entity in _scope.EntityMap)
+			{
+				switch (entity.value.GetKind())
+				{
+				case .Constant(let constant):
+					// This means it's a built in constant, so like int32s and stuff. We can safely ignore those as they're defined in the zen.h header.
+					if (constant.Decl case .Builtin)
+						continue;
+
+					Runtime.Assert(constant.Decl case .Normal(let basic));
+
+					let namespaceStr = buildNamespaceString(constant, .. scope .(), true);
+
+					code.AppendLine("const ");
+					bool isStructType = false;
+
+					if (constant.ResolvedType case .Structure)
+					{
+						isStructType = true;
+					}
+
+					// Write type
+					code.Append(writeResolvedType(constant.ResolvedType, .. scope .()));
+
+					// The space between type and name
+					code.Append(' ');
+
+					// Write namespace
+					code.Append(namespaceStr);
+					code.Append("_");
+
+					// Write name
+					code.Append(basic.Name.Lexeme);
+
+					if (constant.ResolvedType case .Array(let element, let count))
+					{
+						code.Append(scope $"[{count}]");
+					}
+
+					if (basic.Initializer != null)
+					{
+						code.Append(scope $" = ");
+						emitExpr(basic.Initializer, code, _scope, true, .()
+							{
+								FromConst = true
+							});
+					}
+					else
+					{
+						if (isStructType)
+						{
+							// Because C doesn't initialize structs automatically without an initializer (but we want to),
+							// we'll have to tell it to do so manually.
+
+							// @TODO - pelly, 11/2/25
+							// Actually, we want initializers in the future, and we want to throw errors when we try to use uninitialized variables.
+							// So this needs to be removed or changed in the future!
+							Console.ForegroundColor = .Yellow;
+							Console.WriteLine("please fix this implicit initializer");
+							Console.ResetColor();
+							code.Append(scope $" = \{\}");
+						}
+					}
+					code.Append(';');
+					break;
+				default:
+				}
+			}
+		}
+
+		if (kind == .GlobalVars)
+		{
+			for (let entity in _scope.EntityMap)
+			{
+				switch (entity.value.GetKind())
+				{
+				case .Variable(let ent):
+					// It might be okay to do this here?
+					// For variables at the global (or non functional) scope at least...?
+					emitFunctionStmt(ent.Decl, code, _scope);
+					break;
+				default:
+				}
+			}
+		}
+
 		if (kind == .FunctionImpls)
 		{
 			for (let entity in _scope.EntityMap)
@@ -378,11 +418,6 @@ class Generator
 					}
 					code.DecreaseTab();
 					code.AppendLine("}");
-					break;
-				case .Variable(let ent):
-					// It might be okay to do this here?
-					// For variables at the global (or non functional) scope at least...?
-					emitFunctionStmt(ent.Decl, code, _scope);
 					break;
 				default:
 				}
@@ -582,8 +617,8 @@ class Generator
 				if (_struct.Scope.NamespaceParent case .Ok(let ns))
 				{
 					buildNamespaceString(ns, outStr, false);
-					outStr.Append('_');
 				}
+				outStr.Append('_');
 			}
 
 			outStr.Append(_struct.Name.Lexeme);
@@ -648,12 +683,9 @@ class Generator
 				}
 				if (let _varEnt = val as Entity.Variable)
 				{
-					if (_varEnt.NamespaceParent != null)
-					{
-						let ns = buildNamespaceString(_varEnt, .. scope .(), true);
-						code.Append(ns);
-						code.Append("_");
-					}
+					let ns = buildNamespaceString(_varEnt, .. scope .(), true);
+					code.Append(ns);
+					code.Append("_");
 				}
 			}
 			code.Append(_var.Name.Lexeme);

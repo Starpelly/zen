@@ -228,6 +228,11 @@ class Checker : Visitor
 					return entity.Value.Type;
 				}
 
+				if (calleeFun.Decl.Name.Lexeme == "map_move_entity")
+				{
+					var a = 0;
+				}
+
 				// for (let arg in call.Arguments)
 				// Runtime.FatalError("please finish this");
 				for (let i < call.Arguments.Count)
@@ -238,10 +243,14 @@ class Checker : Visitor
 					let calleeParamType = checkExpr(calleeFun.Decl.Parameters[i].Type, _scope);
 
 					// Check if the two types are compatible
-					checkTypesComparable(call.Close, argType, calleeParamType);
+					checkTypesComparable(arg, argType, calleeParamType);
 				}
 
 				return calleeFun.ResolvedType;
+			}
+			else if (entity.Value is Entity.Builtin)
+			{
+				return .Invalid;
 			}
 
 			Debug.Assert(false);
@@ -526,6 +535,17 @@ class Checker : Visitor
 	{
 		if (!checkTypesComparable(x, y))
 		{
+			/*
+			if (y case .Pointer(let element))
+			{
+				if (x == *element)
+				{
+					reportError(expr, scope $"Types mismatch ({x.GetName(.. scope .())}) to ({y.GetName(.. scope .())})");
+					return;
+				}
+			}
+			*/
+
 			// @FIX
 			// Bad error message
 			reportError(expr, scope $"Types mismatch ({x.GetName(.. scope .())}) to ({y.GetName(.. scope .())})");

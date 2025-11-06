@@ -6,6 +6,14 @@ extern struct Vector2
 	float y;
 }
 
+extern struct Rectangle
+{
+	float x;
+	float y;
+	float width;
+	float height;
+}
+
 extern struct Color
 {
 	uint8 r;
@@ -92,7 +100,11 @@ extern struct Texture2D
 }
 
 extern fun Texture2D LoadTexture(string fileName);
+extern fun void UnloadTexture(Texture2D texture);
+
 extern fun void DrawTexture(Texture2D texture, int posX, int posY, Color tint);
+extern fun void DrawTextureV(Texture2D texture, Vector2 pos, Color tint);
+extern fun void DrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint);
 
 enum KeyboardKey
 {

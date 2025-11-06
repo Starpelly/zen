@@ -2,6 +2,7 @@
 #load "player.zen";
 #load "crate.zen";
 #load "map.zen";
+#load "assets.zen";
 
 #load "../extern/raylib.zen";
 #load "../std/math.zen";
@@ -28,8 +29,6 @@ let uint64 game_frame = 0;
 
 struct GameManager
 {
-	Player* player;
-	Crate* testCrate;
 }
 
 fun void start_game()
@@ -37,26 +36,17 @@ fun void start_game()
     raylib::InitWindow(GAME_WIDTH * GAME_ZOOM, GAME_HEIGHT * GAME_ZOOM, "Zen");
 	// raylib::SetTargetFPS(185);
 
-	let raylib::Texture2D tex = raylib::LoadTexture("C:/Users/Braedon/Pictures/socialmedia/24588691.jpg");
+	assets_load();
 
 	let GameManager gameManager;
-	let Player player;
-	let Crate testCrate;
+
+	map_load();
+	map_move_entity(&gameManager.testCrate.entity, 4, 2);
 
 	let raylib::Camera2D cam;
 	cam.target.x = -cast(float)(58);
 	cam.target.y = -cast(float)(32);
 	cam.zoom = cast(float)GAME_ZOOM;
-
-	gameManager.player = &player;
-	gameManager.testCrate = &testCrate;
-	player_init(gameManager.player);
-
-	map_load();
-
-	let raylib::Color test = { 15, 15, 15, 15 };
-
-	map_move_entity(&gameManager.testCrate.entity, 4, 2);
 
 	while (!raylib::WindowShouldClose())
 	{
@@ -69,12 +59,13 @@ fun void start_game()
 		game_draw(&gameManager);
 		raylib::EndMode2D();
 
-		raylib::DrawTexture(tex, 0, 0, raylib::White);
-
 		raylib::DrawFPS(20, 20);
 
 		raylib::EndDrawing();
 	}
+
+	assets_unload();
+
 	raylib::CloseWindow();
 }
 
@@ -84,13 +75,10 @@ fun void game_update(GameManager* gameManager)
 	game_time += delta_time;
 	game_frame += 1;
 
-	entity_update(&gameManager.testCrate.entity);
-	player_update(gameManager.player);
+	map_update();
 }
 
 fun void game_draw(GameManager* gameManager)
 {
 	map_draw();
-	player_draw(gameManager.player);
-	crate_draw(gameManager.testCrate);
 }
