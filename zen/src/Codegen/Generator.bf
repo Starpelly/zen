@@ -96,6 +96,7 @@ class Generator
 		scope $"""
 		void main()
 		\{
+			zencg_initglobals();
 			{USER_SYMBOL_PREFIX}_main();
 		\}
 		""");
@@ -132,19 +133,38 @@ class Generator
 		headerCode.AppendBanner("Global constants");
 		doScopeRecursive(.GlobalConstants, m_globalScope, headerCode);
 		headerCode.AppendBanner("Global variables");
-		doScopeRecursive(.GlobalVars, m_globalScope, headerCode);
+		List<Entity.Variable> outVars = scope .();
+		doScopeRecursive(.GlobalVars(outVars), m_globalScope, headerCode);
+
+		headerCode.AppendLine("void zencg_initglobals()");
+		headerCode.AppendLine("{");
+		headerCode.IncreaseTab();
+		for (let _var in outVars)
+		{
+			// @NOTE - pelly 11/6/25
+			// Visual Studio gave a warning for this, I think we can safely ignore the initializer if it's an array as arrays don't allow initializers (yet).
+			// This can probably be moved to writeExpr_VarDecl in the future when I make initializers mandatory.
+			if (_var.Decl.Initializer == null && _var.ResolvedType case .Array)
+			{
+				continue;
+			}
+			writeExpr_VarDecl(_var.Decl, headerCode, _var.Scope, false, true, true);
+		}
+		headerCode.DecreaseTab();
+		headerCode.AppendLine("}");
+
 		headerCode.AppendBanner("Function implementations");
 		doScopeRecursive(.FunctionImpls, m_globalScope, headerCode);
 	}
 
 	enum DoScopeKind
 	{
-		NamedTypeDeclares,
-		FunctionDeclares,
-		NamedTypeImpls,
-		GlobalConstants,
-		GlobalVars,
-		FunctionImpls
+		case NamedTypeDeclares;
+		case FunctionDeclares;
+		case NamedTypeImpls;
+		case GlobalConstants;
+		case GlobalVars(List<Entity.Variable> outVars);
+		case FunctionImpls;
 	}
 
 	private void buildNamespaceString(IEntityNamespaceParent entity, String outStr, bool zenPrefix)
@@ -320,7 +340,8 @@ class Generator
 
 					let namespaceStr = buildNamespaceString(constant, .. scope .(), true);
 
-					code.AppendLine("const ");
+					code.AppendLine("#define ");
+					// code.AppendLine("const ");
 					bool isStructType = false;
 
 					if (constant.ResolvedType case .Structure)
@@ -329,10 +350,10 @@ class Generator
 					}
 
 					// Write type
-					code.Append(writeResolvedType(constant.ResolvedType, .. scope .()));
+					// code.Append(writeResolvedType(constant.ResolvedType, .. scope .()));
 
 					// The space between type and name
-					code.Append(' ');
+					// code.Append(' ');
 
 					// Write namespace
 					code.Append(namespaceStr);
@@ -348,7 +369,9 @@ class Generator
 
 					if (basic.Initializer != null)
 					{
-						code.Append(scope $" = ");
+						// code.Append(' ');
+						// code.Append('=');
+						code.Append(' ');
 						emitExpr(basic.Initializer, code, _scope, true, .()
 							{
 								FromConst = true
@@ -370,14 +393,14 @@ class Generator
 							code.Append(scope $" = \{\}");
 						}
 					}
-					code.Append(';');
+					// code.Append(';');
 					break;
 				default:
 				}
 			}
 		}
 
-		if (kind == .GlobalVars)
+		if (kind case .GlobalVars(let outVars))
 		{
 			for (let entity in _scope.EntityMap)
 			{
@@ -386,7 +409,8 @@ class Generator
 				case .Variable(let ent):
 					// It might be okay to do this here?
 					// For variables at the global (or non functional) scope at least...?
-					emitFunctionStmt(ent.Decl, code, _scope);
+					writeExpr_VarDecl(ent.Decl, code, _scope, true, false, true);
+					outVars.Add(ent);
 					break;
 				default:
 				}
@@ -478,65 +502,7 @@ class Generator
 			break;
 
 		case .VarDecl(let v):
-			code.AppendNewLine();
-			code.AppendTabs();
-
-			let entity = _scope.LookupStmtAs<Entity.Variable>(v).Value;
-
-			// Write type
-			code.Append(writeResolvedType(entity.ResolvedType, .. scope .()));
-
-			// Space between type and name
-			code.Append(' ');
-
-			// Write namespace
-			let ns = buildNamespaceString(entity, .. scope .(), true);
-			code.Append(ns);
-			code.Append('_');
-
-			// Write name
-			code.Append(v.Name.Lexeme);
-
-			if (entity.ResolvedType case .Array(let element, let count))
-			{
-				code.Append(scope $"[{count}]");
-			}
-
-			if (v.Initializer != null)
-			{
-				code.Append(scope $" = ");
-				emitExpr(v.Initializer, code, _scope);
-			}
-			else
-			{
-				if (entity.ResolvedType case .Structure(let _struct))
-				{
-					// Because C doesn't initialize structs automatically without an initializer (but we want to),
-					// we'll have to tell it to do so manually.
-
-					// @TODO - pelly, 11/2/25
-					// Actually, we want initializers in the future, and we want to throw errors when we try to use uninitialized variables.
-					// So this needs to be removed or changed in the future!
-					Console.ForegroundColor = .Yellow;
-					Console.WriteLine("please fix this implicit initializer");
-					Console.ResetColor();
-					code.Append(scope $" = ");
-					code.Append("{ ");
-					for (let field in _struct.Fields)
-					{
-						if (field.Initializer == null)
-							continue;
-
-						code.Append(scope $".{field.Name.Lexeme} = ");
-						emitExpr(field.Initializer, code, _scope);
-
-						if (field != _struct.Fields.Back)
-							code.Append(", ");
-					}
-					code.Append(" }");
-				}
-			}
-			addSemicolon!();
+			writeExpr_VarDecl(v, code, _scope, true, true, emitSemicolon);
 			break;
 
 		case .Return(let ret):
@@ -596,6 +562,96 @@ class Generator
 
 		default:
 		}
+	}
+
+	private void writeExpr_VarDecl(AstNode.Stmt.VariableDeclaration v, StringCodeBuilder code, Scope _scope, bool writeType, bool writeInitializer, bool writeSemicolon)
+	{
+		code.AppendNewLine();
+		code.AppendTabs();
+
+		let entity = _scope.LookupStmtAs<Entity.Variable>(v).Value;
+
+		if (writeType)
+		{
+			// Write type
+			code.Append(writeResolvedType(entity.ResolvedType, .. scope .()));
+
+			// Space between type and name
+			code.Append(' ');
+		}
+
+		// Write namespace
+		let ns = buildNamespaceString(entity, .. scope .(), true);
+		code.Append(ns);
+		code.Append('_');
+
+		// Write name
+		code.Append(v.Name.Lexeme);
+
+		if (entity.ResolvedType case .Array(let element, let count))
+		{
+			code.Append(scope $"[{count}]");
+		}
+
+		if (writeInitializer)
+		{
+			if (v.Initializer != null)
+			{
+				code.Append(scope $" = ");
+				emitExpr(v.Initializer, code, _scope);
+			}
+			else
+			{
+				if (entity.ResolvedType case .Structure(let _struct))
+				{
+					// Because C doesn't initialize structs automatically without an initializer (but we want to),
+					// we'll have to tell it to do so manually.
+
+					// @TODO - pelly, 11/2/25
+					// Actually, we want initializers in the future, and we want to throw errors when we try to use uninitialized variables.
+					// So this needs to be removed or changed in the future!
+					Console.ForegroundColor = .Yellow;
+					Console.WriteLine("please fix this implicit initializer");
+					Console.ResetColor();
+					code.Append(scope $" = ");
+
+					let type = writeResolvedType(entity.ResolvedType, .. scope .());
+					code.Append(scope $"CLITERAL({type})");
+
+					int initFieldsCount = 0;
+					for (let field in _struct.Fields)
+					{
+						if (field.Initializer == null)
+							continue;
+						initFieldsCount++;
+					}
+
+					if (initFieldsCount == 0)
+					{
+						code.Append("{ 0 }");
+					}
+					else
+					{
+						code.Append("{ ");
+						for (let field in _struct.Fields)
+						{
+							if (field.Initializer == null)
+								continue;
+
+							code.Append(scope $".{field.Name.Lexeme} = ");
+							emitExpr(field.Initializer, code, _scope);
+
+							if (field != _struct.Fields.Back)
+								code.Append(", ");
+						}
+
+						code.Append(" }");
+					}
+				}
+			}
+		}
+		if (writeSemicolon)
+		code.Append(';');
 	}
 
 	private void writeResolvedType(ZenType type, String outStr)
@@ -977,7 +1033,7 @@ class Generator
 
 			// MSVC doesn't like compound literals in constant expressions, so those need to be disabled here.
 			// Other compilers support them fine, but we need to support ALL compilers
-			if (!parameters.FromConst)
+			// if (!parameters.FromConst)
 			{
 				let type = writeResolvedType(composite.ResolvedInferredType.Value, .. scope .());
 				code.Append(scope $"CLITERAL({type})");

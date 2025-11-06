@@ -33,6 +33,15 @@ class Scope
 		}
 	}
 
+	/// Doesn't look up the scope chain if it can't find the identifier.
+	public Result<Entity> LookForName(StringView name)
+	{
+		if (EntityMap.TryGetValue(name, let entity))
+			return entity;
+
+		return .Err;
+	}
+
 	public Result<Entity> LookupName(StringView name)
 	{
 		if (EntityMap.TryGetValue(name, let entity))
@@ -89,12 +98,16 @@ class Scope
 
 	public void DeclareWithName(Entity entity, StringView name)
 	{
+		Debug.Assert(entity.Scope == this);
+
 		m_entities.Add(entity);
 		EntityMap.Add(name, entity);
 	}
 
 	public void DeclareWithAstNode(Entity entity, StringView name, AstNode.Stmt stmt)
 	{
+		Debug.Assert(entity.Scope == this);
+
 		m_entities.Add(entity);
 		EntityMap.Add(name, entity);
 		NodeEntityMap.Add(stmt, entity);

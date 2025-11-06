@@ -29,6 +29,7 @@ let uint64 game_frame = 0;
 
 struct GameManager
 {
+	float t;
 }
 
 fun void start_game()
@@ -41,7 +42,6 @@ fun void start_game()
 	let GameManager gameManager;
 
 	map_load();
-	map_move_entity(&gameManager.testCrate.entity, 4, 2);
 
 	let raylib::Camera2D cam;
 	cam.target.x = -cast(float)(58);

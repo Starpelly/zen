@@ -35,7 +35,7 @@ class Binder : Visitor
 		for (let fun in BuiltinFunctions)
 		{
 			let token = Token(.Identifier);
-			let entity = new Entity.Builtin(fun.Name, token, fun.TempType);
+			let entity = new Entity.Builtin(m_globalScope, fun.Name, token, fun.TempType);
 			m_globalScope.DeclareWithName(entity, fun.Name);
 		}
 	}
@@ -43,7 +43,7 @@ class Binder : Visitor
 	private void addGlobalConstant(String name, ZenType type, Variant value)
 	{
 		let token = Token(.Identifier);
-		let entity = new Entity.Constant(.Builtin, null, value, token, type);
+		let entity = new Entity.Constant(m_globalScope, .Builtin, null, value, token, type);
 		m_globalScope.DeclareWithName(entity, name);
 	}
 
@@ -119,7 +119,7 @@ class Binder : Visitor
 			}
 			else
 			{
-				let entity = new Entity.Namespace(namespc, namespc.Name, .Namespace(namespc));
+				let entity = new Entity.Namespace(m_currentScope, namespc, namespc.Name, .Namespace(namespc));
 				scope_tryDeclare(m_currentScope, namespc.Name, entity, namespc);
 
 				openNewScope(scope $"Namespace ({namespc.Name.Lexeme})", namespc);
@@ -167,7 +167,7 @@ class Binder : Visitor
 
 			closeScope();
 
-			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(fun, getNamespaceParent(), fun.Name, getZenTypeFromNamedTypeExpr(fun.Type)), fun);
+			scope_tryDeclare(m_currentScope, fun.Name, new Entity.Function(m_currentScope, fun, getNamespaceParent(), fun.Name, getZenTypeFromNamedTypeExpr(fun.Type)), fun);
 		}
 
 		if (let str = node as AstNode.Stmt.StructDeclaration)
@@ -183,7 +183,13 @@ class Binder : Visitor
 			closeScope();
 
 			let type = ZenType.Structure(str);
-			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(str, getNamespaceParent(), str.Name, type), str);
+			scope_tryDeclare(m_currentScope, str.Name, new Entity.TypeName(m_currentScope, str, getNamespaceParent(), str.Name, type), str);
+
+			if (str.Fields.Count == 0)
+			{
+				// Sadge
+				reportError(str.Name, "C requires that a struct or union have at least one member");
+			}
 		}
 
 		if (let _enum = node as AstNode.Stmt.EnumDeclaration)
@@ -199,25 +205,25 @@ class Binder : Visitor
 			closeScope();
 
 			let type = ZenType.Enum(_enum);
-			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(_enum, getNamespaceParent(), _enum.Name, type), _enum);
+			scope_tryDeclare(m_currentScope, _enum.Name, new Entity.TypeName(m_currentScope, _enum, getNamespaceParent(), _enum.Name, type), _enum);
 		}
 
 		if (let enumVal = node as AstNode.Stmt.EnumFieldValue)
 		{
 			let type = ZenType.Basic(.FromKind(.UntypedInteger));
-			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(.EnumField(enumVal), getNamespaceParent(), default, enumVal.Name, type), node);
+			scope_tryDeclare(m_currentScope, enumVal.Name, new Entity.Constant(m_currentScope, .EnumField(enumVal), getNamespaceParent(), default, enumVal.Name, type), node);
 		}
 
 		if (let vari = node as AstNode.Stmt.VariableDeclaration)
 		{
 			let type = getZenTypeFromNamedTypeExpr(vari.Type);
-			scope_tryDeclare(m_currentScope, vari.Name, new Entity.Variable(vari, getNamespaceParent(), vari.Name, type), vari);
+			scope_tryDeclare(m_currentScope, vari.Name, new Entity.Variable(m_currentScope, vari, getNamespaceParent(), vari.Name, type), vari);
 		}
 
 		if (let constant = node as AstNode.Stmt.ConstantDeclaration)
 		{
 			let type = getZenTypeFromNamedTypeExpr(constant.Type);
-			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(.Normal(constant), getNamespaceParent(), default, constant.Name, type), constant);
+			scope_tryDeclare(m_currentScope, constant.Name, new Entity.Constant(m_currentScope, .Normal(constant), getNamespaceParent(), default, constant.Name, type), constant);
 		}
 
 		if (let _if = node as AstNode.Stmt.If)

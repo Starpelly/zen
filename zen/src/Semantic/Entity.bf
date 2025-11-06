@@ -26,14 +26,16 @@ enum EntityKind
 /// An entity is a named "thing" in the language.
 abstract class Entity
 {
+	public readonly Scope Scope;
 	public readonly Token Token;
 	public readonly ZenType Type => m_type;
 	public ZenType* TypePtr => &m_type;
 
 	private ZenType m_type;
 
-	public this(Token token, ZenType type)
+	public this(Scope _scope, Token token, ZenType type)
 	{
+		this.Scope = _scope;
 		this.Token = token;
 		this.m_type = type;
 	}
@@ -56,7 +58,7 @@ abstract class Entity
 		/// The type the variable is holding, not to be confused with Variable.Type
 		public ZenType ResolvedType;
 
-		public this(ConstantDecl node, Namespace namespaceParent, Variant value, Token token, ZenType type) : base(token, type)
+		public this(Scope _scope, ConstantDecl node, Namespace namespaceParent, Variant value, Token token, ZenType type) : base(_scope, token, type)
 		{
 			this.Decl = node;
 			this.Value = Value;
@@ -88,7 +90,7 @@ abstract class Entity
 		/// The type the variable is holding, not to be confused with Variable.Type
 		public ZenType ResolvedType;
 
-		public this(AstNode.Stmt.VariableDeclaration decl, Namespace namespaceParent, Token token, ZenType type) : base(token, type)
+		public this(Scope _scope, AstNode.Stmt.VariableDeclaration decl, Namespace namespaceParent, Token token, ZenType type) : base(_scope, token, type)
 		{
 			this.Decl = decl;
 			this.NamespaceParent = namespaceParent;
@@ -104,7 +106,7 @@ abstract class Entity
 		public readonly AstNode.Stmt Decl;
 		public readonly Namespace NamespaceParent;
 
-		public this(AstNode.Stmt decl, Namespace namespaceParent, Token token, ZenType type) : base(token, type)
+		public this(Scope _scope, AstNode.Stmt decl, Namespace namespaceParent, Token token, ZenType type) : base(_scope, token, type)
 		{
 			this.Decl = decl;
 			this.NamespaceParent = namespaceParent;
@@ -123,7 +125,7 @@ abstract class Entity
 		/// The type the function returns, not to be confused with Function.Type
 		public ZenType ResolvedType;
 
-		public this(AstNode.Stmt.FunctionDeclaration decl, Namespace namespaceParent, Token token, ZenType type) : base(token, type)
+		public this(Scope _scope, AstNode.Stmt.FunctionDeclaration decl, Namespace namespaceParent, Token token, ZenType type) : base(_scope, token, type)
 		{
 			this.Decl = decl;
 			this.NamespaceParent = namespaceParent;
@@ -138,7 +140,7 @@ abstract class Entity
 	{
 		public readonly StringView Name;
 
-		public this(StringView name, Token token, ZenType type) : base(token, type)
+		public this(Scope _scope, StringView name, Token token, ZenType type) : base(_scope, token, type)
 		{
 			this.Name = name;
 		}
@@ -150,7 +152,7 @@ abstract class Entity
 	{
 		public readonly AstNode.Stmt.NamespaceDeclaration Decl;
 
-		public this(AstNode.Stmt.NamespaceDeclaration decl, Token token, ZenType type) : base(token, type)
+		public this(Scope _scope, AstNode.Stmt.NamespaceDeclaration decl, Token token, ZenType type) : base(_scope, token, type)
 		{
 			this.Decl = decl;
 		}

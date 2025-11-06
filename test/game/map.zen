@@ -26,6 +26,7 @@ fun void map_load()
 	}
 
 	player_init(&player);
+	map_move_entity(&testCrate.entity, 4, 2);
 }
 
 fun void map_draw()

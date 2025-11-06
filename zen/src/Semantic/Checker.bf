@@ -228,11 +228,6 @@ class Checker : Visitor
 					return entity.Value.Type;
 				}
 
-				if (calleeFun.Decl.Name.Lexeme == "map_move_entity")
-				{
-					var a = 0;
-				}
-
 				// for (let arg in call.Arguments)
 				// Runtime.FatalError("please finish this");
 				for (let i < call.Arguments.Count)
@@ -280,7 +275,7 @@ class Checker : Visitor
 				}
 
 				// Look inside this struct for the member variable we're getting.
-				let entity = lookupScopeForIdentifier(_struct.Scope, get.Name);
+				let entity = lookinScopeForIdentifier(_struct.Scope, get.Name);
 				if (entity case .Ok(let val))
 				{
 					if (let _var = val as Entity.Variable)
@@ -555,6 +550,19 @@ class Checker : Visitor
 	private Result<Entity> lookupScopeForIdentifier(Scope _scope, Token name)
 	{
 		let entity = _scope.LookupName(name.Lexeme);
+		if (entity case .Err)
+		{
+			reportError(name, scope $"Undeclared identifier '{name.Lexeme}'");
+			return .Err;
+		}
+
+		return .Ok(entity);
+	}
+
+	/// Doesn't look up the scope chain if it can't find the identifier.
+	private Result<Entity> lookinScopeForIdentifier(Scope _scope, Token name)
+	{
+		let entity = _scope.LookForName(name.Lexeme);
 		if (entity case .Err)
 		{
 			reportError(name, scope $"Undeclared identifier '{name.Lexeme}'");

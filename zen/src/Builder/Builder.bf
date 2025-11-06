@@ -165,7 +165,7 @@ class Builder
 			{
 				if (directive.Token.Lexeme == "load")
 				{
-					let directiveCompFile = m_compFiles[directive.Token.File];
+					// let directiveCompFile = m_compFiles[directive.Token.File];
 					let directiveFilePath = m_compFiles[directive.Token.File].Path;
 					let directiveFileDirectory = Path.GetDirectoryPath(directiveFilePath, .. scope .());
 
