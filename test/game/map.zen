@@ -46,8 +46,7 @@ fun void map_draw()
 		}
 	}
 
-	let raylib::Color white; white.r = 255; white.g = 255; white.b = 255; white.a = 255;
-	draw_rect_lines(0.0, 0.0, cast(float)(MAP_WIDTH * CELL_WIDTH), cast(float)(MAP_HEIGHT * CELL_HEIGHT), white);
+	draw_rect_lines(0.0, 0.0, cast(float)(MAP_WIDTH * CELL_WIDTH), cast(float)(MAP_HEIGHT * CELL_HEIGHT), raylib::LightGray);
 }
 
 fun void map_update()

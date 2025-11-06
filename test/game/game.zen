@@ -34,9 +34,6 @@ struct GameManager
 
 fun void start_game()
 {
-    let raylib::Color black;
-	black.r = 0; black.g = 0; black.b = 0; black.a = 255;
-
     raylib::InitWindow(GAME_WIDTH * GAME_ZOOM, GAME_HEIGHT * GAME_ZOOM, "Zen");
 	raylib::SetTargetFPS(185);
 
@@ -62,7 +59,7 @@ fun void start_game()
 		game_update(&gameManager);
 
 		raylib::BeginDrawing();
-		raylib::ClearBackground(black);
+		raylib::ClearBackground(raylib::DarkGray);
 
 		raylib::BeginMode2D(cam);
 		game_draw(&gameManager);

@@ -139,9 +139,19 @@ extension Parser
 		{
 			let pType = consumeType();
 			let pName = consume(.Identifier, "Expected parameter name.");
+
+			AstNode.Expression initializer = null;
+			Token? op = null;
+
+			if (match(.Equal))
+			{
+				op = previous();
+				initializer = getExpression();
+			}
+
 			consume(.Semicolon, "Semicolon expected.");
 
-			fields.Add(new .(.Immutable, pName, pType, null, null));
+			fields.Add(new .(.Immutable, pName, pType, op, initializer));
 			// list.Add(scanNextStmt());
 			// fields.Add((AstNode.Stmt.VariableDeclaration)scanNextStmt());
 		}
@@ -350,9 +360,11 @@ extension Parser
 		let name = consume(.Identifier, "Expected constant name.");
 
 		AstNode.Expression initializer = null;
+		Token? op = null;
 
 		if (match(.Equal))
 		{
+			op = previous();
 			initializer = getExpression();
 		}
 		else if (check(.Semicolon))
@@ -366,6 +378,6 @@ extension Parser
 
 		consume(.Semicolon, "Semicolon expected.");
 
-		return new .(name, type, initializer);
+		return new .(name, type, initializer, op);
 	}
 }

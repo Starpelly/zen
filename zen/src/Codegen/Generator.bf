@@ -16,6 +16,12 @@ class Generator
 		public readonly List<CFile> Files;
 	}
 
+	struct EmitExprParameters
+	{
+		/// Calling from a constant variable declaration.
+		public bool FromConst;
+	}
+
 	private const String USER_SYMBOL_PREFIX = "zen";
 
 	const String BOILERPLATE =
@@ -53,6 +59,15 @@ class Generator
 
 		#ifdef ZENC_PLATFORM_WINDOWS
 		// #include <windows.h>
+		#endif
+
+		// NOTE: MSVC C++ compiler does not support compound literals (C99 feature)
+		// Plain structures in C++ (without constructors) can be initialized with { }
+		// This is called aggregate initialization (C++11 feature)
+		#if defined(__cplusplus)
+		#define CLITERAL(type)      type
+		#else
+		#define CLITERAL(type)      (type)
 		#endif
 
 		#include <raylib.h>
@@ -214,9 +229,6 @@ class Generator
 
 					let namespaceStr = buildNamespaceString(constant, .. scope .(), true);
 
-					// @TODO
-					// Macros are a bit wack, does c have constant expressions or something?
-					// code.AppendLine(scope $"#define {basic.Name.Lexeme} ");
 					code.AppendLine("const ");
 					bool isStructType = false;
 
@@ -246,7 +258,10 @@ class Generator
 					if (basic.Initializer != null)
 					{
 						code.Append(scope $" = ");
-						emitExpr(basic.Initializer, code, _scope);
+						emitExpr(basic.Initializer, code, _scope, true, .()
+							{
+								FromConst = true
+							});
 					}
 					else
 					{
@@ -305,27 +320,25 @@ class Generator
 
 									}
 
+									code.Append(writeResolvedType(val.ResolvedType, .. scope .()));
+									code.Append(scope $" {field.Name.Lexeme}");
+
+									// @NOTE - pelly 11/5/25
+									// C doesn't allow for struct initializers, so we'll need to do this later.
 									/*
-									if (writeNamespace)
-									if (let ns = val.ResolvedType as IEntityNamespaceParent)
+									if (field.Initializer != null)
 									{
-										code.Append(buildNamespaceString(ns, .. scope .()));
-										code.Append("_");
+										code.Append(" = ");
+										emitExpr(field.Initializer, code, _scope);
 									}
 									*/
 
-									// emitExpr( )
-									// code.Append(val.ResolvedType);
-									code.Append(writeResolvedType(val.ResolvedType, .. scope .()));
-									code.Append(scope $" {field.Name.Lexeme};");
+									code.Append(';');
 								}
 								else
 								{
 									Runtime.FatalError("This should've been declared. SOMEONE didn't do their job correctly!");
 								}
-
-								// emitExpr(field.Type, code, _struct.Scope);
-								// code.Append(scope $" {field.Name.Lexeme};");
 							}
 						}
 						code.DecreaseTab();
@@ -433,13 +446,7 @@ class Generator
 			code.AppendNewLine();
 			code.AppendTabs();
 
-			bool isStructType = false;
-
 			let entity = _scope.LookupStmtAs<Entity.Variable>(v).Value;
-			if (entity.ResolvedType case .Structure)
-			{
-				isStructType = true;
-			}
 
 			// Write type
 			code.Append(writeResolvedType(entity.ResolvedType, .. scope .()));
@@ -467,7 +474,7 @@ class Generator
 			}
 			else
 			{
-				if (isStructType)
+				if (entity.ResolvedType case .Structure(let _struct))
 				{
 					// Because C doesn't initialize structs automatically without an initializer (but we want to),
 					// we'll have to tell it to do so manually.
@@ -478,7 +485,20 @@ class Generator
 					Console.ForegroundColor = .Yellow;
 					Console.WriteLine("please fix this implicit initializer");
 					Console.ResetColor();
-					code.Append(scope $" = \{\}");
+					code.Append(scope $" = ");
+					code.Append("{ ");
+					for (let field in _struct.Fields)
+					{
+						if (field.Initializer == null)
+							continue;
+
+						code.Append(scope $".{field.Name.Lexeme} = ");
+						emitExpr(field.Initializer, code, _scope);
+
+						if (field != _struct.Fields.Back)
+							code.Append(", ");
+					}
+					code.Append(" }");
 				}
 			}
 			addSemicolon!();
@@ -601,7 +621,7 @@ class Generator
 		}
 	}
 
-	private void emitExpr(AstNode.Expression expr, StringCodeBuilder code, Scope _scope, bool zenNamespacePrefix = true)
+	private void emitExpr(AstNode.Expression expr, StringCodeBuilder code, Scope _scope, bool zenNamespacePrefix = true, EmitExprParameters parameters = default)
 	{
 		switch (expr.GetKind())
 		{
@@ -918,6 +938,27 @@ class Generator
 			code.Append('[');
 			emitExpr(index.Index, code, _scope);
 			code.Append(']');
+			break;
+
+		case .CompositeLiteral(let composite):
+			Debug.Assert(composite.ResolvedInferredType != null);
+
+			// MSVC doesn't like compound literals in constant expressions, so those need to be disabled here.
+			// Other compilers support them fine, but we need to support ALL compilers
+			if (!parameters.FromConst)
+			{
+				let type = writeResolvedType(composite.ResolvedInferredType.Value, .. scope .());
+				code.Append(scope $"CLITERAL({type})");
+			}
+
+			code.Append("{ ");
+			for (let i < composite.Elements.Count)
+			{
+				if (i > 0)
+					code.Append(", ");
+				emitExpr(composite.Elements[i], code, _scope);
+			}
+			code.Append(" }");
 			break;
 		}
 	}

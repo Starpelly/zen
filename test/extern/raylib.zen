@@ -22,6 +22,36 @@ extern struct Camera2D
 	float zoom;
 }
 
+// Colors
+const Color LightGray  = { 200, 200, 200, 255 };
+const Color Gray 	   = { 130, 130, 130, 255 };
+const Color DarkGray   = { 80, 80, 80, 255 };
+const Color Yellow 	   = { 253, 249, 0, 255 };
+const Color Gold 	   = { 255, 203, 0, 255 };
+
+const Color Orange     = { 255, 161, 0, 255 };
+const Color Pink       = { 255, 109, 194, 255 };
+const Color Red        = { 230, 41, 55, 255 };
+const Color Maroon     = { 190, 33, 55, 255 };
+const Color Green      = { 0, 228, 48, 255 };
+const Color Lime       = { 0, 158, 47, 255 };
+const Color DarkGreen  = { 0, 117, 44, 255 };
+const Color SkyBlue    = { 102, 191, 255, 255 };
+const Color Blue       = { 0, 121, 241, 255 };
+const Color DarkBlue   = { 0, 82, 172, 255 };
+const Color Purple     = { 200, 122, 255, 255 };
+const Color Violet     = { 135, 60, 190, 255 };
+const Color DarkPurple = { 112, 31, 126, 255 };
+const Color Beige      = { 211, 176, 131, 255 };
+const Color Brown      = { 127, 106, 79, 255 };
+const Color DarkBrown  = { 76, 63, 47, 255 };
+
+const Color White 	   = { 255, 255, 255, 255 };
+const Color Black 	   = { 0, 0, 0, 255 };
+const Color Blank 	   = { 0, 0, 0, 0 };
+const Color Magenta    = { 255, 0, 255, 255 };
+const Color RayWhite   = { 245, 245, 245, 255 };
+
 extern fun void InitWindow(int width, int height, string title);
 extern fun void CloseWindow();
 extern fun bool WindowShouldClose();

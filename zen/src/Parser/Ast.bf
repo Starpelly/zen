@@ -47,6 +47,7 @@ enum ExpressionKind
 	case NamedType(AstNode.Expression.NamedType);
 	case Cast(AstNode.Expression.Cast);
 	case Index(AstNode.Expression.Index);
+	case CompositeLiteral(AstNode.Expression.CompositeLiteral);
 }
 
 abstract class AstNode
@@ -216,12 +217,14 @@ abstract class AstNode
 			public readonly Token Name;
 			public readonly Expression.NamedType Type ~ delete _;
 			public readonly Expression Initializer ~ delete _;
+			public readonly Token? Operator;
 
-			public this(Token name, Expression.NamedType type, Expression init)
+			public this(Token name, Expression.NamedType type, Expression init, Token? op)
 			{
 				this.Name = name;
 				this.Type = type;
 				this.Initializer = init;
+				this.Operator = op;
 			}
 
 			public override StmtKind GetKind() => .ConstDecl(this);
@@ -636,6 +639,24 @@ abstract class AstNode
 			}
 
 			public override ExpressionKind GetKind() => .Index(this);
+		}
+
+		public class CompositeLiteral : Expression
+		{
+			public readonly List<Expression> Elements ~ DeleteContainerAndItems!(_);
+			public readonly Token LBrace;
+			public readonly Token RBrace;
+
+			public ZenType? ResolvedInferredType;
+
+			public this(List<Expression> elements, Token lbrace, Token rbrace)
+			{
+				this.Elements = elements;
+				this.LBrace = lbrace;
+				this.RBrace = rbrace;
+			}
+
+			public override ExpressionKind GetKind() => .CompositeLiteral(this);
 		}
 	}
 }

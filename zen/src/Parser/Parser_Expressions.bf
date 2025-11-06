@@ -288,9 +288,32 @@ extension Parser
 			returnValue!(new Expression.Grouping(expr));
 		}
 
+		if (check(.LeftBrace))
+		{
+			returnValue!(getExprCompositeLiteral());
+		}
+
 		reportError(peek(), "Expected expression.");
 		advance();
 		return null;
+	}
+
+	private Expression.CompositeLiteral getExprCompositeLiteral()
+	{
+		let lbrace = consume(.LeftBrace, "Expected '{'");
+		let elements = new List<Expression>();
+
+		if (!check(.RightBrace))
+		{
+			repeat
+			{
+				elements.Add(getExpression());
+			} while(match(.Comma));
+		}
+
+		let rbrace = consume(.RightBrace, "Expected '}'");
+
+		return new .(elements, lbrace, rbrace);
 	}
 
 	private Expression parseLeftAssociativeBinaryOparation(function Expression(Self this) higherPrecedence, params TokenKind[] tokenTypes)

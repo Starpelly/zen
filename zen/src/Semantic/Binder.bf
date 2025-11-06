@@ -265,11 +265,11 @@ class Binder
 	{
 		let pad = scope String(' ', indent * 2);
 
-		Console.WriteLine(scope $"{pad}Scope: {_scope.Name}");
+		Console.WriteLine(scope $"{pad}[] Scope: {_scope.Name}");
 
 		for (let e in _scope.EntityMap)
 		{
-			Console.WriteLine(scope $"{pad}  - {e.value.GetType().GetName(.. scope .())} {e.key}: type({e.value.Type})");
+			Console.WriteLine(scope $"{pad}   - {e.value.GetType().GetName(.. scope .())} {e.key}: type({e.value.Type})");
 		}
 
 		for (let child in _scope.Children)

@@ -76,8 +76,19 @@ class Checker
 
 			if (_var.Initializer != null)
 			{
-				let initType = checkExpr(_var.Initializer, _scope);
+				let initType = checkExpr(_var.Initializer, _scope, null, entity.ResolvedType);
 				checkTypesComparable(_var.Operator.Value, entity.ResolvedType, initType);
+			}
+		}
+
+		if (let _const = stmt as AstNode.Stmt.ConstantDeclaration)
+		{
+			let entity = _scope.LookupName(_const.Name.Lexeme).Value as Entity.Constant;
+
+			if (_const.Initializer != null)
+			{
+				let initType = checkExpr(_const.Initializer, _scope, null, entity.ResolvedType);
+				checkTypesComparable(_const.Operator.Value, entity.ResolvedType, initType);
 			}
 		}
 
@@ -144,7 +155,7 @@ class Checker
 		}
 	}
 
-	private ZenType checkExpr(AstNode.Expression expr, Scope _scope, Scope callScope = null)
+	private ZenType checkExpr(AstNode.Expression expr, Scope _scope, Scope callScope = null, ZenType? expectedTypeQ = null)
 	{
 		switch (expr.GetKind())
 		{
@@ -186,56 +197,13 @@ class Checker
 			{
 				return _var.ResolvedType;
 			}
-
-			/*
-			let type = entity.Value.Type;
-			switch (type)
+			else if (entity.Value.GetKind() case .Constant(let _const))
 			{
-			case .SimpleNamed(let name):
-				let a = lookupScopeForIdentifier(_scope, name);
-				returnVal!(a.Value.Type);
-
-			case .QualifiedNamed(let qualifiedName):
-				let sourceNamespace = lookupScopeForIdentifier(_scope, qualifiedName.Left);
-				if (sourceNamespace case .Ok(let left))
+				if (_const.Decl case .Normal)
 				{
-					if (let ns = left as Entity.Namespace)
-					{
-						let a = checkExpr(qualifiedName.Right, ns.Decl.Scope);
-						returnVal!(a);
-					}
-					if (let typename = left as Entity.TypeName)
-					{
-						if (let declScope = typename.Decl as AstNode.Stmt.IScope)
-						{
-							let a = checkExpr(qualifiedName.Right, declScope.Scope);
-							returnVal!(a);
-							// let source = lookupScopeForIdentifier(declScope.Scope, qualifiedName.)
-						}
-					}
-				}
-				break;
-			default:
-			}
-			*/
-
-			// @FIX
-			// Idk how I feel about this, but basically we look at the variable's declaration to check what type it is.
-			// If it's an enum, we can just return an integer, since they're pretty much the same.
-			// I don't think we should do this here, Enums should probably be comparable to ints when we actually compare them.
-			// Especially when enums get the ability to specify their types. But this is OK for now.
-			/*
-			if (let _var = entity.Value as Entity.Variable)
-			{
-				if (_scope.Lookup(_var.Decl.Type.Lexeme) case .Ok(let foundEntity))
-				{
-					if (foundEntity.Type == .Enum)
-					{
-						returnVal!(ZenType.Basic(.FromKind(.UntypedInteger)));
-					}
+					return _const.ResolvedType;
 				}
 			}
-			*/
 
 			return entity.Value.Type;
 
@@ -264,6 +232,12 @@ class Checker
 				for (let i < call.Arguments.Count)
 				{
 					let arg = call.Arguments[i];
+
+					if (let t = arg as AstNode.Expression.QualifiedName)
+					{
+						var a = 0;
+					}
+
 					let argType = checkExpr(arg, callScope ?? _scope);
 					let calleeParamType = checkExpr(calleeFun.Decl.Parameters[i].Type, _scope);
 
@@ -279,7 +253,7 @@ class Checker
 
 		case .Assign(let ass):
 			let x = checkExpr(ass.Assignee, _scope);
-			let y = checkExpr(ass.Value, _scope);
+			let y = checkExpr(ass.Value, _scope, null, x);
 			checkTypesComparable(ass.Op, x, y);
 
 			return x;
@@ -476,6 +450,35 @@ class Checker
 
 			reportError(index.Array, "Cannot index into a non-array type");
 			return ZenType.Invalid;
+
+		case .CompositeLiteral(let composite):
+			Debug.Assert(expectedTypeQ != null, "Composite literal is context dependent, so we'll need an expected type!");
+			let expectedType = expectedTypeQ.Value;
+
+			if (expectedType case .Structure(let _struct))
+			{
+				let fields = _struct.Fields;
+
+				if (composite.Elements.Count != fields.Count)
+				{
+					reportError(composite.LBrace, scope $"Struct {_struct.Name.Lexeme} expects {fields.Count} fields but got {composite.Elements.Count}");
+					return ZenType.Invalid;
+				}
+
+				for (let i < fields.Count)
+				{
+					let fieldType = checkExpr(fields[i].Type, _scope, callScope);
+					let elemType = checkExpr(composite.Elements[i], _scope, callScope, fieldType);
+				}
+
+				composite.ResolvedInferredType = expectedType;
+				return expectedType;
+			}
+			else
+			{
+				reportError(composite.LBrace, "Composite literal not allowed for this type");
+				return ZenType.Invalid;
+			}
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");
