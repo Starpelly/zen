@@ -60,6 +60,8 @@ const Color Blank 	   = { 0, 0, 0, 0 };
 const Color Magenta    = { 255, 0, 255, 255 };
 const Color RayWhite   = { 245, 245, 245, 255 };
 
+const Color RealGray   = { 21, 12, 13, 255 };
+
 extern fun void InitWindow(int width, int height, string title);
 extern fun void CloseWindow();
 extern fun bool WindowShouldClose();

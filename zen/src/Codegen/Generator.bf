@@ -148,7 +148,7 @@ class Generator
 			{
 				continue;
 			}
-			writeExpr_VarDecl(_var.Decl, headerCode, _var.Scope, false, true, true);
+			writeStmt_VarDecl(_var.Decl, headerCode, _var.Scope, false, true, true);
 		}
 		headerCode.DecreaseTab();
 		headerCode.AppendLine("}");
@@ -329,73 +329,13 @@ class Generator
 		{
 			for (let entity in _scope.EntityMap)
 			{
-				switch (entity.value.GetKind())
+				if (let constant = entity.value as Entity.Constant)
 				{
-				case .Constant(let constant):
 					// This means it's a built in constant, so like int32s and stuff. We can safely ignore those as they're defined in the zen.h header.
 					if (constant.Decl case .Builtin)
 						continue;
 
-					Runtime.Assert(constant.Decl case .Normal(let basic));
-
-					let namespaceStr = buildNamespaceString(constant, .. scope .(), true);
-
-					code.AppendLine("#define ");
-					// code.AppendLine("const ");
-					bool isStructType = false;
-
-					if (constant.ResolvedType case .Structure)
-					{
-						isStructType = true;
-					}
-
-					// Write type
-					// code.Append(writeResolvedType(constant.ResolvedType, .. scope .()));
-
-					// The space between type and name
-					// code.Append(' ');
-
-					// Write namespace
-					code.Append(namespaceStr);
-					code.Append("_");
-
-					// Write name
-					code.Append(basic.Name.Lexeme);
-
-					if (constant.ResolvedType case .Array(let element, let count))
-					{
-						code.Append(scope $"[{count}]");
-					}
-
-					if (basic.Initializer != null)
-					{
-						// code.Append(' ');
-						// code.Append('=');
-						code.Append(' ');
-						emitExpr(basic.Initializer, code, _scope, true, .()
-							{
-								FromConst = true
-							});
-					}
-					else
-					{
-						if (isStructType)
-						{
-							// Because C doesn't initialize structs automatically without an initializer (but we want to),
-							// we'll have to tell it to do so manually.
-
-							// @TODO - pelly, 11/2/25
-							// Actually, we want initializers in the future, and we want to throw errors when we try to use uninitialized variables.
-							// So this needs to be removed or changed in the future!
-							Console.ForegroundColor = .Yellow;
-							Console.WriteLine("please fix this implicit initializer");
-							Console.ResetColor();
-							code.Append(scope $" = \{\}");
-						}
-					}
-					// code.Append(';');
-					break;
-				default:
+					writeStmt_ConstDecl(constant, code, _scope);
 				}
 			}
 		}
@@ -409,7 +349,7 @@ class Generator
 				case .Variable(let ent):
 					// It might be okay to do this here?
 					// For variables at the global (or non functional) scope at least...?
-					writeExpr_VarDecl(ent.Decl, code, _scope, true, false, true);
+					writeStmt_VarDecl(ent.Decl, code, _scope, true, false, true);
 					outVars.Add(ent);
 					break;
 				default:
@@ -501,8 +441,13 @@ class Generator
 			code.AppendLine("}");
 			break;
 
+		case .ConstDecl(let c):
+			let entity = _scope.LookupStmtAs<Entity.Constant>(c).Value;
+			writeStmt_ConstDecl(entity, code, _scope);
+			break;
+
 		case .VarDecl(let v):
-			writeExpr_VarDecl(v, code, _scope, true, true, emitSemicolon);
+			writeStmt_VarDecl(v, code, _scope, true, true, emitSemicolon);
 			break;
 
 		case .Return(let ret):
@@ -562,96 +507,6 @@ class Generator
 
 		default:
 		}
-	}
-
-	private void writeExpr_VarDecl(AstNode.Stmt.VariableDeclaration v, StringCodeBuilder code, Scope _scope, bool writeType, bool writeInitializer, bool writeSemicolon)
-	{
-		code.AppendNewLine();
-		code.AppendTabs();
-
-		let entity = _scope.LookupStmtAs<Entity.Variable>(v).Value;
-
-		if (writeType)
-		{
-			// Write type
-			code.Append(writeResolvedType(entity.ResolvedType, .. scope .()));
-
-			// Space between type and name
-			code.Append(' ');
-		}
-
-		// Write namespace
-		let ns = buildNamespaceString(entity, .. scope .(), true);
-		code.Append(ns);
-		code.Append('_');
-
-		// Write name
-		code.Append(v.Name.Lexeme);
-
-		if (entity.ResolvedType case .Array(let element, let count))
-		{
-			code.Append(scope $"[{count}]");
-		}
-
-		if (writeInitializer)
-		{
-			if (v.Initializer != null)
-			{
-				code.Append(scope $" = ");
-				emitExpr(v.Initializer, code, _scope);
-			}
-			else
-			{
-				if (entity.ResolvedType case .Structure(let _struct))
-				{
-					// Because C doesn't initialize structs automatically without an initializer (but we want to),
-					// we'll have to tell it to do so manually.
-
-					// @TODO - pelly, 11/2/25
-					// Actually, we want initializers in the future, and we want to throw errors when we try to use uninitialized variables.
-					// So this needs to be removed or changed in the future!
-					Console.ForegroundColor = .Yellow;
-					Console.WriteLine("please fix this implicit initializer");
-					Console.ResetColor();
-					code.Append(scope $" = ");
-
-					let type = writeResolvedType(entity.ResolvedType, .. scope .());
-					code.Append(scope $"CLITERAL({type})");
-
-					int initFieldsCount = 0;
-					for (let field in _struct.Fields)
-					{
-						if (field.Initializer == null)
-							continue;
-						initFieldsCount++;
-					}
-
-					if (initFieldsCount == 0)
-					{
-						code.Append("{ 0 }");
-					}
-					else
-					{
-						code.Append("{ ");
-						for (let field in _struct.Fields)
-						{
-							if (field.Initializer == null)
-								continue;
-
-							code.Append(scope $".{field.Name.Lexeme} = ");
-							emitExpr(field.Initializer, code, _scope);
-
-							if (field != _struct.Fields.Back)
-								code.Append(", ");
-						}
-
-						code.Append(" }");
-					}
-				}
-			}
-		}
-		if (writeSemicolon)
-		code.Append(';');
 	}
 
 	private void writeResolvedType(ZenType type, String outStr)
@@ -895,7 +750,37 @@ class Generator
 			break;
 
 		case .Literal(let literal):
-			code.Append(literal.ValueString);
+			if (literal.Value.TryGet<StringView>(let str))
+			{
+				bool isMultiline = str.Contains('\n');
+				if (isMultiline)
+				{
+					let lines = str.Split('\n');
+					int i = 0;
+					for (let line in lines)
+					{
+						let t = scope String(line);
+						t.TrimStart();
+						if (t == "\"\"\"")
+							continue;
+
+						code.AppendNewLine();
+						code.AppendTabs();
+
+						code.Append('"');
+						code.Append(line);
+						code.Append('"');
+					}
+				}
+				else
+				{
+					code.AppendLine(str);
+				}
+			}
+			else
+			{
+				code.Append(literal.ValueString);
+			}
 			if (literal.GetLiteralType().IsTypeFloat())
 			{
 				// C appends the "f" at the end of floats...

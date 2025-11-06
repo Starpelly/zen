@@ -142,6 +142,7 @@ void zen_game_map_load();
 void zen_game_map_draw();
 void zen_game_map_update();
 void zen_game_map_move_entity(zen_game_Entity* zen_game_e, int zen_game_dx, int zen_game_dy);
+bool zen_game_map_add_entity(zen_game_Entity* zen_game_e);
 void zen_game_draw_line(float zen_game_x1, float zen_game_y1, float zen_game_x2, float zen_game_y2, Color zen_game_color);
 void zen_game_draw_rect(float zen_game_x, float zen_game_y, float zen_game_w, float zen_game_h, Color zen_game_color);
 void zen_game_draw_rect_lines(float zen_game_x, float zen_game_y, float zen_game_w, float zen_game_h, Color zen_game_color);
@@ -184,6 +185,13 @@ struct zen_game_Tile {
 #define zen_game_PLAYER_SPEED 500.0f
 #define zen_game_MAP_WIDTH 12
 #define zen_game_MAP_HEIGHT 6
+#define zen_game_LEVEL \
+"############"\
+"#..........#"\
+"#@c......o.#"\
+"#..c.....o.#"\
+"#..........#"\
+"##########D#"
 #define zen_raylib_LightGray CLITERAL(Color){ 200, 200, 200, 255 }
 #define zen_raylib_Gray CLITERAL(Color){ 130, 130, 130, 255 }
 #define zen_raylib_DarkGray CLITERAL(Color){ 80, 80, 80, 255 }
@@ -210,6 +218,7 @@ struct zen_game_Tile {
 #define zen_raylib_Blank CLITERAL(Color){ 0, 0, 0, 0 }
 #define zen_raylib_Magenta CLITERAL(Color){ 255, 0, 255, 255 }
 #define zen_raylib_RayWhite CLITERAL(Color){ 245, 245, 245, 255 }
+#define zen_raylib_RealGray CLITERAL(Color){ 21, 12, 13, 255 }
 #define zen_math_PI 3.14159265358979323846f
 #define zen_math_HALF_PI 1.57079632679489661923f
 #define zen_math_EPSILON 0.00001f
@@ -255,7 +264,7 @@ void zen_game_start_game()
 	{
 		zen_game_game_update(&zen_game_gameManager);
 		BeginDrawing();
-		ClearBackground(zen_raylib_DarkGray);
+		ClearBackground(zen_raylib_RayWhite);
 		BeginMode2D(zen_game_cam);
 		zen_game_game_draw(&zen_game_gameManager);
 		EndMode2D();
@@ -346,11 +355,19 @@ void zen_game_map_load()
 }
 void zen_game_map_draw()
 {
-	for (int zen_game_y = 0; zen_game_y < zen_game_MAP_WIDTH; zen_game_y += 1)
+	#define zen_game_checker1 CLITERAL(Color){ 0, 0, 0, 15 }
+	#define zen_game_checker2 CLITERAL(Color){ 21, 24, 31, 28 }
+	for (int zen_game_y = 0; zen_game_y < zen_game_MAP_HEIGHT; zen_game_y += 1)
 	{
-		for (int zen_game_x = 0; zen_game_x < zen_game_MAP_HEIGHT; zen_game_x += 1)
+		for (int zen_game_x = 0; zen_game_x < zen_game_MAP_WIDTH; zen_game_x += 1)
 		{
 			zen_game_Tile zen_game_tile = zen_game_map_tiles[zen_game_y * zen_game_MAP_HEIGHT + zen_game_x];
+			Color zen_game_tileColor = zen_game_checker1;
+			if ((zen_game_x - zen_game_y) % 2 == 0)
+			{
+				zen_game_tileColor = zen_game_checker2;
+			}
+			DrawRectangle(zen_game_x * zen_game_CELL_WIDTH, zen_game_y * zen_game_CELL_HEIGHT, zen_game_CELL_WIDTH, zen_game_CELL_HEIGHT, zen_game_tileColor);
 		}
 	}
 	zen_game_draw_rect_lines(0.0f, 0.0f, (float)(zen_game_MAP_WIDTH * zen_game_CELL_WIDTH), (float)(zen_game_MAP_HEIGHT * zen_game_CELL_HEIGHT), zen_raylib_LightGray);
@@ -386,6 +403,18 @@ void zen_game_map_move_entity(zen_game_Entity* zen_game_e, int zen_game_dx, int 
 	zen_game_map_tiles[zen_game_nx + (zen_game_ny * zen_game_MAP_WIDTH)].entity = zen_game_e;
 	zen_game_e->x = zen_game_nx;
 	zen_game_e->y = zen_game_ny;
+	string zen_game_test = 
+	"	let a  =0;"
+	"	let b = 0;";
+}
+bool zen_game_map_add_entity(zen_game_Entity* zen_game_e)
+{
+	if (zen_game_e == null)
+	{
+		return false;
+	}
+	zen_game_map_tiles[zen_game_e->x + zen_game_e->y * zen_game_MAP_WIDTH].entity = zen_game_e;
+	return true;
 }
 void zen_game_draw_line(float zen_game_x1, float zen_game_y1, float zen_game_x2, float zen_game_y2, Color zen_game_color)
 {

@@ -8,6 +8,8 @@ public class StringCodeBuilder
 	private int m_tabCount;
 	private int m_line = 0;
 
+	private bool m_inMacro = false;
+
 	public String Code => m_code;
 
 	public void IncreaseTab()
@@ -18,6 +20,16 @@ public class StringCodeBuilder
 	public void DecreaseTab()
 	{
 		m_tabCount--;
+	}
+
+	public void BeginMacro()
+	{
+		m_inMacro = true;
+	}
+
+	public void EndMacro()
+	{
+		m_inMacro = false;
 	}
 
 	public void Append(String text)
@@ -66,6 +78,11 @@ public class StringCodeBuilder
 
 	public void AppendNewLine()
 	{
+		if (m_inMacro)
+		{
+			m_code.Append('\\');
+		}
+
 		if (m_line > 0) m_code.Append('\n');
 		m_line++;
 	}

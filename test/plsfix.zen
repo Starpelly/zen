@@ -1,6 +1,6 @@
 struct EmptyStruct
 {
-    
+    float a;
 }
 
 let float x = 0.0;

@@ -261,10 +261,6 @@ extension Parser
 			return returnExpr;
 		}
 
-		mixin returnLiteral(Token prevToken, Variant? value, StringView valueStr)
-		{
-		}
-
 		if (match(.Number_Int, .Number_Float, .String))
 		{
 			let token = previous();

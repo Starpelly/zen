@@ -3,6 +3,7 @@
 #load "crate.zen";
 #load "map.zen";
 #load "assets.zen";
+#load "levels.zen";
 
 #load "../extern/raylib.zen";
 #load "../std/math.zen";
@@ -53,7 +54,7 @@ fun void start_game()
 		game_update(&gameManager);
 
 		raylib::BeginDrawing();
-		raylib::ClearBackground(raylib::DarkGray);
+		raylib::ClearBackground(raylib::RayWhite);
 
 		raylib::BeginMode2D(cam);
 		game_draw(&gameManager);
