@@ -2,3 +2,4 @@
 // #load "tests/arrays.zen";
 // #load "tests/pointers.zen";
 // #load "tests/checker/loop_basic.zen";
+// #load "tests/error.zen";

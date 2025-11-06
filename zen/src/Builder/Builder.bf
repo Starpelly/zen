@@ -9,12 +9,11 @@ class Builder
 {
 	private const ConsoleColor CONSOLE_CODE_COLOR = .Gray;
 
-	private ErrorManager m_errorManager = new .(CONSOLE_CODE_COLOR) ~ delete _;
+	private DiagnosticManager m_errorManager = new .(CONSOLE_CODE_COLOR) ~ delete _;
 	private bool m_hadErrors = false;
 	private int m_errorCount = 0;
 
 	private Dictionary<Guid, CompFile> m_compFiles = new .() ~ DeleteDictionaryAndValues!(_);
-	private List<CompilerError> m_errors = new .() ~ DeleteContainerAndItems!(_);
 
 	// public int FilesWritten => m_writtenFiles.Count;
 	// public List<String> WrittenFiles => m_writtenFiles;
@@ -48,52 +47,51 @@ class Builder
 			finalAst.AddRange(file.value.Ast);
 		}
 
-		let errors = scope List<CompilerError>();
-		mixin checkAddErrorsAndReturn()
+		mixin checkAddErrorsAndReturn(Visitor visitor)
 		{
-			for (let err in errors)
+			for (let err in visitor.Diagnostics)
 			{
-				addError(m_compFiles[err.FirstToken.File], err);
+				writeDiagnostic(err);
 			}
 
 			if (m_hadErrors)
 				return .Err;
 		}
 
-		// Checker
-
+		// Scope builder
 
 		StopwatchChecker.Start();
 
-		let scoper = scope Binder(finalAst, errors);
+		let scoper = scope Binder(finalAst);
 		let globalScope = scoper.Run();
 
 		StopwatchChecker.Stop();
 
 		Binder.PrintScopeTree(globalScope);
 
-		checkAddErrorsAndReturn!();
+		checkAddErrorsAndReturn!(scoper);
 
 		StopwatchChecker.Start();
 
 		// Type resolver
-		let resolver = scope Resolver(finalAst, globalScope, errors);
+
+		let resolver = scope Resolver(finalAst, globalScope);
 		resolver.Run();
 
 		StopwatchChecker.Stop();
 
-		checkAddErrorsAndReturn!();
+		checkAddErrorsAndReturn!(resolver);
 
 		// Checker
 
 		StopwatchChecker.Start();
 
-		let checker = scope Checker(finalAst, globalScope, errors);
+		let checker = scope Checker(finalAst, globalScope);
 		checker.Run();
 
 		StopwatchChecker.Stop();
 
-		checkAddErrorsAndReturn!();
+		checkAddErrorsAndReturn!(checker);
 
 		// Code gen
 
@@ -112,7 +110,6 @@ class Builder
 	private CompFile compFile(String filePath, Guid fileID)
 	{
 		let text = File.ReadAllText(filePath, .. new .());
-		let errors = scope List<CompilerError>();
 
 		// Tokenize file
 		StopwatchLexer.Start();
@@ -126,7 +123,7 @@ class Builder
 
 		StopwatchParser.Start();
 
-		let parser = new Parser(tokens, errors);
+		let parser = new Parser(tokens);
 		Ast retAst = ?;
 		switch (parser.Run())
 		{
@@ -140,11 +137,6 @@ class Builder
 		StopwatchParser.Stop();
 
 		let comp = new CompFile(filePath, Path.GetFileName(filePath, .. scope .()), text, tokenizer, parser, tokens, retAst);
-		for (let err in errors)
-		{
-			addError(comp, err);
-		}
-
 		return comp;
 	}
 
@@ -153,6 +145,11 @@ class Builder
 		let fileID = Guid.Create();
 		let comp = compFile(Path.GetActualPathName(path, .. scope .()), fileID);
 		list.Add(fileID, comp);
+
+		for (let err in comp.Parser.Diagnostics)
+		{
+			writeDiagnostic(err);
+		}
 
 		searchForLoads(comp, comp.Ast, list);
 
@@ -181,7 +178,11 @@ class Builder
 
 					if (currentFile.Path == loadFilePath)
 					{
-						addError(directiveCompFile, new .(directive.Name, "File is attempting to load itself"));
+						let span = new DiagnosticSpan()
+						{
+							Range = directive.Name.SourceRange
+						};
+						writeDiagnostic(new .(.Error, "File is attempting to load itself", span));
 					}
 
 					bool tryLoadFile = true;
@@ -203,7 +204,11 @@ class Builder
 						}
 						else
 						{
-							addError(directiveCompFile, new .(directive.Name, "File not found"));
+							let span = new DiagnosticSpan()
+							{
+								Range = directive.Name.SourceRange
+							};
+							writeDiagnostic(new .(.Error, "File not found", span));
 						}
 					}
 				}
@@ -216,10 +221,9 @@ class Builder
 		}
 	}
 
-	private void addError(CompFile file, CompilerError err)
+	private void writeDiagnostic(Diagnostic diagnostic)
 	{
-		m_errors.Add(err);
-		m_errorManager.WriteError(file, err);
+		m_errorManager.WriteError(m_compFiles, diagnostic);
 
 		++m_errorCount;
 		m_hadErrors = true;

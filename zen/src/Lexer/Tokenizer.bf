@@ -209,21 +209,13 @@ class Tokenizer
 
 	private void addToken(TokenKind type)
 	{
-		m_tokens.Add(.(type, substring(m_start, m_current), m_line, m_column - (m_current - m_start), m_file));
+		m_tokens.Add(.(type, substring(m_start, m_current), m_line, m_column - (m_current - m_start), m_current, m_file));
 		// addToken(type/*, getValue()*/);
 	}
 
-	/*
-	private void addToken(TokenType type, Variant literal)
+	private void addToken(TokenKind type, StringView lexeme)
 	{
-		let text = substring(m_start, m_current);
-		addToken(type, text, literal);
-	}
-	*/
-
-	private void addToken(TokenKind type, StringView lexeme/*, Variant literal*/)
-	{
-		m_tokens.Add(.(type, lexeme, m_line, m_column - (m_current - m_start), m_file));
+		m_tokens.Add(.(type, lexeme, m_line, m_column - (m_current - m_start), m_current, m_file));
 	}
 
 	private void increaseLine()

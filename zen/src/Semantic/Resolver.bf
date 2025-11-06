@@ -7,17 +7,15 @@ namespace Zen;
 /// This pass is responsible for resolving types on entities.
 /// For example, Entity.Variables will get the type of the object they're storing resolved here,
 /// so we don't have to look up the tree for it again.
-class Resolver
+class Resolver : Visitor
 {
 	private readonly List<AstNode.Stmt> m_ast;
-	private readonly List<CompilerError> m_errors;
 	private readonly Scope m_globalScope;
 
-	public this(List<AstNode.Stmt> ast, Scope globalScope, List<CompilerError> errs)
+	public this(List<AstNode.Stmt> ast, Scope globalScope)
 	{
 		this.m_ast = ast;
 		this.m_globalScope = globalScope;
-		this.m_errors = errs;
 	}
 
 	public void Run()
@@ -114,11 +112,6 @@ class Resolver
 		}
 
 		return .Ok(entity);
-	}
-
-	private void reportError(Token token, String message)
-	{
-		m_errors.Add(new .(token, message));
 	}
 
 	private void resolveVariable(AstNode.Stmt.VariableDeclaration varDecl, Scope _scope)

@@ -55,7 +55,8 @@ extension Parser
 			// Only Variable Get, and Index are valid targets
 			if (expr is Expression.Variable || expr is Expression.Get || expr is Expression.Index)
 			{
-				expr = new Expression.Assign(expr, value, equals);
+				let range = SourceRange(expr.Range.Start, value.Range.End);
+				expr = new Expression.Assign(expr, value, equals, range);
 			}
 			else
 			{
@@ -75,7 +76,8 @@ extension Parser
 		{
 			let op = previous();
 			let right = getExprAnd();
-			expr = new Expression.Logical(expr, op, right);
+			let range = SourceRange(expr.Range.Start, right.Range.End);
+			expr = new Expression.Logical(expr, op, right, range);
 		}
 
 		return expr;
@@ -89,7 +91,8 @@ extension Parser
 		{
 			let op = previous();
 			let right = getExprEquality();
-			expr = new Expression.Logical(expr, op, right);
+			let range = SourceRange(expr.Range.Start, right.Range.End);
+			expr = new Expression.Logical(expr, op, right, range);
 		}
 
 		return expr;
@@ -129,7 +132,8 @@ extension Parser
 		{
 			let op = previous();
 			let right = getExprUnary();
-			return new Expression.Unary(op, right);
+			let range = SourceRange(op.SourceRange.Start, right.Range.End);
+			return new Expression.Unary(op, right, range);
 		}
 
 		bool isCasting = false;
@@ -145,7 +149,11 @@ extension Parser
 			castType = consumeType();
 			consume(.RightParen, "Expected ')'");
 
-			return new AstNode.Expression.Cast(getExprCall(), castType, castToken.Value);
+			let callValue = getExprCall();
+
+			// I never realized how out of order some of these ranges are lol
+			let range = SourceRange(castToken.Value.SourceRange.Start, callValue.Range.End);
+			return new AstNode.Expression.Cast(callValue, castType, castToken.Value, range);
 		}
 
 		return getExprCall();
@@ -184,12 +192,14 @@ extension Parser
 				let separator = consume(.DoubleColon, "Expected '::'");
 				let right = getExprCall();
 
-				expr = new Expression.QualifiedName(left, separator, right);
+				let range = SourceRange(left.SourceRange.Start, right.Range.End);
+				expr = new Expression.QualifiedName(left, separator, right, range);
 			}
 			else if (match(.Dot))
 			{
 				let name = consume(.Identifier, "Expected property name after '.'.");
-				expr = new Expression.Get(expr, name);
+				let range = SourceRange(expr.Range.Start, name.SourceRange.End);
+				expr = new Expression.Get(expr, name, range);
 			}
 			else
 			{
@@ -216,7 +226,8 @@ extension Parser
 
 		let close = consume(.RightParen, "Expected ')' after arguments.");
 
-		return new Expression.Call(callee, arguments, open, close);
+		let range = SourceRange(callee.Range.Start, close.SourceRange.End);
+		return new Expression.Call(callee, arguments, open, close, range);
 	}
 
 	private Expression getExprPostfix()
@@ -230,7 +241,9 @@ extension Parser
 				let lbrack = previous();
 				let index = getExpression();
 				let rbrack = consume(.RightBracket, "Expected ']' after index expression");
-				expr = new Expression.Index(expr, index, lbrack, rbrack);
+
+				let range = SourceRange(lbrack.SourceRange.Start, rbrack.SourceRange.End);
+				expr = new Expression.Index(expr, index, lbrack, rbrack, range);
 			}
 			else
 			{
@@ -250,45 +263,55 @@ extension Parser
 
 		mixin returnLiteral(Token prevToken, Variant? value, StringView valueStr)
 		{
-			returnValue!(new Expression.Literal(prevToken, value, valueStr));
 		}
 
 		if (match(.Number_Int, .Number_Float, .String))
 		{
+			let token = previous();
+
 			Variant value = ?;
-			switch (previous().Kind)
+			switch (token.Kind)
 			{
 			case .Number_Int:
-				value = Variant.Create<int>(int.Parse(previous().Lexeme));
+				value = Variant.Create<int>(int.Parse(token.Lexeme));
 				break;
 			case .Number_Float:
-				value = Variant.Create<float>(float.Parse(previous().Lexeme));
+				value = Variant.Create<float>(float.Parse(token.Lexeme));
 				break;
 			case .String:
-				value = Variant.Create<StringView>(previous().Lexeme);
+				value = Variant.Create<StringView>(token.Lexeme);
 				break;
 			default:
 				Runtime.FatalError("Variant token case not handled.");
 			}
 
-			returnLiteral!(previous(), value, previous().Lexeme);
+			let range = token.SourceRange; // Literals just use the token directly so this is fine
+			returnValue!(new Expression.Literal(token, value, token.Lexeme, range));
 		}
 
 		if (match(.This))
 		{
-			returnValue!(new Expression.This(previous()));
+			// @TODO
+			// I don't remember what this does lol
+			let range = previous().SourceRange;
+			returnValue!(new Expression.This(previous(), range));
 		}
 
 		if (match(.Identifier))
 		{
-			returnValue!(new Expression.Variable(previous()));
+			let token = previous();
+			let range = token.SourceRange;
+			returnValue!(new Expression.Variable(token, range));
 		}
 
 		if (match(.LeftParen))
 		{
+			let lparen = previous();
 			let expr = getExpression();
-			consume(.RightParen, "Expected ')' after expression.");
-			returnValue!(new Expression.Grouping(expr));
+			let rparen = consume(.RightParen, "Expected ')' after expression.");
+
+			let range = SourceRange(lparen.SourceRange.Start, rparen.SourceRange.End);
+			returnValue!(new Expression.Grouping(expr, range));
 		}
 
 		if (check(.LeftBrace))
@@ -316,7 +339,8 @@ extension Parser
 
 		let rbrace = consume(.RightBrace, "Expected '}'");
 
-		return new .(elements, lbrace, rbrace);
+		let range = SourceRange(lbrace.SourceRange.Start, rbrace.SourceRange.End);
+		return new .(elements, lbrace, rbrace, range);
 	}
 
 	private Expression parseLeftAssociativeBinaryOparation(function Expression(Self this) higherPrecedence, params TokenKind[] tokenTypes)
@@ -327,7 +351,9 @@ extension Parser
 		{
 			let op = previous();
 			let right = higherPrecedence(this);
-			expr = new Expression.Binary(expr, op, right, false);
+
+			let range = SourceRange(expr.Range.Start, right.Range.End);
+			expr = new Expression.Binary(expr, op, right, false, range);
 		}
 
 		return expr;

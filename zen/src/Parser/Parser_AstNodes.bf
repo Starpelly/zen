@@ -28,11 +28,12 @@ extension Parser
 			if (match(.DoubleColon))
 			{
 				let name = consume(.Identifier, "Expected identifier.");
-				let qualified = new AstNode.Expression.QualifiedName(token, past(2), new AstNode.Expression.Variable(name));
-				return new .(.Qualified(qualified));
+				let range =  SourceRange(token.SourceRange.Start, name.SourceRange.End);
+				let qualified = new AstNode.Expression.QualifiedName(token, past(2), new AstNode.Expression.Variable(name, name.SourceRange), range);
+				return new .(.Qualified(qualified), range);
 			}
 
-			return new .(.Simple(token));
+			return new .(.Simple(token), token.SourceRange);
 		}
 
 		var baseType = parseNamedType();
@@ -48,16 +49,19 @@ extension Parser
 			// if (!check(.RightBracket))
 				count = getExprAddition();
 
-			consume(.RightBracket, "Expected ']'");
+			let rbrack = consume(.RightBracket, "Expected ']'");
 
-			baseType = new .(.Array(baseType, count));
+			let range = SourceRange(baseType.Range.Start, rbrack.SourceRange.End); // Starts at the identifier, ends at the closing bracket
+			baseType = new .(.Array(baseType, count), range);
 		}
 
 		// @TODO @HACK
 		// This isn't chain-able
 		if (match(.Star))
 		{
-			baseType = new .(.Pointer(baseType));
+			let star = previous();
+			let range = SourceRange(baseType.Range.Start, star.SourceRange.End); // Starts at the identifier, ends at the star(s)
+			baseType = new .(.Pointer(baseType), range);
 		}
 
 		return baseType;
@@ -211,7 +215,8 @@ extension Parser
 			}
 			else
 			{
-				value = new AstNode.Expression.Literal(valueName, Variant.Create<int>(valueIndex), valueIndex.ToString(.. scope .()));
+				let range = valueName.SourceRange;
+				value = new AstNode.Expression.Literal(valueName, Variant.Create<int>(valueIndex), valueIndex.ToString(.. scope .()), range);
 			}
 
 			values.Add(new .(valueName, value));

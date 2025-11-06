@@ -4,18 +4,16 @@ using System.Diagnostics;
 
 namespace Zen;
 
-class Checker
+class Checker : Visitor
 {
 	private readonly List<AstNode.Stmt> m_ast;
 	private readonly Scope m_globalScope;
-	private readonly List<CompilerError> m_errors;
 	private readonly List<Entity.Function> m_functionStack = new .() ~ delete _;
 
-	public this(List<AstNode.Stmt> ast, Scope globalScope, List<CompilerError> errs)
+	public this(List<AstNode.Stmt> ast, Scope globalScope)
 	{
 		this.m_ast = ast;
 		this.m_globalScope = globalScope;
-		this.m_errors = errs;
 	}
 
 	public Result<void> Run()
@@ -77,7 +75,10 @@ class Checker
 			if (_var.Initializer != null)
 			{
 				let initType = checkExpr(_var.Initializer, _scope, null, entity.ResolvedType);
-				checkTypesComparable(_var.Operator.Value, entity.ResolvedType, initType);
+				if (!checkTypesComparable(entity.ResolvedType, initType))
+				{
+					reportError(_var.Initializer, scope $"Cannot assign '{initType.GetName(.. scope .())}' to '{entity.ResolvedType.GetName(.. scope .())}'");
+				}
 			}
 		}
 
@@ -453,7 +454,7 @@ class Checker
 			{
 				// @TODO
 				// Wrong token
-				reportError(composite.LBrace, "Composite literal is context dependent, so we'll need an expected type!");
+				reportError(composite, "Composite literal is context dependent, so we'll need an expected type!");
 				return .Invalid;
 			}
 
@@ -466,7 +467,7 @@ class Checker
 
 				if (composite.Elements.Count != fields.Count)
 				{
-					reportError(composite.LBrace, scope $"Struct {_struct.Name.Lexeme} expects {fields.Count} fields but got {composite.Elements.Count}");
+					reportError(composite, scope $"Struct {_struct.Name.Lexeme} expects {fields.Count} fields but got {composite.Elements.Count}");
 					return ZenType.Invalid;
 				}
 
@@ -477,7 +478,7 @@ class Checker
 
 					// @TODO
 					// Wrong token
-					checkTypesComparable(composite.LBrace, fieldType, elemType);
+					checkTypesComparable(composite.Elements[i], fieldType, elemType);
 				}
 
 				composite.ResolvedInferredType = expectedType;
@@ -493,7 +494,7 @@ class Checker
 		Runtime.FatalError("Uh oh! How did you get here?");
 	}
 
-	private void checkTypesComparable(Token token, ZenType x, ZenType y)
+	private bool checkTypesComparable(ZenType x, ZenType y)
 	{
 		// @HACK
 		if (!ZenType.AreTypesIdenticalUntyped(x, y))
@@ -502,12 +503,32 @@ class Checker
 			{
 				// This allows pointers to be assigned as NULL, not valid for other types I assume.
 				if (basic.Kind == .UntypedNull)
-					return;
+					return true;
 			}
 
+			return false;
+		}
+
+		return true;
+	}
+
+	private void checkTypesComparable(Token token, ZenType x, ZenType y)
+	{
+		if (!checkTypesComparable(x, y))
+		{
 			// @FIX
 			// Bad error message
 			reportError(token, scope $"Types mismatch ({x.GetName(.. scope .())}) to ({y.GetName(.. scope .())})");
+		}
+	}
+
+	private void checkTypesComparable(AstNode.Expression expr, ZenType x, ZenType y)
+	{
+		if (!checkTypesComparable(x, y))
+		{
+			// @FIX
+			// Bad error message
+			reportError(expr, scope $"Types mismatch ({x.GetName(.. scope .())}) to ({y.GetName(.. scope .())})");
 		}
 	}
 
@@ -531,25 +552,6 @@ class Checker
 			// @FIX
 			// Bad error message
 			reportError(expr, "Conditional expression isn't a boolean");
-		}
-	}
-
-	private void reportError(Token token, String message)
-	{
-		m_errors.Add(new .(token, message));
-	}
-
-	private void reportError(AstNode.Expression expr, String message)
-	{
-		// @TODO
-		// What the fuck?
-		if (let lit = expr as AstNode.Expression.Variable)
-		{
-			m_errors.Add(new .(lit.Name, message));
-		}
-		else
-		{
-			Runtime.FatalError("Not implemented yet!! :*(");
 		}
 	}
 }

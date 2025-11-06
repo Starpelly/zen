@@ -133,19 +133,24 @@ struct Token
 	public readonly TokenKind Kind;
 	public readonly StringView Lexeme;
 
-	public readonly int Line;
-	public readonly int Column;
+	public readonly SourceRange SourceRange;
+	public readonly Guid File => SourceRange.Start.File; // I'm suuuree this is fine...
 
-	public readonly Guid File;
-
-	public this(TokenKind type, StringView lexeme, int line, int col, Guid file)
+	public this(TokenKind kind)
 	{
-		this.Kind = type;
+		this.Kind = kind;
+		this.Lexeme = String.Empty;
+		this.SourceRange = default;
+	}
+
+	public this(TokenKind kind, StringView lexeme, int line, int col, int offset, Guid file)
+	{
+		this.Kind = kind;
 		this.Lexeme = lexeme;
 
-		this.Line = line;
-		this.Column = col;
-
-		this.File = file;
+		// In case you're worried, \n prevents tokens from being "multi-lined", so this is ok.
+		let start = SourceLocation(file, line, col, offset);
+		let end = SourceLocation(file, line, col + lexeme.Length, offset + lexeme.Length);
+		this.SourceRange = .(start, end);
 	}
 }

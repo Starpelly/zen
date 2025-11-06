@@ -5,10 +5,9 @@ namespace Zen;
 
 /// This pass is responsible for binding identifiers (Functions, Structs, Enums, etc.) to
 /// entities in scopes.
-class Binder
+class Binder : Visitor
 {
 	private readonly Ast m_ast;
-	private readonly List<CompilerError> m_errors;
 
 	private readonly Scope m_globalScope ~ delete _;
 	private Scope m_currentScope;
@@ -21,10 +20,9 @@ class Binder
 		public Entity.Namespace Entity;
 	}
 
-	public this(Ast ast, List<CompilerError> errs)
+	public this(Ast ast)
 	{
 		this.m_ast = ast;
-		this.m_errors = errs;
 
 		m_globalScope = new Scope("Global Scope", null, null);
 		m_currentScope = m_globalScope;
@@ -36,7 +34,7 @@ class Binder
 		// Built in functions
 		for (let fun in BuiltinFunctions)
 		{
-			let token = Token(.Identifier, "", 0, 0, .Empty);
+			let token = Token(.Identifier);
 			let entity = new Entity.Builtin(fun.Name, token, fun.TempType);
 			m_globalScope.DeclareWithName(entity, fun.Name);
 		}
@@ -44,7 +42,7 @@ class Binder
 
 	private void addGlobalConstant(String name, ZenType type, Variant value)
 	{
-		let token = Token(.Identifier, name, 0, 0, .Empty);
+		let token = Token(.Identifier);
 		let entity = new Entity.Constant(.Builtin, null, value, token, type);
 		m_globalScope.DeclareWithName(entity, name);
 	}
@@ -336,11 +334,5 @@ class Binder
 
 		// reportError(token, "Unknown data type.");
 		return .SimpleNamed(token);
-	}
-
-	private void reportError(Token token, String message)
-	{
-		// Log error here.
-		m_errors.Add(new .(token, message));
 	}
 }

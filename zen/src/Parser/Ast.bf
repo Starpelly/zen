@@ -336,6 +336,13 @@ abstract class AstNode
 	{
 		public abstract ExpressionKind GetKind();
 
+		public readonly SourceRange Range;
+
+		public this(SourceRange range)
+		{
+			this.Range = range;
+		}
+
 		public class Binary : Expression
 		{
 			public readonly Expression Left ~ delete _;
@@ -343,7 +350,7 @@ abstract class AstNode
 			public readonly Expression Right ~ delete _;
 			public readonly bool WasCompounded = false;
 
-			public this(Expression left, Token op, Expression right, bool wasCompounded)
+			public this(Expression left, Token op, Expression right, bool wasCompounded, SourceRange range) : base(range)
 			{
 				this.Left = left;
 				this.Op = op;
@@ -358,7 +365,7 @@ abstract class AstNode
 		{
 			public readonly Token Name;
 
-			public this(Token name)
+			public this(Token name, SourceRange range) : base(range)
 			{
 				this.Name = name;
 			}
@@ -376,7 +383,7 @@ abstract class AstNode
 			/// Close ')' token
 			public readonly Token Close;
 
-			public this(Expression.Variable callee, List<Expression> arguments, Token open, Token close)
+			public this(Expression.Variable callee, List<Expression> arguments, Token open, Token close, SourceRange range) : base(range)
 			{
 				this.Callee = callee;
 				this.Arguments = arguments;
@@ -393,7 +400,7 @@ abstract class AstNode
 			public readonly Token Op;
 			public readonly Expression Right ~ delete _;
 			
-			public this(Expression left, Token op, Expression right)
+			public this(Expression left, Token op, Expression right, SourceRange range) : base(range)
 			{
 				this.Left = left;
 				this.Op = op;
@@ -414,7 +421,7 @@ abstract class AstNode
 			/// Used in the code generator, so it's on the creator to say what this is, so we don't need a big switch statement or whatever.
 			public readonly String ValueString = new .() ~ delete _;
 
-			public this(Token token, Variant? value, StringView valueStr)
+			public this(Token token, Variant? value, StringView valueStr, SourceRange range) : base(range)
 			{
 				this.Token = token;
 				this.Variant = value;
@@ -466,7 +473,7 @@ abstract class AstNode
 
 			public ZenType StoredType;
 
-			public this(Token @operator, Expression right)
+			public this(Token @operator, Expression right, SourceRange range) : base(range)
 			{
 				this.Operator = @operator;
 				this.Right = right;
@@ -484,7 +491,7 @@ abstract class AstNode
 			// Just to get pointers working for now
 			public bool IsPointer;
 
-			public this(Expression object, Token name)
+			public this(Expression object, Token name, SourceRange range) : base(range)
 			{
 				this.Object = object;
 				this.Name = name;
@@ -499,7 +506,7 @@ abstract class AstNode
 			public readonly Token Name;
 			public readonly Expression Value;
 
-			public this(Expression object, Token name, Expression value)
+			public this(Expression object, Token name, Expression value, SourceRange range) : base(range)
 			{
 				this.Object = object;
 				this.Name = name;
@@ -513,7 +520,7 @@ abstract class AstNode
 		{
 			public readonly Token Keyword;
 
-			public this(Token keyword)
+			public this(Token keyword, SourceRange range) : base(range)
 			{
 				this.Keyword = keyword;
 			}
@@ -525,7 +532,7 @@ abstract class AstNode
 		{
 			public readonly Expression Expression ~ delete _;
 
-			public this(Expression expression)
+			public this(Expression expression, SourceRange range) : base(range)
 			{
 				this.Expression = expression;
 			}
@@ -539,7 +546,7 @@ abstract class AstNode
 			public readonly Expression Value ~ delete _;
 			public readonly Token Op;
 
-			public this(Expression assignee, Expression value, Token op)
+			public this(Expression assignee, Expression value, Token op, SourceRange range) : base(range)
 			{
 				this.Assignee = assignee;
 				this.Value = value;
@@ -555,7 +562,7 @@ abstract class AstNode
 			public readonly Token Separator;
 			public readonly Expression Right ~ delete _;
 
-			public this(Token left, Token separator, Expression right)
+			public this(Token left, Token separator, Expression right, SourceRange range) : base(range)
 			{
 				this.Left = left;
 				this.Separator = separator;
@@ -582,7 +589,7 @@ abstract class AstNode
 			/// I want to think there's a better way of doing this, but I'm really tired right now.
 			public ZenType StoredType;
 
-			public this(Kind kind)
+			public this(Kind kind, SourceRange range) : base(range)
 			{
 				this.Kind = kind;
 			}
@@ -613,7 +620,7 @@ abstract class AstNode
 			public readonly NamedType TargetType ~ delete _;
 			public readonly Token CastKeyword;
 
-			public this(Expression value, NamedType targetType, Token keyword)
+			public this(Expression value, NamedType targetType, Token keyword, SourceRange range) : base(range)
 			{
 				this.Value = value;
 				this.TargetType = targetType;
@@ -630,7 +637,7 @@ abstract class AstNode
 			public readonly Token LeftBracket;
 			public readonly Token RightBracket;
 
-			public this(Expression array, Expression index, Token left, Token right)
+			public this(Expression array, Expression index, Token left, Token right, SourceRange range) : base(range)
 			{
 				this.Array = array;
 				this.Index = index;
@@ -649,7 +656,7 @@ abstract class AstNode
 
 			public ZenType? ResolvedInferredType;
 
-			public this(List<Expression> elements, Token lbrace, Token rbrace)
+			public this(List<Expression> elements, Token lbrace, Token rbrace, SourceRange range) : base(range)
 			{
 				this.Elements = elements;
 				this.LBrace = lbrace;

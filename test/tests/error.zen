@@ -1,0 +1,13 @@
+struct Vector2
+{
+    float x;
+    float y;
+}
+
+fun void main()
+{
+    while (1111)
+    {
+
+    }
+}

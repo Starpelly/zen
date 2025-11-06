@@ -290,7 +290,9 @@ void zen_game_player_update(zen_game_Player* zen_game_player)
 }
 void zen_game_player_draw(zen_game_Player* zen_game_player)
 {
-	DrawRectangle((int)(zen_game_player->entity.visualX * (float)zen_game_CELL_WIDTH), (int)(zen_game_player->entity.visualY * (float)zen_game_CELL_HEIGHT), zen_game_CELL_WIDTH, zen_game_CELL_WIDTH, zen_game_player->color);
+	float zen_game_x = zen_game_player->entity.visualX * (float)zen_game_CELL_WIDTH;
+	float zen_game_y = zen_game_player->entity.visualY * (float)zen_game_CELL_HEIGHT;
+	zen_game_draw_rect(zen_game_x, zen_game_y, (float)zen_game_CELL_WIDTH, (float)zen_game_CELL_HEIGHT, zen_game_player->color);
 }
 void zen_game_crate_init(zen_game_Crate* zen_game_crate)
 {

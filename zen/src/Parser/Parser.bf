@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Zen;
 
-class Parser
+class Parser : Visitor
 {
 	private const int MAX_ERRORS = 1000;
 
@@ -11,20 +11,17 @@ class Parser
 	private readonly List<Token> m_tokens;
 
 	private int m_current = 0;
-	private bool m_hadErrors = false;
-	private List<CompilerError> m_errors;
 
-	public this(List<Token> tokens, List<CompilerError> errors)
+	public this(List<Token> tokens)
 	{
 		this.m_tokens = tokens;
-		this.m_errors = errors;
 	}
 
 	public Result<Ast> Run()
 	{
 		m_ast.ClearAndDeleteItems();
 
-		while (!isAtEnd() && !m_hadErrors)
+		while (!isAtEnd() && !HadErrors)
 		{
 			let decl = scanNextStmt();
 			if (decl != null)
@@ -115,13 +112,6 @@ class Parser
 
 		reportError(previous(), message);
 		return peek();
-	}
-
-	private void reportError(Token token, String message)
-	{
-		// Log error here.
-		m_hadErrors = true;
-		m_errors.Add(new .(token, message));
 	}
 
 	private bool match(params TokenKind[] types)
