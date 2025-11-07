@@ -81,7 +81,6 @@ class Tokenizer
 		case '.' : addToken(.Dot); break;
 		case ';' : addToken(.Semicolon); break;
 		case '?' : addToken(.Question); break;
-		case '#' : addToken(.Hash); break;
 		case '&' : addToken(match('&', true) ? .And : .Ampersand); break;
 		case '|' : addToken(match('|', true) ? .Or : .Ampersand); break;
 		case '+' : addToken(match('=', true) ? .PlusEqual : .Plus); break;
@@ -92,6 +91,31 @@ class Tokenizer
 		case '=' : addToken(match('=', true) ? .EqualEqual : .Equal); break;
 		case '<' : addToken(match('=', true) ? .LessEqual : .Less); break;
 		case '>' : addToken(match('=', true) ? .GreaterEqual : .Greater); break;
+		case '#' :
+			// We'll only add a hash if there's nothing ahead,
+			// anything else is a directive
+			if (match(' ', false))
+			{
+				addToken(.Hash);
+			}
+			else
+			{
+				if (isDigit(peekNext()))
+				{
+					// @ERROR
+					// Unexpected character error.
+				}
+				else if (isAlpha(peekNext()))
+				{
+					scanIdentifier(true);
+				}
+				else
+				{
+					// @ERROR
+					// Unexpected character error.
+				}
+			}
+			break;
 		case '/' :
 			if (match('/', true))
 			{
@@ -186,7 +210,7 @@ class Tokenizer
 			}
 			else if (isAlpha(c))
 			{
-				scanIdentifier();
+				scanIdentifier(false);
 			}
 			else
 			{
@@ -380,7 +404,7 @@ class Tokenizer
 		}
 	}
 
-	private void scanIdentifier()
+	private void scanIdentifier(bool isDirective)
 	{
 		while (isAlphaNumeric(peek()))
 		{
@@ -395,7 +419,10 @@ class Tokenizer
 		}
 		else
 		{
-			addToken(.Identifier/*, Variant.Create<StringView>(text)*/);
+			if (isDirective)
+				addToken(.Directive);
+			else
+				addToken(.Identifier);
 		}
 	}
 }

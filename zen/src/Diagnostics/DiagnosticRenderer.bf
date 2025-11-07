@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Zen;
 
-public class DiagnosticManager
+public class DiagnosticRenderer
 {
 	private ConsoleColor m_CodeColor;
 

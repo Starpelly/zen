@@ -756,7 +756,6 @@ class Generator
 				if (isMultiline)
 				{
 					let lines = str.Split('\n');
-					int i = 0;
 					for (let line in lines)
 					{
 						let t = scope String(line);

@@ -27,7 +27,6 @@ enum StmtKind
 	case For(AstNode.Stmt.For);
 	case While(AstNode.Stmt.While);
 	case Expression(AstNode.Stmt.ExpressionStmt);
-	case BasicDirective(AstNode.Stmt.BasicDirective);
 }
 
 enum ExpressionKind
@@ -314,20 +313,6 @@ abstract class AstNode
 			}
 
 			public override StmtKind GetKind() => .Expression(this);
-		}
-
-		public class BasicDirective : Stmt
-		{
-			public readonly Token Token;
-			public readonly Token Name;
-
-			public this(Token token, Token name)
-			{
-				this.Token = token;
-				this.Name = name;
-			}
-
-			public override StmtKind GetKind() => .BasicDirective(this);
 		}
 	}
 

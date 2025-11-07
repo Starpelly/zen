@@ -7,14 +7,15 @@ class Parser : Visitor
 {
 	private const int MAX_ERRORS = 1000;
 
-	private readonly Ast m_ast = new .() ~ DeleteContainerAndItems!(_);
+	private readonly Ast m_ast;
 	private readonly List<Token> m_tokens;
 
 	private int m_current = 0;
 
-	public this(List<Token> tokens)
+	public this(List<Token> tokens, Ast ast)
 	{
 		this.m_tokens = tokens;
+		this.m_ast = ast;
 	}
 
 	public Result<Ast> Run()
@@ -90,13 +91,6 @@ class Parser : Visitor
 		if (match(.Const))
 		{
 			return getConstStmt();
-		}
-		if (match(.Hash))
-		{
-			let token = peek(); advance();
-			let name = peek(); advance();
-			consume(.Semicolon, "Semicolon expected.");
-			return new AstNode.Stmt.BasicDirective(token, name);
 		}
 
 		return getExpressionStmt();

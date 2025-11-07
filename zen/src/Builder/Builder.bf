@@ -9,7 +9,9 @@ class Builder
 {
 	private const ConsoleColor CONSOLE_CODE_COLOR = .Gray;
 
-	private DiagnosticManager m_errorManager = new .(CONSOLE_CODE_COLOR) ~ delete _;
+	private readonly List<Diagnostic> m_diagnostics = new .() ~ DeleteContainerAndItems!(_);
+	private readonly DiagnosticRenderer m_diagnosticsRenderer = new .(CONSOLE_CODE_COLOR) ~ delete _;
+
 	private bool m_hadErrors = false;
 	private int m_errorCount = 0;
 
@@ -49,10 +51,7 @@ class Builder
 
 		mixin checkAddErrorsAndReturn(Visitor visitor)
 		{
-			for (let err in visitor.Diagnostics)
-			{
-				writeDiagnostic(err);
-			}
+			renderDiagnostics();
 
 			if (m_hadErrors)
 				return .Err;
@@ -63,6 +62,7 @@ class Builder
 		StopwatchChecker.Start();
 
 		let scoper = scope Binder(finalAst);
+		addOnVisitorReport!(scoper);
 		let globalScope = scoper.Run();
 
 		StopwatchChecker.Stop();
@@ -79,6 +79,7 @@ class Builder
 		// Type resolver
 
 		let resolver = scope Resolver(finalAst, globalScope);
+		addOnVisitorReport!(resolver);
 		resolver.Run();
 
 		StopwatchChecker.Stop();
@@ -90,6 +91,7 @@ class Builder
 		StopwatchChecker.Start();
 
 		let checker = scope Checker(finalAst, globalScope);
+		addOnVisitorReport!(checker);
 		checker.Run();
 
 		StopwatchChecker.Stop();
@@ -113,33 +115,39 @@ class Builder
 	private CompFile compFile(String filePath, Guid fileID)
 	{
 		let text = File.ReadAllText(filePath, .. new .());
+		let outTokens = new List<Token>();
+		let ast = new Ast();
+		let pp = new PreprocessingResult();
 
+		// ----------------------------------------------
 		// Tokenize file
+		// ----------------------------------------------
 		StopwatchLexer.Start();
 
-		let tokenizer = new Tokenizer(text, fileID);
-		let tokens = tokenizer.Run();
+		let tokenizer = scope Tokenizer(text, fileID);
+		let inTokens = tokenizer.Run();
 
 		StopwatchLexer.Stop();
 
-		// Parse file
+		// ----------------------------------------------
+		// Preprocessor
+		// ----------------------------------------------
+		let preprocessor = scope DirectivePreprocessor();
+		addOnVisitorReport!(preprocessor);
+		preprocessor.Process(inTokens, outTokens, pp);
 
+		// ----------------------------------------------
+		// Parse file
+		// ----------------------------------------------
 		StopwatchParser.Start();
 
-		let parser = new Parser(tokens);
-		Ast retAst = ?;
-		switch (parser.Run())
-		{
-		case .Ok(let ast):
-			retAst = ast;
-			break;
-		case .Err:
-			break;
-		}
+		let parser = scope Parser(outTokens, ast);
+		addOnVisitorReport!(parser);
+		parser.Run().IgnoreError();
 
 		StopwatchParser.Stop();
 
-		let comp = new CompFile(filePath, Path.GetFileName(filePath, .. scope .()), text, tokenizer, parser, tokens, retAst);
+		let comp = new CompFile(filePath, Path.GetFileName(filePath, .. scope .()), text, outTokens, ast, pp);
 		return comp;
 	}
 
@@ -149,86 +157,79 @@ class Builder
 		let comp = compFile(Path.GetActualPathName(path, .. scope .()), fileID);
 		list.Add(fileID, comp);
 
-		for (let err in comp.Parser.Diagnostics)
-		{
-			writeDiagnostic(err);
-		}
+		evaluatePP(comp.PreprocessingResult);
 
-		searchForLoads(comp, comp.Ast, list);
+		renderDiagnostics();
 
 		return comp;
 	}
 
-	// @TEMP?
-	private void searchForLoads(CompFile currentFile, Ast ast, Dictionary<Guid, CompFile> list)
+	private void evaluatePP(PreprocessingResult result)
 	{
-		for (let stmt in ast)
+		for (let file in result.FilesToLoad)
 		{
-			if (let directive = stmt as AstNode.Stmt.BasicDirective)
+			let originFilePath = m_compFiles[file.Origin].Path;
+			let originFileDirectory = Path.GetDirectoryPath(originFilePath, .. scope .());
+
+			let loadFileName = file.Path;
+			let loadFilePath = Path.GetActualPathName(Path.Combine(.. scope .(), originFileDirectory, loadFileName), .. scope .());
+
+			if (originFilePath == loadFilePath)
 			{
-				if (directive.Token.Lexeme == "load")
+				let span = new DiagnosticSpan()
 				{
-					// let directiveCompFile = m_compFiles[directive.Token.File];
-					let directiveFilePath = m_compFiles[directive.Token.File].Path;
-					let directiveFileDirectory = Path.GetDirectoryPath(directiveFilePath, .. scope .());
+					Range = file.PathToken.SourceRange
+				};
+				addDiagnostic(new .(.Error, "File is attempting to load itself", span));
+			}
 
-					// Trim the surrounding quotes
-					bool isMultiline = false;
-					let offset = (isMultiline) ? 3 : 1;
+			bool tryLoadFile = true;
+			for (let file in m_compFiles)
+			{
+				// This file is already loaded, we can safely ignore it.
+				if (file.value.Path == loadFilePath)
+				{
+					tryLoadFile = false;
+					break;
+				}
+			}
 
-					let loadFileName = directive.Name.Lexeme.Substring(offset, directive.Name.Lexeme.Length - 1 - offset);
-					let loadFilePath = Path.GetActualPathName(Path.Combine(.. scope .(), directiveFileDirectory, loadFileName), .. scope .());
-
-					if (currentFile.Path == loadFilePath)
-					{
-						let span = new DiagnosticSpan()
-						{
-							Range = directive.Name.SourceRange
-						};
-						writeDiagnostic(new .(.Error, "File is attempting to load itself", span));
-					}
-
-					bool tryLoadFile = true;
-					for (let file in m_compFiles)
-					{
-						// This file is already loaded, we can safely ignore it.
-						if (file.value.Path == loadFilePath)
-						{
-							tryLoadFile = false;
-							break;
-						}
-					}
-
-					if (tryLoadFile)
-					{
-						if (File.Exists(loadFilePath))
-						{
-							pleaseDoFile(loadFilePath, list);
-						}
-						else
-						{
-							let span = new DiagnosticSpan()
-							{
-								Range = directive.Name.SourceRange
-							};
-							writeDiagnostic(new .(.Error, "File not found", span));
-						}
-					}
+			if (tryLoadFile)
+			{
+				if (File.Exists(loadFilePath))
+				{
+					pleaseDoFile(loadFilePath, m_compFiles);
 				}
 				else
 				{
-					// @TEMP
-					Runtime.FatalError("bruh");
+					let span = new DiagnosticSpan()
+					{
+						Range = file.PathToken.SourceRange
+					};
+					addDiagnostic(new .(.Error, "File not found", span));
 				}
 			}
 		}
 	}
 
-	private void writeDiagnostic(Diagnostic diagnostic)
+	private mixin addOnVisitorReport(Visitor visitor)
 	{
-		m_errorManager.WriteError(m_compFiles, diagnostic);
+		visitor.OnReport.Add(scope:mixin => addDiagnostic);
+	}
 
-		++m_errorCount;
-		m_hadErrors = true;
+	private void addDiagnostic(Diagnostic diag)
+	{
+		m_diagnostics.Add(diag);
+	}
+
+	private void renderDiagnostics()
+	{
+		for (let diagnostic in m_diagnostics)
+		{
+			m_diagnosticsRenderer.WriteError(m_compFiles, diagnostic);
+
+			++m_errorCount;
+			m_hadErrors = true;
+		}
 	}
 }

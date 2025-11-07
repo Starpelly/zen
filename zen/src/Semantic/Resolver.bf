@@ -92,7 +92,7 @@ class Resolver : Visitor
 			resolveConstant(_const, _scope);
 			return;
 
-		case .BasicDirective,
+		case
 			 .Expression,
 			 .EOF,
 			 .Return

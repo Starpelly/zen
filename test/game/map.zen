@@ -62,6 +62,8 @@ fun void map_draw()
 
 	crate_draw(&testCrate);
 	player_draw(&player);
+
+	// #c { printf("hello world!"); }
 }
 
 fun void map_update()
@@ -104,12 +106,6 @@ fun void map_move_entity(Entity* e, int dx, int dy)
 
 	e.x = nx;
 	e.y = ny;
-
-	let string test =
-	"""
-	let a  =0;
-	let b = 0;
-	""";
 }
 
 fun bool map_add_entity(Entity* e)

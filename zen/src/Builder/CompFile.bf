@@ -11,23 +11,21 @@ class CompFile
 	public readonly String Text ~ delete _;
 	public readonly List<StringView> Lines = new .() ~ delete _;
 
-	public readonly Tokenizer Tokenizer ~ delete _;
-	public readonly Parser Parser ~ delete _;
+	public readonly List<Token> Tokens ~ delete _;
+	public readonly Ast Ast ~ DeleteContainerAndItems!(_);
 
-	public readonly List<Token> Tokens;
-	public readonly Ast Ast;
+	public readonly PreprocessingResult PreprocessingResult ~ delete _;
 
-	public this(String path, String name, String text, Tokenizer tokenizer, Parser parser, List<Token> tokens, Ast ast)
+	public this(String path, String name, String text, List<Token> tokens, Ast ast, PreprocessingResult ppResult)
 	{
 		this.Path.Set(path);
 		this.Name.Set(name);
 		this.Text = text;
 
-		this.Tokenizer = tokenizer;
-		this.Parser = parser;
-
 		this.Tokens = tokens;
 		this.Ast = ast;
+
+		this.PreprocessingResult = ppResult;
 
 		let split = text.Split('\n');
 		for (let line in split)

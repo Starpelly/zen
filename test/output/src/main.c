@@ -403,9 +403,6 @@ void zen_game_map_move_entity(zen_game_Entity* zen_game_e, int zen_game_dx, int 
 	zen_game_map_tiles[zen_game_nx + (zen_game_ny * zen_game_MAP_WIDTH)].entity = zen_game_e;
 	zen_game_e->x = zen_game_nx;
 	zen_game_e->y = zen_game_ny;
-	string zen_game_test = 
-	"	let a  =0;"
-	"	let b = 0;";
 }
 bool zen_game_map_add_entity(zen_game_Entity* zen_game_e)
 {
