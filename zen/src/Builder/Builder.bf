@@ -170,7 +170,7 @@ class Builder
 			if (result case .Err(var err))
 			{
 				delete outTokens;
-				delete ast;
+				DeleteContainerAndItems!(ast);
 				delete pp;
 
 				return .Err((.)err);
