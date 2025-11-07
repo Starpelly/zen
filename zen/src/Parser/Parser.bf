@@ -9,6 +9,7 @@ class Parser : Visitor
 	private readonly List<Token> m_tokens;
 
 	private int m_current = 0;
+	private bool m_insideFunction = false;
 
 	public this(List<Token> tokens, Ast ast)
 	{

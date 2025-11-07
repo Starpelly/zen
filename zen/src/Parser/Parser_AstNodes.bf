@@ -84,6 +84,11 @@ extension Parser
 
 	private AstNode.Stmt.FunctionDeclaration getFunctionStmt(bool isExtern)
 	{
+		let oldFun = m_insideFunction;
+		defer {
+			m_insideFunction = oldFun;
+		}
+
 		let type = consumeType();
 
 		let name = consume(.Identifier, "Expected name.");
@@ -119,6 +124,8 @@ extension Parser
 		AstNode.Stmt.Block body = null;
 		if (!isExtern)
 		{
+			m_insideFunction = true;
+
 			// Body
 			let bodyList = scanBlock(.. new .(), var open, var close);
 			body = new AstNode.Stmt.Block(bodyList, open, close);

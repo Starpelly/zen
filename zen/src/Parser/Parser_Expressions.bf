@@ -21,8 +21,17 @@ extension Parser
 
 		if (match(.C_Code))
 		{
-			let token = previous();
-			return new AstNode.Expression.InlinedC(token, token.Lexeme, token.SourceRange);
+			if (!m_insideFunction)
+			{
+				// @FIX @TODO
+				// Wrong token(s)
+				reportError(previous(), "Inline C code is only available inside functions!");
+			}
+			else
+			{
+				let token = previous();
+				return new AstNode.Expression.InlinedC(token, token.Lexeme, token.SourceRange);
+			}
 		}
 
 		return getExprAssignment();
