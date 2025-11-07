@@ -25,13 +25,12 @@ extension Parser
 			{
 				// @FIX @TODO
 				// Wrong token(s)
+				// OR maybe the right tokens and I just need to support multiple lines lol
 				reportError(previous(), "Inline C code is only available inside functions!");
 			}
-			else
-			{
-				let token = previous();
-				return new AstNode.Expression.InlinedC(token, token.Lexeme, token.SourceRange);
-			}
+
+			let token = previous();
+			return new AstNode.Expression.InlinedC(token, token.Lexeme, token.SourceRange);
 		}
 
 		return getExprAssignment();
