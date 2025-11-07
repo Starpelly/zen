@@ -4,12 +4,12 @@ namespace Zen;
 
 public struct SourceLocation
 {
-	public readonly SourceFileID File;
+	public SourceFileID File;
 
-	public readonly int Line;
-	public readonly int Column;
+	public int Line;
+	public int Column;
 	/// Absolute position in the file
-	public readonly int Offset;
+	public int Offset;
 
 	public this(SourceFileID file, int line, int col, int offset)
 	{

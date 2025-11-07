@@ -504,7 +504,6 @@ class Generator
 			emitExpr(expr.InnerExpr, code, _scope);
 			addSemicolon!();
 			break;
-
 		default:
 		}
 	}
@@ -931,6 +930,12 @@ class Generator
 				emitExpr(composite.Elements[i], code, _scope);
 			}
 			code.Append(" }");
+			break;
+
+		case .InlinedC(let inlined):
+			code.Append(scope $"/* Inlined C generated from the Zen compiler: (put some info here pls) */");
+			code.Append(inlined.Code);
+			code.Append(scope $"/*End inline C*/");
 			break;
 		}
 	}

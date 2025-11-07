@@ -373,6 +373,8 @@ void zen_game_map_draw()
 	zen_game_draw_rect_lines(0.0f, 0.0f, (float)(zen_game_MAP_WIDTH * zen_game_CELL_WIDTH), (float)(zen_game_MAP_HEIGHT * zen_game_CELL_HEIGHT), zen_raylib_LightGray);
 	zen_game_crate_draw(&zen_game_testCrate);
 	zen_game_player_draw(&zen_game_player);
+	/* Inlined C generated from the Zen compiler: (put some info here pls) */		printf("%s\n", "Hello from C!");
+	/*End inline C*/;
 }
 void zen_game_map_update()
 {

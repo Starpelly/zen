@@ -19,6 +19,12 @@ extension Parser
 		// @TODO
 		// reportError(previous(), "An empty block cannot be used as an expression");
 
+		if (match(.C_Code))
+		{
+			let token = previous();
+			return new AstNode.Expression.InlinedC(token, token.Lexeme, token.SourceRange);
+		}
+
 		return getExprAssignment();
 	}
 

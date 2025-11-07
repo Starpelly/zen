@@ -47,6 +47,7 @@ enum ExpressionKind
 	case Cast(AstNode.Expression.Cast);
 	case Index(AstNode.Expression.Index);
 	case CompositeLiteral(AstNode.Expression.CompositeLiteral);
+	case InlinedC(AstNode.Expression.InlinedC);
 }
 
 abstract class AstNode
@@ -649,6 +650,20 @@ abstract class AstNode
 			}
 
 			public override ExpressionKind GetKind() => .CompositeLiteral(this);
+		}
+
+		public class InlinedC : Expression
+		{
+			public readonly Token Token;
+			public readonly StringView Code;
+
+			public this(Token token, StringView code, SourceRange range) : base(range)
+			{
+				this.Token = token;
+				this.Code = code;
+			}
+
+			public override ExpressionKind GetKind() => .InlinedC(this);
 		}
 	}
 }

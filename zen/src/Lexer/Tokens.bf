@@ -66,6 +66,9 @@ public enum TokenKind
 	case Number_Int;
 	case Number_Float;
 
+	// Created from the pre-processor.
+	case C_Code;
+
 	case EOF;
 
 	[RegisterKeyword("if")]
@@ -137,13 +140,14 @@ struct Token
 	public readonly StringView Lexeme;
 
 	public readonly SourceRange SourceRange;
-	public readonly SourceFileID File => SourceRange.Start.File; // I'm suuuree this is fine...
+	public readonly SourceFileID File;
 
 	public this(TokenKind kind)
 	{
 		this.Kind = kind;
 		this.Lexeme = String.Empty;
 		this.SourceRange = default;
+		this.File = default;
 	}
 
 	public this(TokenKind kind, StringView lexeme, int line, int col, int offset, SourceFileID file)
@@ -155,5 +159,15 @@ struct Token
 		let start = SourceLocation(file, line, col, offset);
 		let end = SourceLocation(file, line, col + lexeme.Length, offset + lexeme.Length);
 		this.SourceRange = .(start, end);
+
+		this.File = file;
+	}
+
+	public this(TokenKind kind, StringView lexeme, SourceRange range, SourceFileID file)
+	{
+		this.Kind = kind;
+		this.Lexeme = lexeme;
+		this.SourceRange = range;
+		this.File = file;
 	}
 }

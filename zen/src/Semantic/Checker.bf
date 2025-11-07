@@ -493,6 +493,10 @@ class Checker : Visitor
 				reportError(composite.LBrace, "Composite literal not allowed for this type");
 				return ZenType.Invalid;
 			}
+
+		case .InlinedC:
+			// Do nothing
+			return ZenType.Invalid;
 		}
 
 		Runtime.FatalError("Uh oh! How did you get here?");

@@ -191,9 +191,9 @@ class Builder
 		// ----------------------------------------------
 		// Preprocessor
 		// ----------------------------------------------
-		let preprocessor = scope DirectivePreprocessor();
+		let preprocessor = scope DirectivePreprocessor(inTokens);
 		addOnVisitorReport!(preprocessor);
-		TryCleanup!(preprocessor.Process(inTokens, outTokens, pp));
+		TryCleanup!(preprocessor.Process(source, outTokens, pp));
 
 		// ----------------------------------------------
 		// Parse file
