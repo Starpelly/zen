@@ -63,7 +63,7 @@ fun void map_draw()
 	crate_draw(&testCrate);
 	player_draw(&player);
 
-	// #c { printf("hello world!"); }
+	//#c { printf("hello world!"); }
 }
 
 fun void map_update()

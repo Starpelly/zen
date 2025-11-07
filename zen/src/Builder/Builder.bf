@@ -12,36 +12,36 @@ class Builder
 	private readonly List<Diagnostic> m_diagnostics = new .() ~ DeleteContainerAndItems!(_);
 	private readonly DiagnosticRenderer m_diagnosticsRenderer = new .(CONSOLE_CODE_COLOR) ~ delete _;
 
-	private bool m_hadErrors = false;
 	private int m_errorCount = 0;
+	private int m_warningCount = 0;
 
-	private Dictionary<Guid, CompFile> m_compFiles = new .() ~ DeleteDictionaryAndValues!(_);
+	private SourceFileID m_currentFileID = 0;
+
+	private Dictionary<SourceFileID, SourceFile> m_knownFiles = new .() ~ DeleteDictionaryAndValues!(_);
+	private Dictionary<SourceFileID, CompFile> m_compFiles = new .() ~ DeleteDictionaryAndValues!(_);
 
 	// public int FilesWritten => m_writtenFiles.Count;
 	// public List<String> WrittenFiles => m_writtenFiles;
 
 	public readonly int ErrorCount => m_errorCount;
-	public readonly bool HadErrors => m_hadErrors;
+	public readonly int WarningCount => m_warningCount;
 
 	public readonly Stopwatch StopwatchLexer = new .() ~ delete _;
 	public readonly Stopwatch StopwatchParser = new .() ~ delete _;
 	public readonly Stopwatch StopwatchChecker = new .() ~ delete _;
 	public readonly Stopwatch StopwatchCodegen = new .() ~ delete _;
 
-	typealias FinishCompCallback = delegate void(Self builder, bool hadErros);
-
 	public ~this()
 	{
 		Console.ResetColor();
 	}
 
-	public Result<Generator.GeneratorResult> Run(String mainFilePath, String outputDirectory, FinishCompCallback finishCompCallback, List<CFile> outCFiles, bool printScopes)
+	public Result<Generator.GeneratorResult> Run(String mainFilePath, String outputDirectory, List<CFile> outCFiles, bool printScopes)
 	{
-		// Load files
-		pleaseDoFile(mainFilePath, m_compFiles);
-
-		if (m_hadErrors)
-			return .Err;
+		// ----------------------------------------------
+		// Load files (starting from the main file)
+		// ----------------------------------------------
+		Try!(parseFile(loadSourceFile(mainFilePath)));
 
 		let finalAst = scope Ast();
 		for (let file in m_compFiles)
@@ -49,21 +49,15 @@ class Builder
 			finalAst.AddRange(file.value.Ast);
 		}
 
-		mixin checkAddErrorsAndReturn(Visitor visitor)
-		{
-			renderDiagnostics();
-
-			if (m_hadErrors)
-				return .Err;
-		}
-
+		// ----------------------------------------------
 		// Scope builder
+		// ----------------------------------------------
 
 		StopwatchChecker.Start();
 
 		let scoper = scope Binder(finalAst);
 		addOnVisitorReport!(scoper);
-		let globalScope = scoper.Run();
+		let globalScope = Try!(scoper.Run());
 
 		StopwatchChecker.Stop();
 
@@ -72,33 +66,33 @@ class Builder
 			Binder.PrintScopeTree(globalScope);
 		}
 
-		checkAddErrorsAndReturn!(scoper);
-
 		StopwatchChecker.Start();
 
+		// ----------------------------------------------
 		// Type resolver
+		// ----------------------------------------------
 
 		let resolver = scope Resolver(finalAst, globalScope);
 		addOnVisitorReport!(resolver);
-		resolver.Run();
+		Try!(resolver.Run());
 
 		StopwatchChecker.Stop();
 
-		checkAddErrorsAndReturn!(resolver);
-
+		// ----------------------------------------------
 		// Checker
+		// ----------------------------------------------
 
 		StopwatchChecker.Start();
 
 		let checker = scope Checker(finalAst, globalScope);
 		addOnVisitorReport!(checker);
-		checker.Run();
+		Try!(checker.Run());
 
 		StopwatchChecker.Stop();
 
-		checkAddErrorsAndReturn!(checker);
-
+		// ----------------------------------------------
 		// Code gen
+		// ----------------------------------------------
 
 		StopwatchCodegen.Start();
 
@@ -107,87 +101,38 @@ class Builder
 
 		StopwatchCodegen.Stop();
 
-		finishCompCallback(this, m_hadErrors);
-
 		return .Ok(c);
 	}
 
-	private CompFile compFile(String filePath, Guid fileID)
+	private Result<CompFile> parseFile(SourceFile source)
 	{
-		let text = File.ReadAllText(filePath, .. new .());
-		let outTokens = new List<Token>();
-		let ast = new Ast();
-		let pp = new PreprocessingResult();
+		let comp = Try!(parseFileWithID(source, source.ID));
+		m_compFiles.Add(source.ID, comp);
 
-		// ----------------------------------------------
-		// Tokenize file
-		// ----------------------------------------------
-		StopwatchLexer.Start();
-
-		let tokenizer = scope Tokenizer(text, fileID);
-		let inTokens = tokenizer.Run();
-
-		StopwatchLexer.Stop();
-
-		// ----------------------------------------------
-		// Preprocessor
-		// ----------------------------------------------
-		let preprocessor = scope DirectivePreprocessor();
-		addOnVisitorReport!(preprocessor);
-		preprocessor.Process(inTokens, outTokens, pp);
-
-		// ----------------------------------------------
-		// Parse file
-		// ----------------------------------------------
-		StopwatchParser.Start();
-
-		let parser = scope Parser(outTokens, ast);
-		addOnVisitorReport!(parser);
-		parser.Run().IgnoreError();
-
-		StopwatchParser.Stop();
-
-		let comp = new CompFile(filePath, Path.GetFileName(filePath, .. scope .()), text, outTokens, ast, pp);
-		return comp;
-	}
-
-	private CompFile pleaseDoFile(String path, Dictionary<Guid, CompFile> list)
-	{
-		let fileID = Guid.Create();
-		let comp = compFile(Path.GetActualPathName(path, .. scope .()), fileID);
-		list.Add(fileID, comp);
-
-		evaluatePP(comp.PreprocessingResult);
-
-		renderDiagnostics();
-
-		return comp;
-	}
-
-	private void evaluatePP(PreprocessingResult result)
-	{
-		for (let file in result.FilesToLoad)
+		// Load files from the preprocessor
+		for (let fileLoad in comp.PreprocessingResult.FilesToLoad)
 		{
-			let originFilePath = m_compFiles[file.Origin].Path;
+			let originFilePath = m_compFiles[fileLoad.Origin].Source.Path;
 			let originFileDirectory = Path.GetDirectoryPath(originFilePath, .. scope .());
 
-			let loadFileName = file.Path;
+			let loadFileName = fileLoad.Path;
 			let loadFilePath = Path.GetActualPathName(Path.Combine(.. scope .(), originFileDirectory, loadFileName), .. scope .());
 
 			if (originFilePath == loadFilePath)
 			{
 				let span = new DiagnosticSpan()
 				{
-					Range = file.PathToken.SourceRange
+					Range = fileLoad.PathToken.SourceRange
 				};
 				addDiagnostic(new .(.Error, "File is attempting to load itself", span));
+				return .Err;
 			}
 
 			bool tryLoadFile = true;
 			for (let file in m_compFiles)
 			{
 				// This file is already loaded, we can safely ignore it.
-				if (file.value.Path == loadFilePath)
+				if (file.value.Source.Path == loadFilePath)
 				{
 					tryLoadFile = false;
 					break;
@@ -198,18 +143,80 @@ class Builder
 			{
 				if (File.Exists(loadFilePath))
 				{
-					pleaseDoFile(loadFilePath, m_compFiles);
+					Try!(parseFile(loadSourceFile(loadFilePath)));
 				}
 				else
 				{
 					let span = new DiagnosticSpan()
 					{
-						Range = file.PathToken.SourceRange
+						Range = fileLoad.PathToken.SourceRange
 					};
 					addDiagnostic(new .(.Error, "File not found", span));
 				}
 			}
 		}
+
+		return comp;
+	}
+
+	private Result<CompFile> parseFileWithID(SourceFile source, SourceFileID fileID)
+	{
+		let outTokens = new List<Token>();
+		let ast = new Ast();
+		let pp = new PreprocessingResult();
+
+		mixin TryCleanup(var result)
+		{
+			if (result case .Err(var err))
+			{
+				delete outTokens;
+				delete ast;
+				delete pp;
+
+				return .Err((.)err);
+			}
+			result.Get()
+		}
+
+		// ----------------------------------------------
+		// Tokenize file
+		// ----------------------------------------------
+		StopwatchLexer.Start();
+
+		let tokenizer = scope Tokenizer(source.Content, fileID);
+		let inTokens = tokenizer.Run();
+
+		StopwatchLexer.Stop();
+
+		// ----------------------------------------------
+		// Preprocessor
+		// ----------------------------------------------
+		let preprocessor = scope DirectivePreprocessor();
+		addOnVisitorReport!(preprocessor);
+		TryCleanup!(preprocessor.Process(inTokens, outTokens, pp));
+
+		// ----------------------------------------------
+		// Parse file
+		// ----------------------------------------------
+		StopwatchParser.Start();
+
+		let parser = scope Parser(outTokens, ast);
+		addOnVisitorReport!(parser);
+		TryCleanup!(parser.Run());
+
+		StopwatchParser.Stop();
+
+		return .Ok(new CompFile(source, outTokens, ast, pp));
+	}
+
+	private SourceFile loadSourceFile(String path)
+	{
+		let actualPath = Path.GetActualPathName(path, .. scope .());
+		let id = ++m_currentFileID;
+		let source = new SourceFile(id, actualPath);
+ 		m_knownFiles.Add(id, source);
+
+		return source;
 	}
 
 	private mixin addOnVisitorReport(Visitor visitor)
@@ -220,16 +227,18 @@ class Builder
 	private void addDiagnostic(Diagnostic diag)
 	{
 		m_diagnostics.Add(diag);
+
+		if (diag.Level == .Error)
+		{
+			m_errorCount++;
+		}
 	}
 
-	private void renderDiagnostics()
+	public void RenderDiagnostics()
 	{
 		for (let diagnostic in m_diagnostics)
 		{
-			m_diagnosticsRenderer.WriteError(m_compFiles, diagnostic);
-
-			++m_errorCount;
-			m_hadErrors = true;
+			m_diagnosticsRenderer.WriteError(m_knownFiles, diagnostic);
 		}
 	}
 }

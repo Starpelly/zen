@@ -50,7 +50,7 @@ class Binder : Visitor
 	public Result<Scope> Run()
 	{
 		addStatementList(m_ast);
-		return .Ok(m_globalScope);
+		return HadErrors ? .Err : .Ok(m_globalScope);
 	}
 
 	private void addStatementList(List<AstNode.Stmt> list)

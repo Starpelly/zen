@@ -20,7 +20,7 @@ class Checker : Visitor
 	{
 		checkStatementList(m_ast, m_globalScope);
 
-		return .Ok;
+		return HadErrors ? .Err : .Ok;
 	}
 
 	private void checkStatementList(List<AstNode.Stmt> ast, Scope _scope)

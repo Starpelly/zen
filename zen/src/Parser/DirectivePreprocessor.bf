@@ -9,11 +9,11 @@ class PreprocessingResult
 	public class FileLoad
 	{
 		/// Used to search relatively from the origin file.
-		public readonly Guid Origin;
+		public readonly SourceFileID Origin;
 		public readonly String Path = new .() ~ delete _;
 		public readonly Token PathToken;
 
-		public this(Guid origin, StringView path, Token pathToken)
+		public this(SourceFileID origin, StringView path, Token pathToken)
 		{
 			this.Origin = origin;
 			this.Path.Set(path);
@@ -26,7 +26,7 @@ class PreprocessingResult
 
 class DirectivePreprocessor : Visitor
 {
-	public void Process(List<Token> inTokens, List<Token> outTokens, PreprocessingResult result)
+	public Result<void> Process(List<Token> inTokens, List<Token> outTokens, PreprocessingResult result)
 	{
 		Debug.Assert(outTokens.IsEmpty);
 
@@ -37,6 +37,7 @@ class DirectivePreprocessor : Visitor
 			if (token.Kind == .Directive)
 			{
 				let name = token.Lexeme;
+				// Console.WriteLine(name);
 				switch (name)
 				{
 				case "#load":
@@ -54,7 +55,10 @@ class DirectivePreprocessor : Visitor
 					result.FilesToLoad.Add(new .(pathToken.File, trimmedPath, pathToken));
 					break;
 				case "#c":
-
+					// var a = 0;
+					break;
+				default:
+					reportError(token, "Unknown directive type");
 					break;
 				}
 			}
@@ -65,5 +69,7 @@ class DirectivePreprocessor : Visitor
 
 			i++;
 		}
+
+		return HadErrors ? .Err : .Ok;
 	}
 }

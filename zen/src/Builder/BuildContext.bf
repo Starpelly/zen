@@ -1,0 +1,6 @@
+namespace Zen;
+
+class BuildContext
+{
+
+}

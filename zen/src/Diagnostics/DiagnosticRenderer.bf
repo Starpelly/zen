@@ -12,7 +12,7 @@ public class DiagnosticRenderer
 		this.m_CodeColor = codeColor;
 	}
 
-	public void WriteError(Dictionary<Guid, CompFile> fileIDs, Diagnostic diagnostic)
+	public void WriteError(Dictionary<SourceFileID, SourceFile> fileIDs, Diagnostic diagnostic)
 	{
 		Console.ForegroundColor = .Red;
 		defer { Console.ForegroundColor = m_CodeColor; }

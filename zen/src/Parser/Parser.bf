@@ -5,8 +5,6 @@ namespace Zen;
 
 class Parser : Visitor
 {
-	private const int MAX_ERRORS = 1000;
-
 	private readonly Ast m_ast;
 	private readonly List<Token> m_tokens;
 
@@ -32,7 +30,7 @@ class Parser : Visitor
 		}
 
 		m_ast.Add(new AstNode.Stmt.EOF());
-		return .Ok(m_ast);
+		return HadErrors ? .Err : .Ok(m_ast);
 	}
 
 	private AstNode.Stmt scanNextStmt()

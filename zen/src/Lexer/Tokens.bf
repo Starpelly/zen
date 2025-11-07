@@ -37,7 +37,6 @@ public enum TokenKind
 	case Plus;				// +
 	case Modulus;			// %
 	case Question;			// ?
-	case Hash;				// #
 	case Ampersand;			// &
 	case VerticalBar;		// |
 
@@ -52,6 +51,9 @@ public enum TokenKind
 	case BangEqual;			// !=
 	case LessEqual;			// <=
 	case GreaterEqual;		// >=
+
+	// Used for preprocessors exclusively now
+	// case Hash;				// #
 
 	case And;	// &&
 	case Or;	// ||
@@ -135,7 +137,7 @@ struct Token
 	public readonly StringView Lexeme;
 
 	public readonly SourceRange SourceRange;
-	public readonly Guid File => SourceRange.Start.File; // I'm suuuree this is fine...
+	public readonly SourceFileID File => SourceRange.Start.File; // I'm suuuree this is fine...
 
 	public this(TokenKind kind)
 	{
@@ -144,7 +146,7 @@ struct Token
 		this.SourceRange = default;
 	}
 
-	public this(TokenKind kind, StringView lexeme, int line, int col, int offset, Guid file)
+	public this(TokenKind kind, StringView lexeme, int line, int col, int offset, SourceFileID file)
 	{
 		this.Kind = kind;
 		this.Lexeme = lexeme;

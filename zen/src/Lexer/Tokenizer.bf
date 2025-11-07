@@ -35,11 +35,11 @@ class Tokenizer
 	private int m_line = 0;
 	private int m_column = 0;
 
-	private readonly Guid m_file;
+	private readonly SourceFileID m_file;
 
 	private readonly StringView m_source;
 
-	public this(StringView source, Guid file)
+	public this(StringView source, SourceFileID file)
 	{
 		this.m_source = source;
 		this.m_file = file;
@@ -92,28 +92,19 @@ class Tokenizer
 		case '<' : addToken(match('=', true) ? .LessEqual : .Less); break;
 		case '>' : addToken(match('=', true) ? .GreaterEqual : .Greater); break;
 		case '#' :
-			// We'll only add a hash if there's nothing ahead,
-			// anything else is a directive
-			if (match(' ', false))
+			if (isDigit(peek()))
 			{
-				addToken(.Hash);
+				// @ERROR
+				// Unexpected character error.
+			}
+			else if (isAlpha(peek()))
+			{
+				scanIdentifier(true);
 			}
 			else
 			{
-				if (isDigit(peekNext()))
-				{
-					// @ERROR
-					// Unexpected character error.
-				}
-				else if (isAlpha(peekNext()))
-				{
-					scanIdentifier(true);
-				}
-				else
-				{
-					// @ERROR
-					// Unexpected character error.
-				}
+				// @ERROR
+				// Unexpected character error.
 			}
 			break;
 		case '/' :

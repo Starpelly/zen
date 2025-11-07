@@ -18,9 +18,10 @@ class Resolver : Visitor
 		this.m_globalScope = globalScope;
 	}
 
-	public void Run()
+	public Result<void> Run()
 	{
 		resolveStatementList(m_ast, m_globalScope);
+		return HadErrors ? .Err : .Ok;
 	}
 
 	private void resolveStatementList(List<AstNode.Stmt> ast, Scope _scope)
