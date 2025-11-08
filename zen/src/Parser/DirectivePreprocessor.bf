@@ -76,9 +76,20 @@ class DirectivePreprocessor : Visitor
 					break;
 				case "#c":
 					let lbrace = consume(.LeftBrace, "Expected '{'");
+					int braceDepth = 0;
 
-					while (!check(.RightBrace))
+					while (true)
 					{
+						if (check(.LeftBrace))
+						{
+							braceDepth++;
+						}
+						if (check(.RightBrace))
+						{
+							if (--braceDepth <= 0)
+								break;
+						}
+
 						advance();
 						// outTokens.Add(next());
 					}

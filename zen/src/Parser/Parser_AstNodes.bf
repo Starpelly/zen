@@ -20,48 +20,48 @@ extension Parser
 		return list;
 	}
 
+	AstNode.Expression.NamedType parseNamedType()
+	{
+		let token = consume(.Identifier, "Expected identifier.");
+		if (match(.DoubleColon))
+		{
+			let name = consume(.Identifier, "Expected identifier.");
+			let range =  SourceRange(token.SourceRange.Start, name.SourceRange.End);
+			let qualified = new AstNode.Expression.QualifiedName(token, past(2), new AstNode.Expression.Variable(name, name.SourceRange), range);
+			return new .(.Qualified(qualified), range);
+		}
+
+		return new .(.Simple(token), token.SourceRange);
+	}
+
 	private AstNode.Expression.NamedType consumeType()
 	{
-		AstNode.Expression.NamedType parseNamedType()
-		{
-			let token = consume(.Identifier, "Expected identifier.");
-			if (match(.DoubleColon))
-			{
-				let name = consume(.Identifier, "Expected identifier.");
-				let range =  SourceRange(token.SourceRange.Start, name.SourceRange.End);
-				let qualified = new AstNode.Expression.QualifiedName(token, past(2), new AstNode.Expression.Variable(name, name.SourceRange), range);
-				return new .(.Qualified(qualified), range);
-			}
-
-			return new .(.Simple(token), token.SourceRange);
-		}
-
 		var baseType = parseNamedType();
 
-		// Parse array type
-		while (match(.LeftBracket))
+		while (check(.LeftBracket) || check(.Star))
 		{
-			// let lbrack = previous();
+			// Parse array type
+			if (match(.LeftBracket))
+			{
+				// let lbrack = previous();
 
-			// @TODO
-			// For now, we'll expect an expression, until we have dynamic arrays at least.
-			AstNode.Expression count = null;
-			// if (!check(.RightBracket))
-				count = getExprAddition();
+				// @TODO
+				// For now, we'll expect an expression, until we have dynamic arrays at least.
+				AstNode.Expression count = null;
+				// if (!check(.RightBracket))
+					count = getExprAddition();
 
-			let rbrack = consume(.RightBracket, "Expected ']'");
+				let rbrack = consume(.RightBracket, "Expected ']'");
 
-			let range = SourceRange(baseType.Range.Start, rbrack.SourceRange.End); // Starts at the identifier, ends at the closing bracket
-			baseType = new .(.Array(baseType, count), range);
-		}
-
-		// @TODO @HACK
-		// This isn't chain-able
-		if (match(.Star))
-		{
-			let star = previous();
-			let range = SourceRange(baseType.Range.Start, star.SourceRange.End); // Starts at the identifier, ends at the star(s)
-			baseType = new .(.Pointer(baseType), range);
+				let range = SourceRange(baseType.Range.Start, rbrack.SourceRange.End); // Starts at the identifier, ends at the closing bracket
+				baseType = new .(.Array(baseType, count), range);
+			}
+			if (match(.Star))
+			{
+				let star = previous();
+				let range = SourceRange(baseType.Range.Start, star.SourceRange.End); // Starts at the identifier, ends at the star(s)
+				baseType = new .(.Pointer(baseType), range);
+			}
 		}
 
 		return baseType;

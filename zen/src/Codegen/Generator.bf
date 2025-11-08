@@ -767,6 +767,7 @@ class Generator
 
 						code.Append('"');
 						code.Append(line);
+						code.Append("\\n");
 						code.Append('"');
 					}
 				}

@@ -117,67 +117,43 @@ class Resolver : Visitor
 		return .Ok(entity);
 	}
 
-
 	// @TODO @FIX @REFACTOR
 	// This could be one function lol
 	private void resolveVariable(AstNode.Stmt.VariableDeclaration varDecl, Scope _scope)
 	{
 		let entity = _scope.LookupName(varDecl.Name.Lexeme).Value as Entity.Variable;
-
-		if (entity.Type case .Pointer(let inner))
-		{
-			entity.ResolvedType = .Pointer(resolveInnerType(*inner, _scope).1);
-		}
-		else if (entity.Type case .Array(let element, let count))
-		{
-			entity.ResolvedType = .Array(resolveInnerType(*element, _scope).1, count);
-			// Debug.Assert(false);
-		}
-		else
-		{
-			entity.ResolvedType = resolveInnerType(entity.Type, _scope).0;
-		}
+		resolveEntity(ref entity.Type, ref entity.ResolvedType, _scope);
 	}
 
 	private void resolveConstant(AstNode.Stmt.ConstantDeclaration constDecl, Scope _scope)
 	{
 		let entity = _scope.LookupName(constDecl.Name.Lexeme).Value as Entity.Constant;
-
-		if (entity.Type case .Pointer(let inner))
-		{
-			entity.ResolvedType = .Pointer(resolveInnerType(*inner, _scope).1);
-		}
-		else if (entity.Type case .Array(let element, let count))
-		{
-			entity.ResolvedType = .Array(resolveInnerType(*element, _scope).1, count);
-			// Debug.Assert(false);
-		}
-		else
-		{
-			entity.ResolvedType = resolveInnerType(entity.Type, _scope).0;
-		}
+		resolveEntity(ref entity.Type, ref entity.ResolvedType, _scope);
 	}
 
 	private void resolveFunction(AstNode.Stmt.FunctionDeclaration funcDecl, Scope _scope)
 	{
 		let entity = _scope.LookupName(funcDecl.Name.Lexeme).Value as Entity.Function;
+		resolveEntity(ref entity.Type, ref entity.ResolvedType, _scope);
+	}
 
-		if (entity.Type case .Pointer(let inner))
+	private void resolveEntity(ref ZenType entityType, ref ZenType resolvedType, Scope _scope)
+	{
+		if (entityType case .Pointer(let inner))
 		{
-			entity.ResolvedType = .Pointer(resolveInnerType(*inner, _scope).1);
+			resolvedType = .Pointer(resolveInnerType(ref *inner, _scope).1);
 		}
-		else if (entity.Type case .Array(let element, let count))
+		else if (entityType case .Array(let element, let count))
 		{
-			entity.ResolvedType = .Array(resolveInnerType(*element, _scope).1, count);
-			// Debug.Assert(false);
+			resolvedType = .Array(resolveInnerType(ref *element, _scope).1, count);
 		}
 		else
 		{
-			entity.ResolvedType = resolveInnerType(entity.Type, _scope).0;
+			resolvedType = resolveInnerType(ref entityType, _scope).0;
 		}
 	}
 
-	(ZenType, ZenType*) resolveInnerType(ZenType type, Scope _scope)
+	private (ZenType, ZenType*) resolveInnerType(ref ZenType type, Scope _scope)
 	{
 		Runtime.Assert(type != .Invalid);
 
@@ -186,18 +162,9 @@ class Resolver : Visitor
 			let lookup = lookupScopeForIdentifier(_scope, simpleName);
 			if (lookup case .Ok(let res))
 			{
-				/*
-				if (isPointer)
-					return .Pointer(res.TypePtr);
-				if (isArray)
-					return .Array(res.TypePtr, arrayCount);
-				*/
-				return (res.Type, res.TypePtr);
+				return (res.Type, &res.Type);
 			}
-			else
-			{
-				return (.Invalid, null);
-			}
+			return (.Invalid, null);
 		}
 		else if (type case .QualifiedNamed(let qualifiedName))
 		{
@@ -214,28 +181,31 @@ class Resolver : Visitor
 						let lookup = lookupScopeForIdentifier(iScope.Scope, _var.Name);
 						if (lookup case .Ok(var res))
 						{
-							/*
-							if (isPointer)
-								return .Pointer(res.TypePtr);
-							if (isArray)
-								return .Array(res.TypePtr, arrayCount);
-							*/
-							return (res.Type, res.TypePtr);
+							return (res.Type, &res.Type);
 						}
-
-						// let lookup = lookupScopeForIdentifier(iScope.Scope, qualifiedName.r)
-						// let val = checkExpr(qualifiedName.Right, iScope.Scope, _scope);
-						// returnVal!(val);
 					}
 				}
 			}
-			// checkExpr(qualifiedName, _scope);
 
 			return (.Invalid, null);
 		}
 		else if (type case .Basic)
 		{
 #pragma warning disable 4204
+			return (type, &type);
+		}
+		else if (type case .Pointer(var ptrElement))
+		{
+			let a = resolveInnerType(ref *ptrElement, _scope);
+			ptrElement = a.1;
+			// let ptr = ZenType.Pointer(a.1);
+			return (type, &type);
+		}
+		else if (type case .Array(var arrayElement, int count))
+		{
+			let a = resolveInnerType(ref *arrayElement, _scope);
+			arrayElement = a.1;
+
 			return (type, &type);
 		}
 

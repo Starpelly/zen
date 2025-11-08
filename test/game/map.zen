@@ -10,11 +10,15 @@ struct Tile
 const int MAP_WIDTH  = 12;
 const int MAP_HEIGHT = 6;
 
+const int MAX_ENTITIES = 32;
+
 // 12 * 6
 let Tile[72] map_tiles;
+let Entity*[MAX_ENTITIES] entities;
 
 let	Player player;
 let	Crate testCrate;
+let	Crate testCrate2;
 
 fun void map_load()
 {
@@ -27,7 +31,44 @@ fun void map_load()
 
 	player_init(&player);
 	map_move_entity(&testCrate.entity, 4, 2);
+	map_move_entity(&testCrate2.entity, 4, 4);
 
+/*
+	#c {
+		// printf("%s\n", "Hello from C!");
+
+		int x = 0;
+		int y = 0;
+		for (int i = 0; zen_game_LEVEL[i] != '\0'; i++)
+		{
+			if (zen_game_LEVEL[i] == '\n')
+			{
+				x = 0;
+				y += 1;
+			}
+			else
+			{
+				switch (zen_game_LEVEL[i])
+				{
+					case '@':
+					{
+						zen_game_player.entity.x = x;
+						zen_game_player.entity.y = y;
+						break;
+					}
+					case 'c':
+					{
+						// zen_game_Crate* crate = (zen_game_Crate*)malloc(sizeof(zen_game_Crate));
+						// zen_game_map_add_entity(crate);
+						break;
+					}
+				}
+			}
+
+			x += 1;
+		}
+	};
+*/
 	/*
 	for (let int i = 0; LEVEL[i] != '\0'; i += 1)
 	{
@@ -61,18 +102,14 @@ fun void map_draw()
 	draw_rect_lines(0.0, 0.0, cast(float)(MAP_WIDTH * CELL_WIDTH), cast(float)(MAP_HEIGHT * CELL_HEIGHT), raylib::LightGray);
 
 	crate_draw(&testCrate);
+	crate_draw(&testCrate2);
 	player_draw(&player);
-
-
 }
-
-	#c {
-		printf("%s\n", "Hello from C!");
-	};
 
 fun void map_update()
 {
 	entity_update(&testCrate.entity);
+	entity_update(&testCrate2.entity);
 	player_update(&player);
 }
 
@@ -99,10 +136,8 @@ fun void map_move_entity(Entity* e, int dx, int dy)
 	let Entity* destE = map_tiles[nx + (ny * MAP_WIDTH)].entity;
 	if (destE != null)
 	{
-		if (e.player == true)
-		{
 			map_move_entity(destE, dx, dy);
-		}
+
 	}
 
 	map_tiles[e.x + (e.y * MAP_WIDTH)].entity = null;

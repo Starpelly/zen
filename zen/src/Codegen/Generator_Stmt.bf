@@ -94,9 +94,19 @@ extension Generator
 		// Write name
 		code.Append(v.Name.Lexeme);
 
+
 		if (entity.ResolvedType case .Array(let element, let count))
 		{
-			code.Append(scope $"[{count}]");
+			void writeArray(ZenType* element, int count)
+			{
+				if (*element case .Array(let e, let c))
+				{
+					writeArray(e, c);
+				}
+				code.Append(scope $"[{count}]");
+			}
+
+			writeArray(element, count);
 		}
 
 		if (writeInitializer)

@@ -1,0 +1,5 @@
+let float*[44] vector;
+
+fun void main()
+{
+}

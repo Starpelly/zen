@@ -28,16 +28,14 @@ abstract class Entity
 {
 	public readonly Scope Scope;
 	public readonly Token Token;
-	public readonly ZenType Type => m_type;
-	public ZenType* TypePtr => &m_type;
 
-	private ZenType m_type;
+	public ZenType Type;
 
 	public this(Scope _scope, Token token, ZenType type)
 	{
 		this.Scope = _scope;
 		this.Token = token;
-		this.m_type = type;
+		this.Type = type;
 	}
 
 	public abstract EntityKind GetKind();
