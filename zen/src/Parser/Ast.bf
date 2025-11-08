@@ -428,6 +428,8 @@ abstract class AstNode
 					kind = .UntypedFloat; break;
 				case typeof(String), typeof(StringView):
 					kind = .UntypedString; break;
+				case typeof(char8):
+					kind = .UntypedChar; break;
 				default:
 					Runtime.Assert(true, "Unhandled type!");
 				}

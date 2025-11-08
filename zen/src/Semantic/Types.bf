@@ -42,6 +42,7 @@ enum BasicKind
 	UntypedInteger,
 	UntypedFloat,
 	UntypedString,
+	UntypedChar,
 	UntypedNull
 }
 
@@ -102,7 +103,6 @@ struct BasicType
 
 		.(.Bool, 	.Boolean, "bool"),
 
-		.(.Char8, 	.Char, "char"),
 		.(.Char8, 	.Char, "char8"),
 		.(.Char16, 	.Char, "char16"),
 		.(.Char32, 	.Char, "char32"),
@@ -113,6 +113,7 @@ struct BasicType
 		.(.UntypedInteger, 	.Integer | .Untyped, "untyped int"),
 		.(.UntypedFloat, 	.Float   | .Untyped, "untyped float"),
 		.(.UntypedString, 	.String  | .Untyped, "untyped string"),
+		.(.UntypedChar, 	.Char  	 | .Untyped, "untyped char"),
 		.(.UntypedNull, 	.Untyped, "untyped null"),
 	);
 
@@ -210,6 +211,13 @@ public enum ZenType
 	{
 		if (this case .Basic(let basic))
 			return basic.Flags.HasFlagInclusive(.String);
+		return false;
+	}
+
+	public bool IsTypeChar()
+	{
+		if (this case .Basic(let basic))
+			return basic.Flags.HasFlagInclusive(.Char);
 		return false;
 	}
 

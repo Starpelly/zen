@@ -13,21 +13,34 @@ abstract class Visitor
 
 	protected void reportError(Token token, String message)
 	{
-		Debug.Assert(OnReport != default);
-
-		let diag = new Diagnostic(.Error, message, new DiagnosticSpan() { Range = token.SourceRange });
-		OnReport(diag);
-
+		reportDiagnostic(.Error, token, message);
 		HadErrors = true;
 	}
 
 	protected void reportError(AstNode.Expression expr, String message)
 	{
+		reportDiagnostic(.Error, expr, message);
+		HadErrors = true;
+	}
+
+	protected void reportWarning(AstNode.Expression expr, String message)
+	{
+		reportDiagnostic(.Warning, expr, message);
+	}
+
+	protected void reportDiagnostic(Diagnostic.Severity level, Token token, String message)
+	{
+		Debug.Assert(OnReport != default);
+
+		let diag = new Diagnostic(.Error, message, new DiagnosticSpan() { Range = token.SourceRange });
+		OnReport(diag);
+	}
+
+	protected void reportDiagnostic(Diagnostic.Severity level, AstNode.Expression expr, String message)
+	{
 		Debug.Assert(OnReport != default);
 
 		let diag = new Diagnostic(.Error, message, new DiagnosticSpan() { Range = expr.Range });
 		OnReport(diag);
-
-		HadErrors = true;
 	}
 }

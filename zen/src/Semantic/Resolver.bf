@@ -55,9 +55,11 @@ class Resolver : Visitor
 			}
 			return;
 		case .EnumField(let field):
+			/*
 			Console.ForegroundColor = .Yellow;
 			Console.WriteLine("please type check me!");
 			Console.ResetColor();
+			*/
 			return;
 			
 		case .If(let _if):
@@ -148,7 +150,7 @@ class Resolver : Visitor
 		resolveType(ref resolvedType, _scope); 
 
 		/// Should never be the case, but again, better safe than sorry.
-		Debug.Assert(resolvedType != .Invalid);
+		// Debug.Assert(resolvedType != .Invalid);
 
 		return resolvedType;
 	}

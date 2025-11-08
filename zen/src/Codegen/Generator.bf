@@ -44,6 +44,8 @@ class Generator
 		typedef			 float		float32;
 		typedef			 double		float64;
 
+		typedef			 char		char8;
+
 		#define null NULL
 
 		#if defined(_WIN32)
@@ -679,8 +681,11 @@ class Generator
 					}
 					else if (argType.IsTypeString())
 					{
-						// No format
 						format.Set("%s");
+					}
+					else if (argType.IsTypeChar())
+					{
+						format.Set("%c");
 					}
 					else
 					{

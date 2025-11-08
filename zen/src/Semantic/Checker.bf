@@ -450,6 +450,9 @@ class Checker : Visitor
 			if (arrayType case .Pointer(let ptr))
 				return *ptr.Element;
 
+			if (arrayType.IsTypeString())
+				return ZenType.Basic(BasicType.FromKind(.Char8));
+
 			reportError(index.Array, "Cannot index into a non-array type");
 			return ZenType.Invalid;
 

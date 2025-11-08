@@ -321,7 +321,7 @@ class Binder : Visitor
 					switch (bin.Op.Kind)
 					{
 					default:
-						reportError(bin.Op, "Unhandled binary operator.");
+						reportError(bin.Op, "Unhandled binary operator");
 						return -1;
 					}
 				default:

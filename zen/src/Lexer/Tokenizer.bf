@@ -194,6 +194,10 @@ class Tokenizer
 			scanString();
 			break;
 
+		case '\'':
+			scanChar();
+			break;
+
 		default:
 			if (isDigit(c))
 			{
@@ -345,6 +349,60 @@ class Tokenizer
 		// let offset = (isMultiline) ? 3 : 1;
 		// let value = substring(m_start + offset, m_current - offset);
 		addToken(.String/*, Variant.Create<StringView>(value)*/);
+	}
+
+	private void scanChar()
+	{
+		if (isAtEnd())
+		{
+			// Un-terminated character literal
+			// Lexer error here.
+			return;
+		}
+
+		var c = peek();
+		advance();
+
+		// Handle escape sequences
+		if (c == '\\')
+		{
+		    if (isAtEnd())
+		    {
+		        // Unterminated escape sequence
+		        return;
+		    }
+
+		    char8 esc = peek();
+		    advance();
+
+		    switch (esc)
+		    {
+		        case 'n': c = '\n'; break;
+		        case 't': c = '\t'; break;
+		        case 'r': c = '\r'; break;
+		        case '0': c = '\0'; break;
+		        case '\'': c = '\''; break;
+		        case '\"': c = '\"'; break;
+		        case '\\': c = '\\'; break;
+		        default:
+		            // Unknown escape sequence
+		            // Lexer error here
+		            break;
+		    }
+		}
+
+		if (peek() != '\'')
+		{
+			// Un-terminated or too long character literal
+			// Lexer error here
+			while (!isAtEnd() && peek() != '\'') advance();
+		}
+
+		// Consume closing quote
+		if (!isAtEnd())
+			advance();
+
+		addToken(.Char);
 	}
 
 	private void scanNumber()

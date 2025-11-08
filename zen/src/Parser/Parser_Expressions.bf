@@ -275,7 +275,7 @@ extension Parser
 			return returnExpr;
 		}
 
-		if (match(.Number_Int, .Number_Float, .String))
+		if (match(.Number_Int, .Number_Float, .String, .Char))
 		{
 			let token = previous();
 
@@ -291,6 +291,8 @@ extension Parser
 			case .String:
 				value = Variant.Create<StringView>(token.Lexeme);
 				break;
+			case .Char:
+				value = Variant.Create<char8>(token.Lexeme[0]);
 			default:
 				Runtime.FatalError("Variant token case not handled.");
 			}
@@ -329,7 +331,7 @@ extension Parser
 			returnValue!(getExprCompositeLiteral());
 		}
 
-		reportError(peek(), "Expected an expression.");
+		reportError(peek(), "Expected an expression");
 		advance();
 		return null;
 	}

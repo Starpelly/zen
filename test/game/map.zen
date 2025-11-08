@@ -14,11 +14,11 @@ const int MAX_ENTITIES = 32;
 
 // 12 * 6
 let Tile[72] map_tiles;
-// let Entity*[MAX_ENTITIES] entities;
+
+let Entity*[32] entities;
+var int entityIndex = 0;
 
 let	Player player;
-let	Crate testCrate;
-let	Crate testCrate2;
 
 fun void map_load()
 {
@@ -30,8 +30,6 @@ fun void map_load()
 	}
 
 	player_init(&player);
-	map_move_entity(&testCrate.entity, 4, 2);
-	map_move_entity(&testCrate2.entity, 4, 4);
 
 /*
 	#c {
@@ -69,12 +67,36 @@ fun void map_load()
 		}
 	};
 */
-	/*
+
+	var int x = 0;
+	var int y = 0;
 	for (let int i = 0; LEVEL[i] != '\0'; i += 1)
 	{
+		if (LEVEL[i] == '\n')
+		{
+			x = 0;
+			y += 1;
+		}
+		else
+		{
+			let char8 a = LEVEL[i];
 
+			if (a == '@')
+			{
+				player.entity.x = x;
+				player.entity.y = y;
+			}
+			if (a == 'c')
+			{
+				entities[entityIndex] = null;
+				entityIndex += 1;
+				print(a);
+			}
+
+		}
+
+		x += 1;
 	}
-	*/
 }
 
 fun void map_draw()
@@ -101,15 +123,11 @@ fun void map_draw()
 
 	draw_rect_lines(0.0, 0.0, cast(float)(MAP_WIDTH * CELL_WIDTH), cast(float)(MAP_HEIGHT * CELL_HEIGHT), raylib::LightGray);
 
-	crate_draw(&testCrate);
-	crate_draw(&testCrate2);
 	player_draw(&player);
 }
 
 fun void map_update()
 {
-	entity_update(&testCrate.entity);
-	entity_update(&testCrate2.entity);
 	player_update(&player);
 }
 
@@ -136,8 +154,7 @@ fun void map_move_entity(Entity* e, int dx, int dy)
 	let Entity* destE = map_tiles[nx + (ny * MAP_WIDTH)].entity;
 	if (destE != null)
 	{
-			map_move_entity(destE, dx, dy);
-
+		map_move_entity(destE, dx, dy);
 	}
 
 	map_tiles[e.x + (e.y * MAP_WIDTH)].entity = null;

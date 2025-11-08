@@ -16,6 +16,8 @@ typedef			 char		int8;
 typedef			 float		float32;
 typedef			 double		float64;
 
+typedef			 char		char8;
+
 #define null NULL
 
 #if defined(_WIN32)
