@@ -28,19 +28,12 @@ let float delta_time = 0.0;
 let float game_time = 0.0;
 let uint64 game_frame = 0;
 
-struct GameManager
-{
-	float t;
-}
-
 fun void start_game()
 {
     raylib::InitWindow(GAME_WIDTH * GAME_ZOOM, GAME_HEIGHT * GAME_ZOOM, "Zen");
 	// raylib::SetTargetFPS(185);
 
 	assets_load();
-
-	let GameManager gameManager;
 
 	map_load();
 
@@ -51,13 +44,13 @@ fun void start_game()
 
 	while (!raylib::WindowShouldClose())
 	{
-		game_update(&gameManager);
+		game_update();
 
 		raylib::BeginDrawing();
 		raylib::ClearBackground(raylib::RayWhite);
 
 		raylib::BeginMode2D(cam);
-		game_draw(&gameManager);
+		game_draw();
 		raylib::EndMode2D();
 
 		raylib::DrawFPS(20, 20);
@@ -70,7 +63,7 @@ fun void start_game()
 	raylib::CloseWindow();
 }
 
-fun void game_update(GameManager* gameManager)
+fun void game_update()
 {
 	delta_time = raylib::GetFrameTime();
 	game_time += delta_time;
@@ -79,7 +72,7 @@ fun void game_update(GameManager* gameManager)
 	map_update();
 }
 
-fun void game_draw(GameManager* gameManager)
+fun void game_draw()
 {
 	map_draw();
 }

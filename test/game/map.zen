@@ -14,7 +14,7 @@ const int MAX_ENTITIES = 32;
 
 // 12 * 6
 let Tile[72] map_tiles;
-let Entity*[MAX_ENTITIES] entities;
+// let Entity*[MAX_ENTITIES] entities;
 
 let	Player player;
 let	Crate testCrate;

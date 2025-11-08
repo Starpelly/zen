@@ -547,8 +547,8 @@ class Generator
 
 			outStr.Append(_enum.Name.Lexeme);
 			break;
-		case .Pointer(let elem):
-			writeResolvedType(*elem, outStr);
+		case .Pointer(let ptr):
+			writeResolvedType(*ptr.Element, outStr);
 
 			// @TODO
 			// Pointers in C are next to the name and not the type...
@@ -556,10 +556,10 @@ class Generator
 			// I'll have to look into this
 			outStr.Append('*');
 			break;
-		case .Array(let element, let count):
+		case .Array(let arr):
 			// Arrays are next to the name and not the type.
 			// So we can just ignore this.
-			writeResolvedType(*element, outStr);
+			writeResolvedType(*arr.Element, outStr);
 			break;
 		default:
 			Runtime.Assert(false);

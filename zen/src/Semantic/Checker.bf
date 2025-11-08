@@ -291,9 +291,9 @@ class Checker : Visitor
 			{
 				doStruct!(objType);
 			}
-			else if (objType case .Pointer(let element))
+			else if (objType case .Pointer(let ptr))
 			{
-				let value = *element;
+				let value = *ptr.Element;
 				if (value case .Structure)
 				{
 					doStruct!(value);
@@ -335,7 +335,7 @@ class Checker : Visitor
 			switch (op.Kind)
 			{ 
 			case .Ampersand:
-				return ZenType.Pointer(&un.StoredType);
+				return ZenType.Pointer(PointerType(&un.StoredType));
 			case .Star:
 				if (!rightType.IsTypePointer())
 				{
@@ -413,7 +413,7 @@ class Checker : Visitor
 
 			case .Pointer(let innerType):
 				var a = checkExpr(innerType, _scope);
-				return ZenType.Pointer(&a);
+				return ZenType.Pointer(PointerType(&a));
 
 			case .Array(let innerType, let countExpr):
 				return checkExpr(innerType, _scope);
@@ -444,11 +444,11 @@ class Checker : Visitor
 			if (!indexType.IsTypeInteger())
 				reportError(index, "Array index must be an integer type");
 
-			if (arrayType case .Array(let arrayE, let count))
-				return *arrayE;
+			if (arrayType case .Array(let arr))
+				return *arr.Element;
 
-			if (arrayType case .Pointer(let pointerE))
-				return *pointerE;
+			if (arrayType case .Pointer(let ptr))
+				return *ptr.Element;
 
 			reportError(index.Array, "Cannot index into a non-array type");
 			return ZenType.Invalid;

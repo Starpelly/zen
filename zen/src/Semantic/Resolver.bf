@@ -122,51 +122,57 @@ class Resolver : Visitor
 	private void resolveVariable(AstNode.Stmt.VariableDeclaration varDecl, Scope _scope)
 	{
 		let entity = _scope.LookupName(varDecl.Name.Lexeme).Value as Entity.Variable;
-		resolveEntity(ref entity.Type, ref entity.ResolvedType, _scope);
+		entity.ResolvedType = resolveEntity(entity.Type, _scope);
 	}
 
 	private void resolveConstant(AstNode.Stmt.ConstantDeclaration constDecl, Scope _scope)
 	{
 		let entity = _scope.LookupName(constDecl.Name.Lexeme).Value as Entity.Constant;
-		resolveEntity(ref entity.Type, ref entity.ResolvedType, _scope);
+		entity.ResolvedType = resolveEntity(entity.Type, _scope);
 	}
 
 	private void resolveFunction(AstNode.Stmt.FunctionDeclaration funcDecl, Scope _scope)
 	{
 		let entity = _scope.LookupName(funcDecl.Name.Lexeme).Value as Entity.Function;
-		resolveEntity(ref entity.Type, ref entity.ResolvedType, _scope);
+		entity.ResolvedType = resolveEntity(entity.Type, _scope);
 	}
 
-	private void resolveEntity(ref ZenType entityType, ref ZenType resolvedType, Scope _scope)
+	private ZenType resolveEntity(ZenType entityType, Scope _scope)
 	{
-		if (entityType case .Pointer(let inner))
-		{
-			resolvedType = .Pointer(resolveInnerType(ref *inner, _scope).1);
-		}
-		else if (entityType case .Array(let element, let count))
-		{
-			resolvedType = .Array(resolveInnerType(ref *element, _scope).1, count);
-		}
-		else
-		{
-			resolvedType = resolveInnerType(ref entityType, _scope).0;
-		}
+		// We can't do anything if it's a type invalid. This should NEVER be the case unless the Binder didn't do its job!
+		// But of course, better safe than sorry. That's what asserts are for.
+		Runtime.Assert(entityType != .Invalid);
+
+		// We'll create a copy of the entity type as that's the base we're working with (and also we don't want to modify the base type we have, we want to return a new value).
+		ZenType resolvedType = entityType;
+		resolveType(ref resolvedType, _scope); 
+
+		/// Should never be the case, but again, better safe than sorry.
+		Debug.Assert(resolvedType != .Invalid);
+
+		return resolvedType;
 	}
 
-	private (ZenType, ZenType*) resolveInnerType(ref ZenType type, Scope _scope)
+	/// Takes a type and swaps the "BasicNamed" and "QualifiedNamed" for symbol types.
+	/// So for example, if there's a struct named "Foo", and the type is a kind ".SimpleNamed", it will swap it from SimpleNamed to the struct called that if it finds it.
+	/// This also works with pointers. Note that this manipulates a ZenType already in memory!
+	private void resolveType(ref ZenType unresolvedType, Scope _scope)
 	{
-		Runtime.Assert(type != .Invalid);
-
-		if (type case .SimpleNamed(let simpleName))
+		if (unresolvedType case .Basic)
+		{
+			// Basic types are defined globally, so we don't need to do anything here.
+		}
+		else if (unresolvedType case .SimpleNamed(let simpleName))
 		{
 			let lookup = lookupScopeForIdentifier(_scope, simpleName);
 			if (lookup case .Ok(let res))
 			{
-				return (res.Type, &res.Type);
+				unresolvedType = res.Type;
+				return;
 			}
-			return (.Invalid, null);
+			unresolvedType = .Invalid;
 		}
-		else if (type case .QualifiedNamed(let qualifiedName))
+		else if (unresolvedType case .QualifiedNamed(let qualifiedName))
 		{
 			let leftScope = lookupScopeForIdentifier(_scope, qualifiedName.Left);
 
@@ -181,34 +187,28 @@ class Resolver : Visitor
 						let lookup = lookupScopeForIdentifier(iScope.Scope, _var.Name);
 						if (lookup case .Ok(var res))
 						{
-							return (res.Type, &res.Type);
+							unresolvedType = res.Type;
+							return;
 						}
 					}
 				}
 			}
 
-			return (.Invalid, null);
+			unresolvedType = .Invalid;
 		}
-		else if (type case .Basic)
+		else if (unresolvedType case .Pointer(var ptr))
 		{
-#pragma warning disable 4204
-			return (type, &type);
+			// Here we're swapping the pointer of the element from whatever we had before to the new resolved type.
+			// So this could be a pointer again or an array or an actual resolved type (handled in cases .SimpleNamed and .QualifiedNamed.
+			resolveType(ref *ptr.Element, _scope);
 		}
-		else if (type case .Pointer(var ptrElement))
+		else if (unresolvedType case .Array(var arr))
 		{
-			let a = resolveInnerType(ref *ptrElement, _scope);
-			ptrElement = a.1;
-			// let ptr = ZenType.Pointer(a.1);
-			return (type, &type);
+			resolveType(ref *arr.Element, _scope);
 		}
-		else if (type case .Array(var arrayElement, int count))
+		else
 		{
-			let a = resolveInnerType(ref *arrayElement, _scope);
-			arrayElement = a.1;
-
-			return (type, &type);
+			Runtime.FatalError(scope $"What are you?!!!");
 		}
-
-		Runtime.FatalError(scope $"What are you?");
 	}
 }

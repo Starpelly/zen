@@ -33,9 +33,9 @@ extension Generator
 		// Write name
 		code.Append(decl.Name.Lexeme);
 
-		if (constant.ResolvedType case .Array(let element, let count))
+		if (constant.ResolvedType case .Array(let arr))
 		{
-			code.Append(scope $"[{count}]");
+			code.Append(scope $"[{arr.Count}]");
 		}
 
 		if (decl.Initializer != null)
@@ -94,19 +94,18 @@ extension Generator
 		// Write name
 		code.Append(v.Name.Lexeme);
 
-
-		if (entity.ResolvedType case .Array(let element, let count))
+		void writeArray(ArrayType arr)
 		{
-			void writeArray(ZenType* element, int count)
+			if (*arr.Element case .Array(let elementArr))
 			{
-				if (*element case .Array(let e, let c))
-				{
-					writeArray(e, c);
-				}
-				code.Append(scope $"[{count}]");
+				writeArray(elementArr);
 			}
+			code.Append(scope $"[{arr.Count}]");
+		}
 
-			writeArray(element, count);
+		if (entity.ResolvedType case .Array(let arr))
+		{
+			writeArray(arr);
 		}
 
 		if (writeInitializer)

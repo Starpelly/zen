@@ -1,5 +1,33 @@
-let float*[44] vector;
+/*
+struct A
+{
+    float x;
+}
+
+let A*[44] vector;
+
+// @TODO
+// Stuff like this is technically valid syntax, but I have no idea how you would translate this to C.
+// So I think I'll just throw an error for complex syntax like this for now.
+let float[44]**[44] what_the_fuck;
+
+
+*/
+
+struct Foo
+{
+    float x;
+}
+
+let bruh::Bar x;
 
 fun void main()
 {
+}
+
+namespace bruh;
+
+struct Bar
+{
+    int y;
 }

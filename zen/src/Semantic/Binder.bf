@@ -301,7 +301,7 @@ class Binder : Visitor
 			// @FIX @REFACTOR
 			// I don't feel comfortable messing with the AST here.
 			type.StoredType = getZenTypeFromNamedTypeExpr(innerType);
-			return .Pointer(&type.StoredType);
+			return .Pointer(PointerType(&type.StoredType));
 
 		case .Array(let innerExpr, let countExpr):
 			// @FIX @REFACTOR
@@ -325,12 +325,15 @@ class Binder : Visitor
 						return -1;
 					}
 				default:
-					// reportError()
+					reportError(countExpr, "Expression kind isn't handled by the compiler. This is my fault sowwy!");
 					return -1;
 				}
 			}
 
-			return .Array(&type.StoredType, getCount());
+			return .Array(ArrayType {
+				Element = &type.StoredType,
+				Count = getCount()
+			});
 		}
 	}
 

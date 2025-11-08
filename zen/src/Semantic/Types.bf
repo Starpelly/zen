@@ -143,6 +143,22 @@ struct BasicType
 	}
 }
 
+struct PointerType
+{
+	public ZenType* Element;
+
+	public this(ZenType* element)
+	{
+		this.Element = element;
+	}
+}
+
+struct ArrayType
+{
+	public ZenType* Element;
+	public int Count;
+}
+
 public enum ZenType
 {
 	case Invalid;
@@ -152,8 +168,8 @@ public enum ZenType
 	case Structure(AstNode.Stmt.StructDeclaration _struct);
 	case Enum(AstNode.Stmt.EnumDeclaration _enum);
 	case Namespace(AstNode.Stmt.NamespaceDeclaration _ns);
-	case Pointer(ZenType* element);
-	case Array(ZenType* element, int count);
+	case Pointer(PointerType);
+	case Array(ArrayType);
 
 	public bool IsTypeVoid()
 	{
@@ -250,10 +266,10 @@ public enum ZenType
 			outName.Append(scope $"{_enum.Name.Lexeme}");
 		case .Namespace:
 			outName.Append("Namespace");
-		case .Pointer(let element):
-			outName.Append(scope $"Pointer->{element.GetName(.. scope .())}");
-		case .Array(let element, let count):
-			outName.Append(scope $"Array({element.GetName(.. scope .())})[{count}]");
+		case .Pointer(let ptr):
+			outName.Append(scope $"Pointer->{ptr.Element.GetName(.. scope .())}");
+		case .Array(let arr):
+			outName.Append(scope $"Array({arr.Element.GetName(.. scope .())})[{arr.Count}]");
 		}
 	}
 
@@ -302,7 +318,7 @@ public enum ZenType
 			{
 				// In Zen, pointers are type safe, so while pointers are still technically just ints,
 				// we'll still need to actually compare the pointer types
-				return AreTypesIdenticalUntyped(*px, *py);
+				return AreTypesIdenticalUntyped(*px.Element, *py.Element);
 			}
 		}
 
